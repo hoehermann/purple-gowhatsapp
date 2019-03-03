@@ -1,0 +1,3 @@
+[submodule "go-whatsapp"]
+	path = go-whatsapp
+	url = https://github.com/Rhymen/go-whatsapp.git
