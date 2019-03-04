@@ -17,7 +17,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
-	//"strings"
+	"os/user"
 	"time"
 
 	"github.com/Rhymen/go-whatsapp"
@@ -52,7 +52,7 @@ func (*waHandler) HandleError(err error) {
 
 func (*waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	messageQueue <- message
-	fmt.Printf("gowhatsapp TextMessage %v %v %v %v\n\t%v\n", message.Info.Timestamp, message.Info.Id, message.Info.RemoteJid, message.Info.QuotedMessageID, message.Text)
+	//fmt.Printf("gowhatsapp TextMessage %v %v %v %v\n\t%v\n", message.Info.Timestamp, message.Info.Id, message.Info.RemoteJid, message.Info.QuotedMessageID, message.Text)
 }
 
 var wac *whatsapp.Conn
@@ -108,7 +108,11 @@ func login(wac *whatsapp.Conn) error {
 
 func readSession() (whatsapp.Session, error) {
 	session := whatsapp.Session{}
-	file, err := os.Open(os.TempDir() + "/whatsappSession.gob")
+	usr, err := user.Current()
+	if err != nil {
+		return session, err
+	}
+	file, err := os.Open(usr.HomeDir + "/.whatsappSession.gob")
 	if err != nil {
 		return session, err
 	}
@@ -122,7 +126,11 @@ func readSession() (whatsapp.Session, error) {
 }
 
 func writeSession(session whatsapp.Session) error {
-	file, err := os.Create(os.TempDir() + "/whatsappSession.gob")
+	usr, err := user.Current()
+	if err != nil {
+		return err
+	}
+	file, err := os.Create(usr.HomeDir + "/.whatsappSession.gob")
 	if err != nil {
 		return err
 	}

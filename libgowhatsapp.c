@@ -73,16 +73,7 @@ gowhatsapp_assume_all_buddies_online(GoWhatsappAccount *sa)
     }
 }
 
-/*
-void
-gowhatsapp_read_cb(gpointer data, gint source, PurpleInputCondition cond)
-{
-    GoWhatsappAccount *sa;
-    sa = data;
-}
-*/
-
-
+// Polling technique copied from https://github.com/EionRobb/pidgin-opensteamworks/blob/master/libsteamworks.cpp .
 gboolean
 gowhatsapp_eventloop(gpointer userdata)
 {
@@ -115,7 +106,7 @@ gowhatsapp_login(PurpleAccount *account)
 {
     PurpleConnection *pc = purple_account_get_connection(account);
 
-    // this protocoll does not support anything special right now
+    // this protocol does not support anything special right now
     PurpleConnectionFlags pc_flags;
     pc_flags = purple_connection_get_flags(pc);
     pc_flags |= PURPLE_CONNECTION_NO_IMAGES;
@@ -132,12 +123,12 @@ gowhatsapp_login(PurpleAccount *account)
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
     GoUint8 ret = gowhatsapp_go_login();
     if (ret == 0) {
-    purple_connection_set_state(pc, PURPLE_DISCONNECTED);
-    purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("gowhatsapp_go_login failed."));
+        purple_connection_set_state(pc, PURPLE_DISCONNECTED);
+        purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("gowhatsapp_go_login failed."));
     } else {
-    purple_connection_set_state(sa->pc, PURPLE_CONNECTION_CONNECTED);
-    sa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
-    purple_debug_info("gowhatsapp", "Started event timer.\n");
+        purple_connection_set_state(sa->pc, PURPLE_CONNECTION_CONNECTED);
+        sa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
+        purple_debug_info("gowhatsapp", "Started event timer.\n");
     }
 }
 
