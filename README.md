@@ -1,25 +1,21 @@
-# purple-signald
+# purple-gowhatsapp
 
-A libpurple/Pidgin plugin for [signald](https://git.callpipe.com/finn/signald) (signal, formerly textsecure).
+A libpurple/Pidgin plugin for WhatsApp **Web**.
 
-signald is written by Finn Herzfeld.
+Powered by [go-whatsapp](https://github.com/Rhymen/go-whatsapp), which is written by Lucas Engelke.
 
-I never wrote code for use in Pidgin before. EionRobb's [purple-discord](https://github.com/EionRobb/purple-discord) sources were of great help. 
+Being developed on Ubuntu 18.04.
 
-Tested on Ubuntu 18.04.
+**This plugin is not actually ready to use (yet).**
 
 ### Features
 
-* Receive messages
-* Send messages
-
-![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")  
+* Receive text messages
 
 ### Missing Features
 
-* Integrating with the buddy list
-* Proper group chats (right now you can send and receive group messages, but you cannot tell which one of the group members is answering)
-* Anything beyond simple messaging, really
+* Displaying the QR Code for login (this needs to be done via go-whatsapp directly).
+* Sending messages
+* Anything beyond receiving a text message, really
 
-![Group Chat](/groupchat.png?raw=true "Group Chat Screenshot")
 
