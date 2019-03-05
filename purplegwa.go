@@ -60,7 +60,7 @@ var wac *whatsapp.Conn
 //export gowhatsapp_go_login
 func gowhatsapp_go_login() bool {
 	//create new WhatsApp connection
-	wac, err := whatsapp.NewConn(5 * time.Second)
+        wac, err := whatsapp.NewConn(5 * time.Second) // TODO: make timeout user configurable
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "gowhatsapp error creating connection: %v\n", err)
 	} else {
@@ -81,8 +81,8 @@ func gowhatsapp_go_login() bool {
 
 //export gowhatsapp_go_close
 func gowhatsapp_go_close() {
-	wac = nil
-	fmt.Fprintf(os.Stderr, "gowhatsapp close() \n")
+        fmt.Fprintf(os.Stderr, "gowhatsapp close()\n")
+        wac = nil
 }
 
 func login(wac *whatsapp.Conn) error {
@@ -93,6 +93,7 @@ func login(wac *whatsapp.Conn) error {
 		session, err = wac.RestoreSession(session)
 		if err != nil {
 			return fmt.Errorf("gowhatsapp restoring failed: %v\n", err)
+                        // NOTE: "restore session connection timed out" may indicate phone switched off
 		}
 	} else {
 		return fmt.Errorf("gowhatsapp error during login: no session stored\n")

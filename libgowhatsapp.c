@@ -48,6 +48,7 @@ typedef struct {
     PurpleConnection *pc;
     
     guint event_timer;
+    GList *used_images;
 } GoWhatsappAccount;
 
 static const char *
@@ -71,6 +72,45 @@ gowhatsapp_assume_all_buddies_online(GoWhatsappAccount *sa)
         gowhatsapp_assume_buddy_online(sa->account, buddies->data);
         buddies = g_slist_delete_link(buddies, buddies);
     }
+}
+
+void tgp_g_list_free_full (GList *list, GDestroyNotify free_func) {
+  if (list) {
+    g_list_free_full (list, free_func);
+  }
+}
+
+static void used_image_free (gpointer data) {
+  purple_imgstore_unref_by_id (GPOINTER_TO_INT(data));
+}
+
+// Copied from p2tgl_imgstore_add_with_id, tgp_msg_photo_display, tgp_format_img
+void gowhatsapp_image(PurpleConnection *pc) {
+    gchar *data = NULL;
+    size_t len;
+    GError *err = NULL;
+    if (! g_file_get_contents("/usr/share/pixmaps/pidgin/protocols/16/gowhatsapp.png", &data, &len, &err)) {
+        purple_debug_info("gowhatsapp", "g_file_get_contents failed: %s\n", err->message);
+        g_error_free(err);
+        err = NULL;
+        return;
+    }
+
+    int id = purple_imgstore_add_with_id(data, len, NULL);
+
+    if (id <= 0) {
+        purple_debug_info("gowhatsapp", "Cannot display picture, adding to imgstore failed.");
+        return;
+    }
+    //sa->used_images = g_list_append(sa->used_images, GINT_TO_POINTER(imgid));
+    // tgp_g_list_free_full (conn->used_images, used_image_free);
+
+    PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
+    flags |= PURPLE_MESSAGE_IMAGES;
+
+    char * t = g_strdup_printf ("<img id=\"%u\">", id);
+
+    purple_serv_got_im(pc, "system@s.whatsapp.net", t, flags, time(NULL));
 }
 
 // Polling technique copied from https://github.com/EionRobb/pidgin-opensteamworks/blob/master/libsteamworks.cpp .
@@ -123,21 +163,24 @@ gowhatsapp_login(PurpleAccount *account)
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
     GoUint8 ret = gowhatsapp_go_login();
     if (ret == 0) {
-        purple_connection_set_state(pc, PURPLE_DISCONNECTED);
+        //purple_connection_set_state(pc, PURPLE_DISCONNECTED);
         purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("gowhatsapp_go_login failed."));
     } else {
-        purple_connection_set_state(sa->pc, PURPLE_CONNECTION_CONNECTED);
+        purple_connection_set_state(pc, PURPLE_CONNECTED);
         sa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
         purple_debug_info("gowhatsapp", "Started event timer.\n");
+        gowhatsapp_image(pc);
     }
+    purple_debug_info("gowhatsapp", "State: %d\n", purple_connection_get_state(pc));
 }
 
 static void
 gowhatsapp_close(PurpleConnection *pc)
 {
+    purple_debug_info("gowhatsapp", "gowhatsapp_close()\n");
+    gowhatsapp_go_close();
     purple_connection_set_state(pc, PURPLE_DISCONNECTED);
     GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
-    gowhatsapp_go_close();
     purple_timeout_remove(sa->event_timer);
     g_free(sa);
 }
@@ -171,7 +214,7 @@ gowhatsapp_send_im(PurpleConnection *pc,
                 const gchar *who, const gchar *message, PurpleMessageFlags flags)
 {
 #endif
-    GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
+    //GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
     return 1;
 }
 
@@ -265,7 +308,7 @@ plugin_init(PurplePlugin *plugin)
     //
 #endif
 
-    prpl_info->options = OPT_PROTO_NO_PASSWORD;
+    prpl_info->options = OPT_PROTO_NO_PASSWORD; // OPT_PROTO_IM_IMAGE
     prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
 
     /*
