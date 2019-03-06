@@ -74,6 +74,7 @@ gowhatsapp_assume_all_buddies_online(GoWhatsappAccount *sa)
     }
 }
 
+/*
 void tgp_g_list_free_full (GList *list, GDestroyNotify free_func) {
   if (list) {
     g_list_free_full (list, free_func);
@@ -83,19 +84,10 @@ void tgp_g_list_free_full (GList *list, GDestroyNotify free_func) {
 static void used_image_free (gpointer data) {
   purple_imgstore_unref_by_id (GPOINTER_TO_INT(data));
 }
+*/
 
 // Copied from p2tgl_imgstore_add_with_id, tgp_msg_photo_display, tgp_format_img
-void gowhatsapp_image(PurpleConnection *pc) {
-    gchar *data = NULL;
-    size_t len;
-    GError *err = NULL;
-    if (! g_file_get_contents("/usr/share/pixmaps/pidgin/protocols/16/gowhatsapp.png", &data, &len, &err)) {
-        purple_debug_info("gowhatsapp", "g_file_get_contents failed: %s\n", err->message);
-        g_error_free(err);
-        err = NULL;
-        return;
-    }
-
+void gowhatsapp_image(PurpleConnection *pc, gchar *who, void *data, size_t len, PurpleMessageFlags flags, time_t time) {
     int id = purple_imgstore_add_with_id(data, len, NULL);
 
     if (id <= 0) {
@@ -105,19 +97,18 @@ void gowhatsapp_image(PurpleConnection *pc) {
     //sa->used_images = g_list_append(sa->used_images, GINT_TO_POINTER(imgid));
     // tgp_g_list_free_full (conn->used_images, used_image_free);
 
-    PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
     flags |= PURPLE_MESSAGE_IMAGES;
 
     char * t = g_strdup_printf ("<img id=\"%u\">", id);
 
-    purple_serv_got_im(pc, "system@s.whatsapp.net", t, flags, time(NULL));
+    purple_serv_got_im(pc, who, t, flags, time);
 }
 
 // Polling technique copied from https://github.com/EionRobb/pidgin-opensteamworks/blob/master/libsteamworks.cpp .
 gboolean
 gowhatsapp_eventloop(gpointer userdata)
 {
-    purple_debug_info("gowhatsapp", "gowhatsapp_eventloop()\n");
+    //purple_debug_info("gowhatsapp", "gowhatsapp_eventloop()\n");
     PurpleConnection *pc = (PurpleConnection *) userdata;
     //SteamInfo *steam = (SteamInfo *) pc->proto_data;
     
@@ -127,16 +118,21 @@ gowhatsapp_eventloop(gpointer userdata)
         gwamsg.timestamp != 0;
         gwamsg = gowhatsapp_go_getMessage()
     ) {
-        purple_debug_info("gowhatsapp", "Recieved message: %ld %s %s %s\n", 
+        purple_debug_info("gowhatsapp", "Recieved message: %ld %s %s\n",
         gwamsg.timestamp,
         gwamsg.id,
-        gwamsg.remoteJid,
-        gwamsg.text);
+        gwamsg.remoteJid);
         time_t timestamp = gwamsg.timestamp;
-        purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, timestamp);
+        if (gwamsg.text) {
+            purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, timestamp);
+        }
+        if (gwamsg.blob) {
+            gowhatsapp_image(pc, gwamsg.remoteJid, gwamsg.blob, gwamsg.blobsize, flags, timestamp);
+        }
         free(gwamsg.id);
         free(gwamsg.remoteJid);
         free(gwamsg.text);
+        free(gwamsg.blob);
     }
     return TRUE;
 }
@@ -169,7 +165,7 @@ gowhatsapp_login(PurpleAccount *account)
         purple_connection_set_state(pc, PURPLE_CONNECTED);
         sa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
         purple_debug_info("gowhatsapp", "Started event timer.\n");
-        gowhatsapp_image(pc);
+        //gowhatsapp_image(pc);
     }
     purple_debug_info("gowhatsapp", "State: %d\n", purple_connection_get_state(pc));
 }
@@ -203,6 +199,7 @@ gowhatsapp_status_types(PurpleAccount *account)
     return types;
 }
 
+/*
 static int
 gowhatsapp_send_im(PurpleConnection *pc,
 #if PURPLE_VERSION_CHECK(3, 0, 0)
@@ -217,7 +214,9 @@ gowhatsapp_send_im(PurpleConnection *pc,
     //GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
     return 1;
 }
+*/
 
+/*
 static void
 gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group
 #if PURPLE_VERSION_CHECK(3, 0, 0)
@@ -232,6 +231,7 @@ gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *grou
         gowhatsapp_assume_buddy_online(sa->account, buddy);
     }
 }
+*/
 
 static GList *
 gowhatsapp_add_account_options(GList *account_options)
