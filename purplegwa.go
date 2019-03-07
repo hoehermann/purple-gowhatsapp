@@ -38,6 +38,7 @@ var imageMessages = make(chan downloadedImageMessage, 100)
 func gowhatsapp_go_getMessage() C.struct_gowhatsapp_message {
         select {
                 case message := <- textMessages:
+                        // https://stackoverflow.com/questions/39023475/how-do-i-copy-a-go-string-to-a-c-char-via-cgo-in-golang
                         return C.struct_gowhatsapp_message{
                                 C.uint64_t(message.Info.Timestamp),
                                 C.CString(message.Info.Id),
@@ -50,7 +51,7 @@ func gowhatsapp_go_getMessage() C.struct_gowhatsapp_message {
                                 C.uint64_t(message.msg.Info.Timestamp),
                                 C.CString(message.msg.Info.Id),
                                 C.CString(message.msg.Info.RemoteJid),
-                                nil,
+                                C.CString(message.msg.Caption),
                                 C.CBytes(message.data),
                                 C.uint64_t(len(message.data))} // TODO: rather use size_t?
                 default:

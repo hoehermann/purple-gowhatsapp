@@ -87,7 +87,7 @@ static void used_image_free (gpointer data) {
 */
 
 // Copied from p2tgl_imgstore_add_with_id, tgp_msg_photo_display, tgp_format_img
-void gowhatsapp_image(PurpleConnection *pc, gchar *who, void *data, size_t len, PurpleMessageFlags flags, time_t time) {
+void gowhatsapp_image(PurpleConnection *pc, gchar *who, gchar *caption, void *data, size_t len, PurpleMessageFlags flags, time_t time) {
     int id = purple_imgstore_add_with_id(data, len, NULL);
 
     if (id <= 0) {
@@ -99,9 +99,12 @@ void gowhatsapp_image(PurpleConnection *pc, gchar *who, void *data, size_t len, 
 
     flags |= PURPLE_MESSAGE_IMAGES;
 
-    char * t = g_strdup_printf ("<img id=\"%u\">", id);
+    if (caption == NULL) {
+        caption = "";
+    }
+    char *content = g_strdup_printf ("%s<img id=\"%u\">", caption, id);
 
-    purple_serv_got_im(pc, who, t, flags, time);
+    purple_serv_got_im(pc, who, content, flags, time);
 }
 
 // Polling technique copied from https://github.com/EionRobb/pidgin-opensteamworks/blob/master/libsteamworks.cpp .
@@ -127,7 +130,7 @@ gowhatsapp_eventloop(gpointer userdata)
             purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, timestamp);
         }
         if (gwamsg.blob) {
-            gowhatsapp_image(pc, gwamsg.remoteJid, gwamsg.blob, gwamsg.blobsize, flags, timestamp);
+            gowhatsapp_image(pc, gwamsg.remoteJid, gwamsg.text, gwamsg.blob, gwamsg.blobsize, flags, timestamp);
         }
         free(gwamsg.id);
         free(gwamsg.remoteJid);
