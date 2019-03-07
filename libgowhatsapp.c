@@ -50,6 +50,7 @@ typedef struct {
     guint event_timer;
     GList *used_images;
 } GoWhatsappAccount;
+typedef struct gowhatsapp_message gowhatsapp_message_t;
 
 static const char *
 gowhatsapp_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
@@ -114,23 +115,35 @@ gowhatsapp_eventloop(gpointer userdata)
     //purple_debug_info("gowhatsapp", "gowhatsapp_eventloop()\n");
     PurpleConnection *pc = (PurpleConnection *) userdata;
     //SteamInfo *steam = (SteamInfo *) pc->proto_data;
-    
+
     PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
+    gowhatsapp_message_t empty = {};
     for (
-        struct gowhatsapp_message gwamsg = gowhatsapp_go_getMessage();
-        gwamsg.timestamp != 0;
+        gowhatsapp_message_t gwamsg = gowhatsapp_go_getMessage();
+        memcmp(&gwamsg, &empty, sizeof(gowhatsapp_message_t));
         gwamsg = gowhatsapp_go_getMessage()
     ) {
-        purple_debug_info("gowhatsapp", "Recieved message: %ld %s %s\n",
-        gwamsg.timestamp,
-        gwamsg.id,
-        gwamsg.remoteJid);
-        time_t timestamp = gwamsg.timestamp;
-        if (gwamsg.text) {
-            purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, timestamp);
-        }
-        if (gwamsg.blob) {
-            gowhatsapp_image(pc, gwamsg.remoteJid, gwamsg.text, gwamsg.blob, gwamsg.blobsize, flags, timestamp);
+        purple_debug_info(
+            "gowhatsapp", "Recieved message: %ld %ld %s %s\n",
+            gwamsg.type,
+            gwamsg.timestamp,
+            gwamsg.id,
+            gwamsg.remoteJid
+        );
+        switch(gwamsg.type) {
+            case gowhatsapp_message_type_error:
+                purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, g_strdup(gwamsg.text));
+                break;
+            case gowhatsapp_message_type_login:
+                purple_connection_set_state(pc, PURPLE_CONNECTED);
+                break;
+            default:
+                if (gwamsg.text) {
+                    purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, gwamsg.timestamp);
+                }
+                if (gwamsg.blob) {
+                    gowhatsapp_image(pc, gwamsg.remoteJid, gwamsg.text, gwamsg.blob, gwamsg.blobsize, flags, gwamsg.timestamp);
+                }
         }
         free(gwamsg.id);
         free(gwamsg.remoteJid);
@@ -159,18 +172,9 @@ gowhatsapp_login(PurpleAccount *account)
     sa->account = account;
     sa->pc = pc;
 
+    sa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
-    GoUint8 ret = gowhatsapp_go_login();
-    if (ret == 0) {
-        //purple_connection_set_state(pc, PURPLE_DISCONNECTED);
-        purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("gowhatsapp_go_login failed."));
-    } else {
-        purple_connection_set_state(pc, PURPLE_CONNECTED);
-        sa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
-        purple_debug_info("gowhatsapp", "Started event timer.\n");
-        //gowhatsapp_image(pc);
-    }
-    purple_debug_info("gowhatsapp", "State: %d\n", purple_connection_get_state(pc));
+    gowhatsapp_go_login();
 }
 
 static void

@@ -3,15 +3,25 @@ package main
 
 /* 
 #include <stdint.h>
+#include <time.h>
+
+enum gowhatsapp_message_type {
+    gowhatsapp_message_type_error = -1,
+    gowhatsapp_message_type_none = 0,
+    gowhatsapp_message_type_login = 1,
+    gowhatsapp_message_type_text,
+    gowhatsapp_message_type_image
+};
 
 struct gowhatsapp_message { 
-uint64_t timestamp;
-char *id;
-char *remoteJid; 
-char *text;
-void *blob;
-uint64_t blobsize;
-}; 
+    int64_t type;
+    time_t timestamp;
+    char *id;
+    char *remoteJid;
+    char *text;
+    void *blob;
+    uint64_t blobsize;
+};
 */
 import "C"
 
@@ -33,6 +43,8 @@ type downloadedImageMessage struct {
 
 var textMessages = make(chan whatsapp.TextMessage, 100)
 var imageMessages = make(chan downloadedImageMessage, 100)
+var errorMessages = make(chan error, 1)
+var loginMessages = make(chan bool, 1)
 
 //export gowhatsapp_go_getMessage
 func gowhatsapp_go_getMessage() C.struct_gowhatsapp_message {
@@ -40,7 +52,8 @@ func gowhatsapp_go_getMessage() C.struct_gowhatsapp_message {
                 case message := <- textMessages:
                         // https://stackoverflow.com/questions/39023475/how-do-i-copy-a-go-string-to-a-c-char-via-cgo-in-golang
                         return C.struct_gowhatsapp_message{
-                                C.uint64_t(message.Info.Timestamp),
+                                C.int64_t(C.gowhatsapp_message_type_text),
+                                C.time_t(message.Info.Timestamp),
                                 C.CString(message.Info.Id),
                                 C.CString(message.Info.RemoteJid),
                                 C.CString(message.Text),
@@ -48,15 +61,35 @@ func gowhatsapp_go_getMessage() C.struct_gowhatsapp_message {
                                 0}
                 case message := <- imageMessages:
                         return C.struct_gowhatsapp_message{
-                                C.uint64_t(message.msg.Info.Timestamp),
+                                C.int64_t(C.gowhatsapp_message_type_image),
+                                C.time_t(message.msg.Info.Timestamp),
                                 C.CString(message.msg.Info.Id),
                                 C.CString(message.msg.Info.RemoteJid),
                                 C.CString(message.msg.Caption),
                                 C.CBytes(message.data),
-                                C.uint64_t(len(message.data))} // TODO: rather use size_t?
+                                C.size_t(len(message.data))}
+                case err := <- errorMessages:
+                        return C.struct_gowhatsapp_message{
+                                C.int64_t(C.gowhatsapp_message_type_error),
+                                0,
+                                nil,
+                                nil,
+                                C.CString(err.Error()),
+                                nil,
+                                0}
+                case <- loginMessages:
+                        return C.struct_gowhatsapp_message{
+                                C.int64_t(C.gowhatsapp_message_type_login),
+                                0,
+                                nil,
+                                nil,
+                                nil,
+                                nil,
+                                0}
                 default:
                         return C.struct_gowhatsapp_message{
-                                C.uint64_t(0),
+                                0,
+                                0,
                                 nil,
                                 nil,
                                 nil,
@@ -87,27 +120,32 @@ func (*waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 
 var wac *whatsapp.Conn
 
-//export gowhatsapp_go_login
-func gowhatsapp_go_login() bool {
-	//create new WhatsApp connection
+func connect_and_login() {
+        //create new WhatsApp connection
         wac, err := whatsapp.NewConn(5 * time.Second) // TODO: make timeout user configurable
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "gowhatsapp error creating connection: %v\n", err)
-	} else {
-		
-		//Add handler
-		wac.AddHandler(&waHandler{})
-		
-                err = login(wac) // TODO: put this into a go routine (return immediately, not blocking the UI during connection), communicate via chan
+        if err != nil {
+                wac = nil
+                errorMessages <- err
+                fmt.Fprintf(os.Stderr, "gowhatsapp error creating connection: %v\n", err)
+        } else {
+                //Add handler
+                wac.AddHandler(&waHandler{})
+
+                err = login(wac)
                 // TODO: create qr code, send as image message from something like "login@s.whatsapp.net"
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "gowhatsapp error logging in: %v\n", err)
-		} else {
-			return true
-		}
-	}
-	wac = nil
-        return false // TODO: forward err instead (for display in frontend)
+                if err != nil {
+                        wac = nil
+                        errorMessages <- err
+                        fmt.Fprintf(os.Stderr, "gowhatsapp error logging in: %v\n", err)
+                } else {
+                        loginMessages <- true
+                }
+        }
+}
+
+//export gowhatsapp_go_login
+func gowhatsapp_go_login() {
+    go connect_and_login()
 }
 
 //export gowhatsapp_go_close
