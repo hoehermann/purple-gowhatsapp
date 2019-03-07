@@ -134,10 +134,8 @@ gowhatsapp_eventloop(gpointer userdata)
             case gowhatsapp_message_type_error:
                 purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, g_strdup(gwamsg.text));
                 break;
-            case gowhatsapp_message_type_login:
-                purple_connection_set_state(pc, PURPLE_CONNECTED);
-                break;
             default:
+                purple_connection_set_state(pc, PURPLE_CONNECTED);
                 if (gwamsg.text) {
                     purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, gwamsg.timestamp);
                 }

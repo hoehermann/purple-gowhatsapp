@@ -8,7 +8,6 @@ package main
 enum gowhatsapp_message_type {
     gowhatsapp_message_type_error = -1,
     gowhatsapp_message_type_none = 0,
-    gowhatsapp_message_type_login = 1,
     gowhatsapp_message_type_text,
     gowhatsapp_message_type_image
 };
@@ -44,7 +43,6 @@ type downloadedImageMessage struct {
 var textMessages = make(chan whatsapp.TextMessage, 100)
 var imageMessages = make(chan downloadedImageMessage, 100)
 var errorMessages = make(chan error, 1)
-var loginMessages = make(chan bool, 1)
 
 //export gowhatsapp_go_getMessage
 func gowhatsapp_go_getMessage() C.struct_gowhatsapp_message {
@@ -75,15 +73,6 @@ func gowhatsapp_go_getMessage() C.struct_gowhatsapp_message {
                                 nil,
                                 nil,
                                 C.CString(err.Error()),
-                                nil,
-                                0}
-                case <- loginMessages:
-                        return C.struct_gowhatsapp_message{
-                                C.int64_t(C.gowhatsapp_message_type_login),
-                                0,
-                                nil,
-                                nil,
-                                nil,
                                 nil,
                                 0}
                 default:
@@ -137,8 +126,6 @@ func connect_and_login() {
                         wac = nil
                         errorMessages <- err
                         fmt.Fprintf(os.Stderr, "gowhatsapp error logging in: %v\n", err)
-                } else {
-                        loginMessages <- true
                 }
         }
 }
