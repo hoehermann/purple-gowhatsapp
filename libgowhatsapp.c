@@ -103,7 +103,7 @@ void gowhatsapp_image(PurpleConnection *pc, gchar *who, gchar *caption, void *da
     if (caption == NULL) {
         caption = "";
     }
-    char *content = g_strdup_printf ("%s<img id=\"%u\">", caption, id);
+    char *content = g_strdup_printf ("%s<img id=\"%u\">", caption, id); // this leaks
 
     purple_serv_got_im(pc, who, content, flags, time);
 }
@@ -130,17 +130,19 @@ gowhatsapp_eventloop(gpointer userdata)
             gwamsg.id,
             gwamsg.remoteJid
         );
+        if (!gwamsg.timestamp) {
+            gwamsg.timestamp = time(NULL);
+        }
         switch(gwamsg.type) {
             case gowhatsapp_message_type_error:
-                purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, g_strdup(gwamsg.text));
+                purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, g_strdup(gwamsg.text)); // this g_strdup leaks
                 break;
             default:
                 purple_connection_set_state(pc, PURPLE_CONNECTED);
-                if (gwamsg.text) {
-                    purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, gwamsg.timestamp);
-                }
                 if (gwamsg.blob) {
                     gowhatsapp_image(pc, gwamsg.remoteJid, gwamsg.text, gwamsg.blob, gwamsg.blobsize, flags, gwamsg.timestamp);
+                } else if (gwamsg.text) {
+                    purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, gwamsg.timestamp);
                 }
         }
         free(gwamsg.id);

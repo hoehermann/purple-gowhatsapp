@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/Rhymen/go-whatsapp"
+	"github.com/skip2/go-qrcode"
 )
 
 type waHandler struct{}
@@ -48,7 +49,7 @@ var errorMessages = make(chan error, 1)
 func gowhatsapp_go_getMessage() C.struct_gowhatsapp_message {
 	select {
 	case message := <-textMessages:
-		// https://stackoverflow.com/questions/39023475/how-do-i-copy-a-go-string-to-a-c-char-via-cgo-in-golang
+		// thanks to https://stackoverflow.com/questions/39023475/
 		return C.struct_gowhatsapp_message{
 			C.int64_t(C.gowhatsapp_message_type_text),
 			C.time_t(message.Info.Timestamp),
@@ -88,8 +89,8 @@ func gowhatsapp_go_getMessage() C.struct_gowhatsapp_message {
 }
 
 func (*waHandler) HandleError(err error) {
-	// TODO: propagate disconnect
 	fmt.Fprintf(os.Stderr, "gowhatsapp error occoured: %v", err)
+	errorMessages <- err
 }
 
 func (*waHandler) HandleTextMessage(message whatsapp.TextMessage) {
@@ -111,17 +112,14 @@ var wac *whatsapp.Conn
 
 func connect_and_login() {
 	//create new WhatsApp connection
-	wac, err := whatsapp.NewConn(5 * time.Second) // TODO: make timeout user configurable
+	wac, err := whatsapp.NewConn(20 * time.Second) // TODO: make timeout user configurable
 	if err != nil {
 		wac = nil
 		errorMessages <- err
 		fmt.Fprintf(os.Stderr, "gowhatsapp error creating connection: %v\n", err)
 	} else {
-		//Add handler
 		wac.AddHandler(&waHandler{})
-
 		err = login(wac)
-		// TODO: create qr code, send as image message from something like "login@s.whatsapp.net"
 		if err != nil {
 			wac = nil
 			errorMessages <- err
@@ -152,7 +150,25 @@ func login(wac *whatsapp.Conn) error {
 			// NOTE: "restore session connection timed out" may indicate phone switched off
 		}
 	} else {
-		return fmt.Errorf("gowhatsapp error during login: no session stored\n")
+		//no saved session -> login via qr code
+		qr := make(chan string)
+		go func() {
+			png, err := qrcode.Encode(<-qr, qrcode.Medium, 256) // TODO: make size user configurable
+			if err != nil {
+				errorMessages <- fmt.Errorf("gowhatsapp login qr code generation failed: %v\n", err)
+			} else {
+				messageInfo := whatsapp.MessageInfo{
+					RemoteJid: "login@s.whatsapp.net"}
+				message := whatsapp.ImageMessage{
+					Info:    messageInfo,
+					Caption: "Scan this QR code within 20 seconds to log in."}
+				imageMessages <- downloadedImageMessage{message, png}
+			}
+		}()
+		session, err = wac.Login(qr)
+		if err != nil {
+			return fmt.Errorf("error during login: %v\n", err)
+		}
 	}
 
 	//save session
