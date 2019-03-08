@@ -87,9 +87,33 @@ void gowhatsapp_image(PurpleConnection *pc, gchar *who, gchar *caption, void *da
     if (caption == NULL) {
         caption = "";
     }
-    char *content = g_strdup_printf ("%s<img id=\"%u\">", caption, id);
+    char *content = g_strdup_printf("%s<img id=\"%u\">", caption, id);
     purple_serv_got_im(pc, who, content, flags, time);
     g_free(content);
+}
+
+gboolean
+gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message_id)
+{
+    const gchar RECEIVED_MESSAGES_ID_KEY[] = "receivedmessagesids";
+    const gchar *received_messages_ids_str = purple_account_get_string(account, RECEIVED_MESSAGES_ID_KEY, "");
+    if (strstr(received_messages_ids_str, message_id) != NULL) {
+        purple_debug_info(
+            "gowhatsapp", "Suppressed message (already received).\n"
+        );
+        return FALSE;
+    } else {
+        gchar *sep = received_messages_ids_str[0] == 0 ? "" : ",";
+        // TODO: count entries, prune
+        gchar *new_received_messages_ids_str = g_strdup_printf("%s%s%s", received_messages_ids_str, sep, message_id);
+        //g_free(received_messages_ids_str); // TODO: check if this is necessary
+        purple_account_set_string(account, RECEIVED_MESSAGES_ID_KEY, new_received_messages_ids_str);
+        purple_debug_info(
+            "gowhatsapp", "received_messages_ids_str now contains %s\n",
+            purple_account_get_string(account, RECEIVED_MESSAGES_ID_KEY, "")
+        );
+        return TRUE;
+    }
 }
 
 // Polling technique copied from https://github.com/EionRobb/pidgin-opensteamworks/blob/master/libsteamworks.cpp .
@@ -116,16 +140,19 @@ gowhatsapp_eventloop(gpointer userdata)
         if (!gwamsg.timestamp) {
             gwamsg.timestamp = time(NULL);
         }
+        // to show a system message: flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG
         switch(gwamsg.type) {
             case gowhatsapp_message_type_error:
                 purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
                 break;
             default:
                 purple_connection_set_state(pc, PURPLE_CONNECTED);
-                if (gwamsg.blob) {
-                    gowhatsapp_image(pc, gwamsg.remoteJid, gwamsg.text, gwamsg.blob, gwamsg.blobsize, flags, gwamsg.timestamp);
-                } else if (gwamsg.text) {
-                    purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, gwamsg.timestamp);
+                if (gowhatsapp_append_message_id_if_not_exists(pc->account, gwamsg.id)) {
+                    if (gwamsg.blob) {
+                        gowhatsapp_image(pc, gwamsg.remoteJid, gwamsg.text, gwamsg.blob, gwamsg.blobsize, flags, gwamsg.timestamp);
+                    } else if (gwamsg.text) {
+                        purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, gwamsg.timestamp);
+                    }
                 }
         }
         free(gwamsg.id);

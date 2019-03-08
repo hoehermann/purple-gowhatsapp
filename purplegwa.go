@@ -98,7 +98,7 @@ func (*waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 }
 
 func (*waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
-	data, err := message.Download()
+    data, err := message.Download() // TODO: do not implicitly download on receival (i.e. due to message already recevived and suppressed), ask user before downloading large images
 	if err != nil {
 		// TODO: propagate error
 		fmt.Printf("gowhatsapp message %v image from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
