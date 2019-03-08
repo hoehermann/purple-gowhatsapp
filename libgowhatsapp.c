@@ -75,44 +75,27 @@ gowhatsapp_assume_all_buddies_online(GoWhatsappAccount *sa)
     }
 }
 
-/*
-void tgp_g_list_free_full (GList *list, GDestroyNotify free_func) {
-  if (list) {
-    g_list_free_full (list, free_func);
-  }
-}
-
-static void used_image_free (gpointer data) {
-  purple_imgstore_unref_by_id (GPOINTER_TO_INT(data));
-}
-*/
 
 // Copied from p2tgl_imgstore_add_with_id, tgp_msg_photo_display, tgp_format_img
 void gowhatsapp_image(PurpleConnection *pc, gchar *who, gchar *caption, void *data, size_t len, PurpleMessageFlags flags, time_t time) {
     int id = purple_imgstore_add_with_id(data, len, NULL);
-
     if (id <= 0) {
         purple_debug_info("gowhatsapp", "Cannot display picture, adding to imgstore failed.");
         return;
     }
-    //sa->used_images = g_list_append(sa->used_images, GINT_TO_POINTER(imgid));
-    // tgp_g_list_free_full (conn->used_images, used_image_free);
-
     flags |= PURPLE_MESSAGE_IMAGES;
-
     if (caption == NULL) {
         caption = "";
     }
-    char *content = g_strdup_printf ("%s<img id=\"%u\">", caption, id); // this leaks
-
+    char *content = g_strdup_printf ("%s<img id=\"%u\">", caption, id);
     purple_serv_got_im(pc, who, content, flags, time);
+    g_free(content);
 }
 
 // Polling technique copied from https://github.com/EionRobb/pidgin-opensteamworks/blob/master/libsteamworks.cpp .
 gboolean
 gowhatsapp_eventloop(gpointer userdata)
 {
-    //purple_debug_info("gowhatsapp", "gowhatsapp_eventloop()\n");
     PurpleConnection *pc = (PurpleConnection *) userdata;
     //SteamInfo *steam = (SteamInfo *) pc->proto_data;
 
@@ -135,7 +118,7 @@ gowhatsapp_eventloop(gpointer userdata)
         }
         switch(gwamsg.type) {
             case gowhatsapp_message_type_error:
-                purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, g_strdup(gwamsg.text)); // this g_strdup leaks
+                purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
                 break;
             default:
                 purple_connection_set_state(pc, PURPLE_CONNECTED);
