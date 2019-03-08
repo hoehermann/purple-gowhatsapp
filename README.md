@@ -11,10 +11,10 @@ Being developed on Ubuntu 18.04.
 ### Features
 
 * Receive text messages
+* Receive image messages
 
 ### Missing Features
 
-* Displaying the QR Code for login (this needs to be done via go-whatsapp directly).
 * Sending messages
 * Anything beyond receiving a text message, really
 
