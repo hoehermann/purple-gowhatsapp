@@ -13,13 +13,15 @@ enum gowhatsapp_message_type {
 };
 
 struct gowhatsapp_message {
-    int64_t type;
-    time_t timestamp;
+    int64_t msgtype;
     char *id;
     char *remoteJid;
+    char *senderJid;
     char *text;
     void *blob;
     uint64_t blobsize;
+    time_t timestamp;
+    char fromMe;
 };
 */
 import "C"
@@ -47,6 +49,15 @@ type waHandler struct {
 }
 var waHandlers = make(map[C.uintptr_t]*waHandler)
 
+// TODO: find out how to enable C99's bool type in cgo
+func bool_to_Cchar(b bool) C.char {
+    if (b) {
+        return C.char(1)
+    } else {
+        return C.char(0)
+    }
+}
+
 //export gowhatsapp_go_getMessage
 func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
     handler := waHandlers[connID]
@@ -54,40 +65,30 @@ func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 	case message := <- handler.textMessages:
 		// thanks to https://stackoverflow.com/questions/39023475/
 		return C.struct_gowhatsapp_message{
-			C.int64_t(C.gowhatsapp_message_type_text),
-			C.time_t(message.Info.Timestamp),
-			C.CString(message.Info.Id),
-			C.CString(message.Info.RemoteJid),
-			C.CString(message.Text),
-			nil,
-			0}
+		    msgtype : C.int64_t(C.gowhatsapp_message_type_text),
+			timestamp : C.time_t(message.Info.Timestamp),
+			id : C.CString(message.Info.Id),
+			remoteJid : C.CString(message.Info.RemoteJid),
+			senderJid : C.CString(message.Info.SenderJid),
+			fromMe : bool_to_Cchar(message.Info.FromMe),
+			text : C.CString(message.Text)}
 	case message := <- handler.imageMessages:
 		return C.struct_gowhatsapp_message{
-			C.int64_t(C.gowhatsapp_message_type_image),
-			C.time_t(message.msg.Info.Timestamp),
-			C.CString(message.msg.Info.Id),
-			C.CString(message.msg.Info.RemoteJid),
-			C.CString(message.msg.Caption),
-			C.CBytes(message.data),
-			C.size_t(len(message.data))}
+		    msgtype : C.int64_t(C.gowhatsapp_message_type_image),
+			timestamp : C.time_t(message.msg.Info.Timestamp),
+			id : C.CString(message.msg.Info.Id),
+			remoteJid : C.CString(message.msg.Info.RemoteJid),
+			senderJid : C.CString(message.msg.Info.SenderJid),
+			fromMe : bool_to_Cchar(message.msg.Info.FromMe),
+			text : C.CString(message.msg.Caption),
+			blob : C.CBytes(message.data),
+			blobsize : C.size_t(len(message.data))}
 	case err := <- handler.errorMessages:
 		return C.struct_gowhatsapp_message{
-			C.int64_t(C.gowhatsapp_message_type_error),
-			0,
-			nil,
-			nil,
-			C.CString(err.Error()),
-			nil,
-			0}
+		    msgtype : C.int64_t(C.gowhatsapp_message_type_error),
+			text : C.CString(err.Error())}
 	default:
-		return C.struct_gowhatsapp_message{
-			0,
-			0,
-			nil,
-			nil,
-			nil,
-			nil,
-			0}
+	    return C.struct_gowhatsapp_message{}
 	}
 }
 
@@ -149,6 +150,7 @@ func gowhatsapp_go_close(connID C.uintptr_t) {
 	//handler.wac.wsConn.Close() // inaccessible :(
 	handler.wac = nil
 	waHandlers[connID] = nil
+	delete(waHandlers, connID)
 }
 
 func login(handler *waHandler) error {

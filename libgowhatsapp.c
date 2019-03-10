@@ -123,7 +123,6 @@ gowhatsapp_eventloop(gpointer userdata)
     PurpleConnection *pc = (PurpleConnection *) userdata;
     //GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
 
-    PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
     gowhatsapp_message_t empty = {};
     for (
         gowhatsapp_message_t gwamsg = gowhatsapp_go_getMessage((uintptr_t)pc);
@@ -131,27 +130,36 @@ gowhatsapp_eventloop(gpointer userdata)
         gwamsg = gowhatsapp_go_getMessage((uintptr_t)pc)
     ) {
         purple_debug_info(
-            "gowhatsapp", "Recieved message: %ld %ld %s %s\n",
-            gwamsg.type,
+            "gowhatsapp", "Recieved: at %ld id %s remote %s sender %s (fromMe %d)\n",
             gwamsg.timestamp,
             gwamsg.id,
-            gwamsg.remoteJid
+            gwamsg.remoteJid,
+            gwamsg.senderJid,
+            gwamsg.fromMe
         );
         if (!gwamsg.timestamp) {
             gwamsg.timestamp = time(NULL);
         }
-        // to show a system message: flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG
-        switch(gwamsg.type) {
+        switch(gwamsg.msgtype) {
             case gowhatsapp_message_type_error:
                 purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
                 break;
             default:
                 purple_connection_set_state(pc, PURPLE_CONNECTED);
-                if (gowhatsapp_append_message_id_if_not_exists(pc->account, gwamsg.id)) {
-                    if (gwamsg.blob) {
-                        gowhatsapp_image(pc, gwamsg.remoteJid, gwamsg.text, gwamsg.blob, gwamsg.blobsize, flags, gwamsg.timestamp);
-                    } else if (gwamsg.text) {
-                        purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, gwamsg.timestamp);
+                {
+                    PurpleMessageFlags flags = 0;
+                    if (gwamsg.fromMe) {
+                        flags |= PURPLE_MESSAGE_SEND;
+                    } else {
+                        flags |= PURPLE_MESSAGE_RECV;
+                    }
+                    // to show a system message: flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG
+                    if (gowhatsapp_append_message_id_if_not_exists(pc->account, gwamsg.id)) {
+                        if (gwamsg.blob) {
+                            gowhatsapp_image(pc, gwamsg.remoteJid, gwamsg.text, gwamsg.blob, gwamsg.blobsize, flags, gwamsg.timestamp);
+                        } else if (gwamsg.text) {
+                            purple_serv_got_im(pc, gwamsg.remoteJid, gwamsg.text, flags, gwamsg.timestamp);
+                        }
                     }
                 }
         }
