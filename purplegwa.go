@@ -152,7 +152,10 @@ func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 
 func connect_and_login(handler *waHandler) {
 	//create new WhatsApp connection
-	wac, err := whatsapp.NewConn(20 * time.Second) // TODO: make timeout user configurable
+	wac, err := whatsapp.NewConn(
+		10 * time.Second, // TODO: make timeout user configurable
+		//"github.com/kaxap/go-whatsapp", "Pidgin via go-whatsapp"
+		)
 	handler.wac = wac
 	if err != nil {
 		wac = nil
@@ -183,7 +186,7 @@ func gowhatsapp_go_login(connID C.uintptr_t)  {
 func gowhatsapp_go_close(connID C.uintptr_t) {
 	fmt.Fprintf(os.Stderr, "gowhatsapp close()\n")
 	handler := waHandlers[connID]
-	//handler.wac.wsConn.Close() // inaccessible :(
+	handler.wac.Disconnect()
 	handler.wac = nil
 	waHandlers[connID] = nil
 	delete(waHandlers, connID)
@@ -195,7 +198,7 @@ func login(handler *waHandler) error {
 	session, err := readSession()
 	if err == nil {
 		//restore session
-		session, err = wac.RestoreSession(session)
+		session, err = wac.RestoreWithSession(session)
 		if err != nil {
 			return fmt.Errorf("gowhatsapp restoring failed: %v\n", err)
 			// NOTE: "restore session connection timed out" may indicate phone switched off
