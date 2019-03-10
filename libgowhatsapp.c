@@ -125,7 +125,9 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     } else {
         flags |= PURPLE_MESSAGE_RECV;
     }
-    // to show a system message: flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG
+    if (gwamsg->system) {
+        flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;
+    }
     if (gowhatsapp_append_message_id_if_not_exists(pc->account, gwamsg->id)) {
         if (gwamsg->blob) {
             gowhatsapp_display_image_message(pc, gwamsg->remoteJid, gwamsg->text, gwamsg->blob, gwamsg->blobsize, flags, gwamsg->timestamp);

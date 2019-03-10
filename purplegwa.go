@@ -22,6 +22,7 @@ struct gowhatsapp_message {
     uint64_t blobsize;
     time_t timestamp;
     char fromMe;
+    char system;
 };
 */
 import "C"
@@ -37,15 +38,16 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-type downloadedImageMessage struct {
-    msg  whatsapp.ImageMessage
-    data []byte
+type MessageAggregate struct {
+	text *whatsapp.TextMessage
+	image *whatsapp.ImageMessage
+	data []byte
+	err error
+	system bool
 }
 type waHandler struct {
-    wac *whatsapp.Conn
-    textMessages chan whatsapp.TextMessage
-    imageMessages chan downloadedImageMessage
-    errorMessages chan error
+	wac *whatsapp.Conn
+	messages chan MessageAggregate
 }
 var waHandlers = make(map[C.uintptr_t]*waHandler)
 
@@ -60,74 +62,87 @@ func bool_to_Cchar(b bool) C.char {
 
 //export gowhatsapp_go_getMessage
 func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
-    handler := waHandlers[connID]
+	handler := waHandlers[connID]
 	select {
-	case message := <- handler.textMessages:
-		// thanks to https://stackoverflow.com/questions/39023475/
+	case message := <- handler.messages:
+		//fmt.Printf("%+v\n", message)
+		if (message.err != nil) {
+			// thanks to https://stackoverflow.com/questions/39023475/
+			return C.struct_gowhatsapp_message{
+				msgtype : C.int64_t(C.gowhatsapp_message_type_error),
+				text : C.CString(message.err.Error())}
+		}
+		if (message.text != nil) {
+			return C.struct_gowhatsapp_message{
+				msgtype : C.int64_t(C.gowhatsapp_message_type_text),
+				timestamp : C.time_t(message.text.Info.Timestamp),
+				id : C.CString(message.text.Info.Id),
+				remoteJid : C.CString(message.text.Info.RemoteJid),
+				senderJid : C.CString(message.text.Info.SenderJid),
+				fromMe : bool_to_Cchar(message.text.Info.FromMe),
+				text : C.CString(message.text.Text),
+				system :  bool_to_Cchar(message.system)}
+		}
+		if (message.image != nil) {
+			return C.struct_gowhatsapp_message{
+				msgtype : C.int64_t(C.gowhatsapp_message_type_image),
+				timestamp : C.time_t(message.image.Info.Timestamp),
+				id : C.CString(message.image.Info.Id),
+				remoteJid : C.CString(message.image.Info.RemoteJid),
+				senderJid : C.CString(message.image.Info.SenderJid),
+				fromMe : bool_to_Cchar(message.image.Info.FromMe),
+				text : C.CString(message.image.Caption),
+				blob : C.CBytes(message.data),
+				blobsize : C.size_t(len(message.data)),
+				system : bool_to_Cchar(message.system)}
+		}
 		return C.struct_gowhatsapp_message{
-		    msgtype : C.int64_t(C.gowhatsapp_message_type_text),
-			timestamp : C.time_t(message.Info.Timestamp),
-			id : C.CString(message.Info.Id),
-			remoteJid : C.CString(message.Info.RemoteJid),
-			senderJid : C.CString(message.Info.SenderJid),
-			fromMe : bool_to_Cchar(message.Info.FromMe),
-			text : C.CString(message.Text)}
-	case message := <- handler.imageMessages:
-		return C.struct_gowhatsapp_message{
-		    msgtype : C.int64_t(C.gowhatsapp_message_type_image),
-			timestamp : C.time_t(message.msg.Info.Timestamp),
-			id : C.CString(message.msg.Info.Id),
-			remoteJid : C.CString(message.msg.Info.RemoteJid),
-			senderJid : C.CString(message.msg.Info.SenderJid),
-			fromMe : bool_to_Cchar(message.msg.Info.FromMe),
-			text : C.CString(message.msg.Caption),
-			blob : C.CBytes(message.data),
-			blobsize : C.size_t(len(message.data))}
-	case err := <- handler.errorMessages:
-		return C.struct_gowhatsapp_message{
-		    msgtype : C.int64_t(C.gowhatsapp_message_type_error),
-			text : C.CString(err.Error())}
+			msgtype : C.int64_t(C.gowhatsapp_message_type_error),
+			text : C.CString("This should actually never happen. Please file a bug.")}
 	default:
-	    return C.struct_gowhatsapp_message{}
+		return C.struct_gowhatsapp_message{}
 	}
+
 }
 
 func (handler *waHandler) HandleError(err error) {
 	fmt.Fprintf(os.Stderr, "gowhatsapp error occoured: %v", err)
-	handler.errorMessages <- err
+	handler.messages <- MessageAggregate{err : err}
 }
 
 func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
-    handler.textMessages <- message
+    handler.messages <- MessageAggregate{text : &message}
 }
 
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
     data, err := message.Download() // TODO: do not implicitly download on receival (i.e. due to message already recevived and suppressed), ask user before downloading large images
 	if err != nil {
 		fmt.Printf("gowhatsapp message %v image from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
-		handler.textMessages <- whatsapp.TextMessage{
+		m := whatsapp.TextMessage{
 			Info : message.Info,
 			Text : fmt.Sprintf("An image message with caption \"%v\" was received, but the image download failed: %v", message.Caption, err)}
+		handler.messages <- MessageAggregate{system: true,
+			text : &m}
 	} else {
 		fmt.Printf("gowhatsapp message %v image from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
-		handler.imageMessages <- downloadedImageMessage{message, data}
+		handler.messages <- MessageAggregate{image : &message, data : data}
 	}
 }
 
 func connect_and_login(handler *waHandler) {
-    //create new WhatsApp connection
-    wac, err := whatsapp.NewConn(20 * time.Second) // TODO: make timeout user configurable
-    handler.wac = wac
+	//create new WhatsApp connection
+	wac, err := whatsapp.NewConn(20 * time.Second) // TODO: make timeout user configurable
+	handler.wac = wac
 	if err != nil {
 		wac = nil
-		handler.errorMessages <- err
+		handler.messages <- MessageAggregate{err : err}
 		fmt.Fprintf(os.Stderr, "gowhatsapp error creating connection: %v\n", err)
 	} else {
 	    wac.AddHandler(handler)
 		err = login(handler)
 		if err != nil {
 			wac = nil
-			handler.errorMessages <- err
+			handler.messages <- MessageAggregate{err : err}
 			fmt.Fprintf(os.Stderr, "gowhatsapp error logging in: %v\n", err)
 		}
 	}
@@ -135,14 +150,12 @@ func connect_and_login(handler *waHandler) {
 
 //export gowhatsapp_go_login
 func gowhatsapp_go_login(connID C.uintptr_t)  {
-    // TODO: protect against concurrent invocation
-    handler := waHandler {
-        wac : nil,
-        textMessages : make(chan whatsapp.TextMessage, 100),
-        imageMessages : make(chan downloadedImageMessage, 100),
-        errorMessages : make(chan error, 100)}
-    waHandlers[connID] = &handler
-    go connect_and_login(&handler)
+	// TODO: protect against concurrent invocation
+	handler := waHandler {
+		wac : nil,
+		messages : make(chan MessageAggregate, 100)}
+	waHandlers[connID] = &handler
+	go connect_and_login(&handler)
 }
 
 //export gowhatsapp_go_close
@@ -172,14 +185,14 @@ func login(handler *waHandler) error {
 		go func() {
 			png, err := qrcode.Encode(<-qr, qrcode.Medium, 256) // TODO: make size user configurable
 			if err != nil {
-			    handler.errorMessages <- fmt.Errorf("login qr code generation failed: %v\n", err)
+			    handler.messages <- MessageAggregate{err : fmt.Errorf("login qr code generation failed: %v\n", err)}
 			} else {
 				messageInfo := whatsapp.MessageInfo{
 					RemoteJid: "login@s.whatsapp.net"}
 				message := whatsapp.ImageMessage{
 					Info:    messageInfo,
 					Caption: "Scan this QR code within 20 seconds to log in."}
-				handler.imageMessages <- downloadedImageMessage{message, png}
+				handler.messages <- MessageAggregate{image : &message, data : png, system : true}
 			}
 		}()
 		session, err = wac.Login(qr)
@@ -233,7 +246,7 @@ func writeSession(session whatsapp.Session) error {
 }
 
 func main() {
-    gowhatsapp_go_login(0)
+	gowhatsapp_go_login(0)
 	<-time.After(1 * time.Minute)
 	gowhatsapp_go_close(0)
 }
