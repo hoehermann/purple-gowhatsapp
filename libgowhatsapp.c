@@ -317,6 +317,7 @@ plugin_init(PurplePlugin *plugin)
         plugin->info = info = g_new0(PurplePluginInfo, 1);
     }
 
+    info->name = "Whatsapp (HTTP)";
     info->extra_info = prpl_info;
 #if PURPLE_MINOR_VERSION >= 5
     //
