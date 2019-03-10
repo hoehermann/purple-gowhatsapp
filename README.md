@@ -24,6 +24,8 @@ Note: The login information is currently stored at `~/.whatsappSession.gob`. Thi
 * Receive image messages
 * Send messages
 
+![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")  
+
 ### Missing Features
 
 * Allow connection to more than one account
