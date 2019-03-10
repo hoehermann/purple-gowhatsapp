@@ -111,22 +111,17 @@ func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 	handler.imageMessages <- downloadedImageMessage{message, data}
 }
 
-func connect_and_login() {
+func connect_and_login(handler *waHandler) {
     //create new WhatsApp connection
-	wac, err := whatsapp.NewConn(20 * time.Second) // TODO: make timeout user configurable
-	handler := waHandler {
-	    wac : wac,
-		textMessages : make(chan whatsapp.TextMessage, 100),
-		imageMessages : make(chan downloadedImageMessage, 100),
-		errorMessages : make(chan error, 100)}
-	waHandlers = append(waHandlers, &handler)
+    wac, err := whatsapp.NewConn(20 * time.Second) // TODO: make timeout user configurable
+    handler.wac = wac
 	if err != nil {
 		wac = nil
 		handler.errorMessages <- err
 		fmt.Fprintf(os.Stderr, "gowhatsapp error creating connection: %v\n", err)
 	} else {
-	    wac.AddHandler(&handler)
-		err = login(&handler)
+	    wac.AddHandler(handler)
+		err = login(handler)
 		if err != nil {
 			wac = nil
 			handler.errorMessages <- err
@@ -137,8 +132,15 @@ func connect_and_login() {
 
 //export gowhatsapp_go_login
 func gowhatsapp_go_login() int {
+    // TODO: protect against concurrent invocation
     i := len(waHandlers)
-	go connect_and_login()
+    handler := waHandler {
+        wac : nil,
+        textMessages : make(chan whatsapp.TextMessage, 100),
+        imageMessages : make(chan downloadedImageMessage, 100),
+        errorMessages : make(chan error, 100)}
+    waHandlers = append(waHandlers, &handler)
+    go connect_and_login(&handler)
 	return i
 }
 
