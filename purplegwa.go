@@ -104,12 +104,14 @@ func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
     data, err := message.Download() // TODO: do not implicitly download on receival (i.e. due to message already recevived and suppressed), ask user before downloading large images
 	if err != nil {
-		// TODO: propagate error
 		fmt.Printf("gowhatsapp message %v image from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
-		return
+		handler.textMessages <- whatsapp.TextMessage{
+			Info : message.Info,
+			Text : fmt.Sprintf("An image message with caption \"%v\" was received, but the image download failed: %v", message.Caption, err)}
+	} else {
+		fmt.Printf("gowhatsapp message %v image from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
+		handler.imageMessages <- downloadedImageMessage{message, data}
 	}
-	fmt.Printf("gowhatsapp message %v image from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
-	handler.imageMessages <- downloadedImageMessage{message, data}
 }
 
 func connect_and_login(handler *waHandler) {
