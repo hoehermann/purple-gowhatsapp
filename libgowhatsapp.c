@@ -147,7 +147,7 @@ gboolean
 gowhatsapp_eventloop(gpointer userdata)
 {
     PurpleConnection *pc = (PurpleConnection *) userdata;
-    //GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
+    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
 
     gowhatsapp_message_t empty = {};
     for (
@@ -171,7 +171,12 @@ gowhatsapp_eventloop(gpointer userdata)
                 purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
                 break;
             default:
-                purple_connection_set_state(pc, PURPLE_CONNECTED);
+                if (!PURPLE_CONNECTION_IS_CONNECTED(pc)) {
+                    purple_connection_set_state(pc, PURPLE_CONNECTED);
+                    if (purple_account_get_bool(gwa->account, "fake-online", TRUE)) {
+                        gowhatsapp_assume_all_buddies_online(gwa);
+                    }
+                }
                 gowhatsapp_display_message(pc, &gwamsg);
         }
         free(gwamsg.id);
