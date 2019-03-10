@@ -75,7 +75,6 @@ gowhatsapp_assume_all_buddies_online(GoWhatsappAccount *sa)
     }
 }
 
-
 // Copied from p2tgl_imgstore_add_with_id, tgp_msg_photo_display, tgp_format_img
 void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *caption, void *data, size_t len, PurpleMessageFlags flags, time_t time) {
     int id = purple_imgstore_add_with_id(data, len, NULL);
@@ -95,7 +94,11 @@ void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *c
 gboolean
 gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message_id)
 {
-    const gchar RECEIVED_MESSAGES_ID_KEY[] = "receivedmessagesids";
+    if (message_id == NULL || message_id[0] == 0) {
+        // always display system messages (they have no ID)
+        return TRUE;
+    }
+    static const gchar *RECEIVED_MESSAGES_ID_KEY = "receivedmessagesids";
     const gchar *received_messages_ids_str = purple_account_get_string(account, RECEIVED_MESSAGES_ID_KEY, "");
     if (strstr(received_messages_ids_str, message_id) != NULL) {
         purple_debug_info(
@@ -103,20 +106,16 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
         );
         return FALSE;
     } else {
-        const char SEPARATOR = ',';
-        const size_t MAX_LENGTH = 2048; // TODO: make user configurable
+        static const char GOWHATSAPP_MESSAGEIDSTORE_SEPARATOR = ',';
+        static const size_t GOWHATSAPP_MESSAGEIDSTORE_MAX_BYTES = 2048; // TODO: make user configurable
         // prune list of received message IDs
         char *offset = (char *)received_messages_ids_str;
         size_t l = strlen(received_messages_ids_str);
-        if (l > MAX_LENGTH) {
-            offset += l - MAX_LENGTH; // this can cut IDs, but that is ok for substring searches
+        if (l > GOWHATSAPP_MESSAGEIDSTORE_MAX_BYTES) {
+            offset += l - GOWHATSAPP_MESSAGEIDSTORE_MAX_BYTES; // this can cut IDs, but that is ok for substring searches
         }
-        gchar *new_received_messages_ids_str = g_strdup_printf("%s%c%s", offset, SEPARATOR, message_id);
+        gchar *new_received_messages_ids_str = g_strdup_printf("%s%c%s", offset, GOWHATSAPP_MESSAGEIDSTORE_SEPARATOR, message_id);
         purple_account_set_string(account, RECEIVED_MESSAGES_ID_KEY, new_received_messages_ids_str);
-        purple_debug_info(
-            "gowhatsapp", "received_messages_ids_str now contains %s\n",
-            purple_account_get_string(account, RECEIVED_MESSAGES_ID_KEY, "")
-        );
         return TRUE;
     }
 }
@@ -141,6 +140,13 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
         }
     }
 }
+
+static const gchar *GOWHATSAPP_SESSION_CLIENDID_KEY = "clientid";
+static const gchar *GOWHATSAPP_SESSION_CLIENTTOKEN_KEY = "clientToken";
+static const gchar *GOWHATSAPP_SESSION_SERVERTOKEN_KEY = "serverToken";
+static const gchar *GOWHATSAPP_SESSION_ENCKEY_KEY = "encKey";
+static const gchar *GOWHATSAPP_SESSION_MACKEY_KEY = "macKey";
+static const gchar *GOWHATSAPP_SESSION_WID_KEY = "wid";
 
 // Polling technique copied from https://github.com/EionRobb/pidgin-opensteamworks/blob/master/libsteamworks.cpp .
 gboolean
@@ -170,19 +176,34 @@ gowhatsapp_eventloop(gpointer userdata)
             case gowhatsapp_message_type_error:
                 purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
                 break;
-            default:
+            case gowhatsapp_message_type_session:
+                purple_account_set_string(pc->account, GOWHATSAPP_SESSION_CLIENDID_KEY, gwamsg.clientId);
+                purple_account_set_string(pc->account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, gwamsg.clientToken);
+                purple_account_set_string(pc->account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, gwamsg.serverToken);
+                purple_account_set_string(pc->account, GOWHATSAPP_SESSION_ENCKEY_KEY, gwamsg.encKey_b64);
+                purple_account_set_string(pc->account, GOWHATSAPP_SESSION_MACKEY_KEY, gwamsg.macKey_b64);
+                purple_account_set_string(pc->account, GOWHATSAPP_SESSION_WID_KEY, gwamsg.wid);
                 if (!PURPLE_CONNECTION_IS_CONNECTED(pc)) {
                     purple_connection_set_state(pc, PURPLE_CONNECTED);
                     if (purple_account_get_bool(gwa->account, "fake-online", TRUE)) {
                         gowhatsapp_assume_all_buddies_online(gwa);
                     }
                 }
+                break;
+            default:
                 gowhatsapp_display_message(pc, &gwamsg);
         }
         free(gwamsg.id);
         free(gwamsg.remoteJid);
+        free(gwamsg.senderJid);
         free(gwamsg.text);
         free(gwamsg.blob);
+        free(gwamsg.clientId);
+        free(gwamsg.clientToken);
+        free(gwamsg.serverToken);
+        free(gwamsg.encKey_b64);
+        free(gwamsg.macKey_b64);
+        free(gwamsg.wid);
     }
     return TRUE;
 }
@@ -205,7 +226,15 @@ gowhatsapp_login(PurpleAccount *account)
     purple_connection_set_protocol_data(pc, sa);
     sa->account = account;
     sa->pc = pc;
-    gowhatsapp_go_login((uintptr_t)pc); // abusing guaranteed-to-be-unique address as connection identifier
+    gowhatsapp_go_login(
+        (uintptr_t)pc, // abusing guaranteed-to-be-unique address as connection identifier
+        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_CLIENDID_KEY, NULL),
+        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, NULL),
+        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, NULL),
+        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_ENCKEY_KEY, NULL),
+        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_MACKEY_KEY, NULL),
+        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_WID_KEY, NULL)
+     );
     sa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
 }
@@ -215,7 +244,9 @@ gowhatsapp_close(PurpleConnection *pc)
 {
     purple_debug_info("gowhatsapp", "gowhatsapp_close()\n");
     GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
-    gowhatsapp_go_close((uintptr_t)pc);
+    if (PURPLE_CONNECTION_IS_CONNECTED(pc)) { // check needed while https://github.com/Rhymen/go-whatsapp/issues/123 remains
+        gowhatsapp_go_close((uintptr_t)pc);
+    }
     purple_connection_set_state(pc, PURPLE_DISCONNECTED);
     purple_timeout_remove(sa->event_timer);
     g_free(sa);

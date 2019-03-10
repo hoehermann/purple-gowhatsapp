@@ -9,7 +9,8 @@ enum gowhatsapp_message_type {
     gowhatsapp_message_type_error = -1,
     gowhatsapp_message_type_none = 0,
     gowhatsapp_message_type_text,
-    gowhatsapp_message_type_image
+    gowhatsapp_message_type_image,
+    gowhatsapp_message_type_session,
 };
 
 struct gowhatsapp_message {
@@ -23,15 +24,24 @@ struct gowhatsapp_message {
     time_t timestamp;
     char fromMe;
     char system;
+    // these are only used for transporting session data
+    char *clientId;
+    char *clientToken;
+    char *serverToken;
+    char *encKey_b64;
+    char *macKey_b64;
+    char *wid;
+};
+
+struct gowhatsapp_session {
 };
 */
 import "C"
 
 import (
-	"encoding/gob"
+	"encoding/base64"
 	"fmt"
 	"os"
-	"os/user"
 	"time"
 
 	"github.com/Rhymen/go-whatsapp"
@@ -41,6 +51,7 @@ import (
 type MessageAggregate struct {
 	text *whatsapp.TextMessage
 	image *whatsapp.ImageMessage
+	session *whatsapp.Session
 	data []byte
 	err error
 	system bool
@@ -63,9 +74,8 @@ func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) C.
     if err := handler.wac.Send(message); err != nil {
         handler.messages <- makeConversationErrorMessage(message.Info,
             fmt.Sprintf("Unable to send message: %v", err))
-        return 0
     }
-    return 1
+    return 0 // never echo message (the server will do this)
 }
 
 // TODO: find out how to enable C99's bool type in cgo
@@ -112,6 +122,16 @@ func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 				blob : C.CBytes(message.data),
 				blobsize : C.size_t(len(message.data)),
 				system : bool_to_Cchar(message.system)}
+		}
+		if (message.session != nil) {
+			return C.struct_gowhatsapp_message{
+				msgtype : C.int64_t(C.gowhatsapp_message_type_session),
+				clientId : C.CString(message.session.ClientId),
+				clientToken : C.CString(message.session.ClientToken),
+				serverToken : C.CString(message.session.ServerToken),
+				encKey_b64 : C.CString(base64.StdEncoding.EncodeToString(message.session.EncKey)),
+				macKey_b64 : C.CString(base64.StdEncoding.EncodeToString(message.session.MacKey)),
+				wid : C.CString(message.session.Wid)}
 		}
 		return C.struct_gowhatsapp_message{
 			msgtype : C.int64_t(C.gowhatsapp_message_type_error),
@@ -171,7 +191,7 @@ func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 	}
 }
 
-func connect_and_login(handler *waHandler) {
+func connect_and_login(handler *waHandler, session *whatsapp.Session) {
 	//create new WhatsApp connection
 	wac, err := whatsapp.NewConn(
 		10 * time.Second, // TODO: make timeout user configurable
@@ -184,7 +204,7 @@ func connect_and_login(handler *waHandler) {
 		fmt.Fprintf(os.Stderr, "gowhatsapp error creating connection: %v\n", err)
 	} else {
 	    wac.AddHandler(handler)
-		err = login(handler)
+		err = login(handler, session)
 		if err != nil {
 			wac = nil
 			handler.messages <- MessageAggregate{err : err}
@@ -194,36 +214,59 @@ func connect_and_login(handler *waHandler) {
 }
 
 //export gowhatsapp_go_login
-func gowhatsapp_go_login(connID C.uintptr_t)  {
+func gowhatsapp_go_login(
+	connID C.uintptr_t,
+	clientId *C.char,
+	clientToken *C.char,
+	serverToken *C.char,
+	encKey_b64 *C.char,
+	macKey_b64 *C.char,
+	wid *C.char,
+	) {
 	// TODO: protect against concurrent invocation
 	handler := waHandler {
 		wac : nil,
 		messages : make(chan MessageAggregate, 100)}
 	waHandlers[connID] = &handler
-	go connect_and_login(&handler)
+	var session *whatsapp.Session;
+	if (clientId != nil && clientToken != nil && serverToken != nil && encKey_b64 != nil && macKey_b64 != nil && wid != nil) {
+		encKey, encKeyErr := base64.StdEncoding.DecodeString(C.GoString(encKey_b64))
+		macKey, macKeyErr := base64.StdEncoding.DecodeString(C.GoString(macKey_b64))
+		if (encKeyErr == nil && macKeyErr == nil) {
+			session = &whatsapp.Session{
+				ClientId : C.GoString(clientId),
+				ClientToken : C.GoString(clientToken),
+				ServerToken : C.GoString(serverToken),
+				EncKey : encKey,
+				MacKey : macKey,
+				Wid : C.GoString(wid)}
+		}
+	}
+	go connect_and_login(&handler, session)
 }
 
 //export gowhatsapp_go_close
 func gowhatsapp_go_close(connID C.uintptr_t) {
 	fmt.Fprintf(os.Stderr, "gowhatsapp close()\n")
-	handler := waHandlers[connID]
-	handler.wac.Disconnect()
-	handler.wac = nil
-	waHandlers[connID] = nil
-	delete(waHandlers, connID)
+	handler, ok := waHandlers[connID]
+	if (ok) {
+		if (handler.wac != nil) {
+			handler.wac.Disconnect()
+		}
+		delete(waHandlers, connID)
+	}
 }
 
-func login(handler *waHandler) error {
+func login(handler *waHandler, login_session *whatsapp.Session) error {
     wac := handler.wac
-	//load saved session
-	session, err := readSession()
-	if err == nil {
+	if login_session != nil {
 		//restore session
-		session, err = wac.RestoreWithSession(session)
+		session, err := wac.RestoreWithSession(*login_session)
 		if err != nil {
-			return fmt.Errorf("gowhatsapp restoring failed: %v\n", err)
-			// NOTE: "restore session connection timed out" may indicate phone switched off
+			return fmt.Errorf("restoring failed: %v\n", err)
+			// NOTE: "restore session connection timed out" may indicate phone switched off OR session data being invalid (after log-out via phone) O_o
 		}
+		handler.messages <- MessageAggregate{session : &session}
 	} else {
 		//no saved session -> login via qr code
 		qr := make(chan string)
@@ -240,58 +283,17 @@ func login(handler *waHandler) error {
 				handler.messages <- MessageAggregate{image : &message, data : png, system : true}
 			}
 		}()
-		session, err = wac.Login(qr)
+		session, err := wac.Login(qr)
 		if err != nil {
 		    return fmt.Errorf("error during login: %v\n", err)
 		}
-	}
-	//save session
-	err = writeSession(session)
-	if err != nil {
-	    return fmt.Errorf("error saving session: %v\n", err)
-	}
-	return nil
-}
-
-func readSession() (whatsapp.Session, error) {
-	session := whatsapp.Session{}
-	usr, err := user.Current()
-	if err != nil {
-		return session, err
-	}
-	file, err := os.Open(usr.HomeDir + "/.whatsappSession.gob")
-	if err != nil {
-		return session, err
-	}
-	defer file.Close()
-	decoder := gob.NewDecoder(file)
-	err = decoder.Decode(&session)
-	if err != nil {
-		return session, err
-	}
-	return session, nil
-}
-
-func writeSession(session whatsapp.Session) error {
-	usr, err := user.Current()
-	if err != nil {
-		return err
-	}
-	file, err := os.Create(usr.HomeDir + "/.whatsappSession.gob")
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	encoder := gob.NewEncoder(file)
-	err = encoder.Encode(session)
-	if err != nil {
-		return err
+		handler.messages <- MessageAggregate{session : &session}
 	}
 	return nil
 }
 
 func main() {
-	gowhatsapp_go_login(0)
+	gowhatsapp_go_login(0, nil, nil, nil, nil, nil, nil)
 	<-time.After(1 * time.Minute)
 	gowhatsapp_go_close(0)
 }

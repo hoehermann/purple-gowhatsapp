@@ -16,18 +16,24 @@ Being developed on Ubuntu 18.04.
 * Upon login, a fake conversation should pop up, showing a QR code.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with the browser-based WhatsApp Web.
 
-Note: The login information is currently stored at `~/.whatsappSession.gob`. This is subject to change.
-
 ### Features
 
 * Receive text messages
 * Receive image messages
-* Send messages
+* Sending a message (yes, currently only one)
 
 ![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")  
 
 ### Missing Features
 
-* Allow connection to more than one account
-* Proper handling of group messages
 * Anything beyond simple messaging, really
+
+### What could be done next
+
+* Investigate "received invalid data" ErrInvalidWsData on sending (disconnect is needed).
+* Add option to flush stored session data
+* Support group conversations properly
+* Implement receiving audio, media, and document messages.
+* Sort old messages by date.
+* Find spurious segfault
+* Investigate getting username from login
