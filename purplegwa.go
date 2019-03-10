@@ -51,6 +51,23 @@ type waHandler struct {
 }
 var waHandlers = make(map[C.uintptr_t]*waHandler)
 
+//export gowhatsapp_go_sendMessage
+func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) C.char {
+    message := whatsapp.TextMessage{
+        Info: whatsapp.MessageInfo{
+            RemoteJid: C.GoString(who),
+        },
+        Text: C.GoString(text),
+    }
+    handler := waHandlers[connID]
+    if err := handler.wac.Send(message); err != nil {
+        handler.messages <- makeConversationErrorMessage(message.Info,
+            fmt.Sprintf("Unable to send message: %v", err))
+        return 0
+    }
+    return 1
+}
+
 // TODO: find out how to enable C99's bool type in cgo
 func bool_to_Cchar(b bool) C.char {
     if (b) {
@@ -114,15 +131,19 @@ func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
     handler.messages <- MessageAggregate{text : &message}
 }
 
+func makeConversationErrorMessage(originalInfo whatsapp.MessageInfo, errorMessage string) MessageAggregate {
+    m := whatsapp.TextMessage{
+        Info : originalInfo,
+        Text : errorMessage}
+    return MessageAggregate{system: true, text : &m}
+}
+
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
     data, err := message.Download() // TODO: do not implicitly download on receival (i.e. due to message already recevived and suppressed), ask user before downloading large images
 	if err != nil {
 		fmt.Printf("gowhatsapp message %v image from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
-		m := whatsapp.TextMessage{
-			Info : message.Info,
-			Text : fmt.Sprintf("An image message with caption \"%v\" was received, but the image download failed: %v", message.Caption, err)}
-		handler.messages <- MessageAggregate{system: true,
-			text : &m}
+		handler.messages <- makeConversationErrorMessage(message.Info,
+		    fmt.Sprintf("An image message with caption \"%v\" was received, but the image download failed: %v", message.Caption, err))
 	} else {
 		fmt.Printf("gowhatsapp message %v image from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
 		handler.messages <- MessageAggregate{image : &message, data : data}

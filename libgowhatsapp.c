@@ -229,7 +229,6 @@ gowhatsapp_status_types(PurpleAccount *account)
     return types;
 }
 
-/*
 static int
 gowhatsapp_send_im(PurpleConnection *pc,
 #if PURPLE_VERSION_CHECK(3, 0, 0)
@@ -241,12 +240,14 @@ gowhatsapp_send_im(PurpleConnection *pc,
                 const gchar *who, const gchar *message, PurpleMessageFlags flags)
 {
 #endif
-    //GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
-    return 1;
+    // dumbly removing const qualifiers (cgo does not know them)
+    char *w = g_strdup(who);
+    char *m = g_strdup(message);
+    return gowhatsapp_go_sendMessage((intptr_t)pc, w, m);
+    g_free(w);
+    g_free(m);
 }
-*/
 
-/*
 static void
 gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group
 #if PURPLE_VERSION_CHECK(3, 0, 0)
@@ -261,7 +262,6 @@ gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *grou
         gowhatsapp_assume_buddy_online(sa->account, buddy);
     }
 }
-*/
 
 static GList *
 gowhatsapp_add_account_options(GList *account_options)
@@ -360,7 +360,7 @@ plugin_init(PurplePlugin *plugin)
     */
     prpl_info->login = gowhatsapp_login;
     prpl_info->close = gowhatsapp_close;
-    //prpl_info->send_im = gowhatsapp_send_im;
+    prpl_info->send_im = gowhatsapp_send_im;
     /*
     prpl_info->send_typing = discord_send_typing;
     prpl_info->join_chat = discord_join_chat;
@@ -371,7 +371,7 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->set_chat_topic = discord_chat_set_topic;
     prpl_info->get_cb_real_name = discord_get_real_name;
     */
-    //prpl_info->add_buddy = gowhatsapp_add_buddy;
+    prpl_info->add_buddy = gowhatsapp_add_buddy;
     /*
     prpl_info->remove_buddy = discord_buddy_remove;
     prpl_info->group_buddy = discord_fake_group_buddy;
