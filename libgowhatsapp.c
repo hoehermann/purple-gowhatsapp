@@ -243,9 +243,10 @@ gowhatsapp_send_im(PurpleConnection *pc,
     // dumbly removing const qualifiers (cgo does not know them)
     char *w = g_strdup(who);
     char *m = g_strdup(message);
-    return gowhatsapp_go_sendMessage((intptr_t)pc, w, m);
+    int ret = gowhatsapp_go_sendMessage((intptr_t)pc, w, m);
     g_free(w);
     g_free(m);
+    return ret;
 }
 
 static void
@@ -322,7 +323,7 @@ static void
 plugin_init(PurplePlugin *plugin)
 {
     PurplePluginInfo *info;
-    PurplePluginProtocolInfo *prpl_info = g_new0(PurplePluginProtocolInfo, 1);
+    PurplePluginProtocolInfo *prpl_info = g_new0(PurplePluginProtocolInfo, 1); // TODO: this leaks
 
     info = plugin->info;
 
