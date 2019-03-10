@@ -127,8 +127,29 @@ func (handler *waHandler) HandleError(err error) {
 	handler.messages <- MessageAggregate{err : err}
 }
 
+/*
+func (handler *waHandler) HandleJsonMessage(message string) {
+	fmt.Printf("%+v\n", message)
+}
+*/
+
 func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
-    handler.messages <- MessageAggregate{text : &message}
+	handler.messages <- MessageAggregate{text : &message}
+}
+
+func (handler *waHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
+	handler.messages <- makeConversationErrorMessage(message.Info, 
+		"Contact sent a video message, but this plug-in cannot handle video messages.")
+}
+
+func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
+	handler.messages <- makeConversationErrorMessage(message.Info, 
+		"Contact sent an audio message, but this plug-in cannot handle audio messages.")
+}
+
+func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
+	handler.messages <- makeConversationErrorMessage(message.Info, 
+		"Contact sent a document message, but this plug-in cannot handle document messages.")
 }
 
 func makeConversationErrorMessage(originalInfo whatsapp.MessageInfo, errorMessage string) MessageAggregate {
@@ -143,7 +164,7 @@ func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 	if err != nil {
 		fmt.Printf("gowhatsapp message %v image from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
 		handler.messages <- makeConversationErrorMessage(message.Info,
-		    fmt.Sprintf("An image message with caption \"%v\" was received, but the image download failed: %v", message.Caption, err))
+			fmt.Sprintf("An image message with caption \"%v\" was received, but the image download failed: %v", message.Caption, err))
 	} else {
 		fmt.Printf("gowhatsapp message %v image from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
 		handler.messages <- MessageAggregate{image : &message, data : data}
