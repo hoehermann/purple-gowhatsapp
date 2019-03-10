@@ -45,11 +45,11 @@ type waHandler struct {
     imageMessages chan downloadedImageMessage
     errorMessages chan error
 }
-var waHandlers []*waHandler
+var waHandlers = make(map[C.uintptr_t]*waHandler)
 
 //export gowhatsapp_go_getMessage
-func gowhatsapp_go_getMessage(i int) C.struct_gowhatsapp_message {
-    handler := waHandlers[i]
+func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
+    handler := waHandlers[connID]
 	select {
 	case message := <- handler.textMessages:
 		// thanks to https://stackoverflow.com/questions/39023475/
@@ -131,26 +131,24 @@ func connect_and_login(handler *waHandler) {
 }
 
 //export gowhatsapp_go_login
-func gowhatsapp_go_login() int {
+func gowhatsapp_go_login(connID C.uintptr_t)  {
     // TODO: protect against concurrent invocation
-    i := len(waHandlers)
     handler := waHandler {
         wac : nil,
         textMessages : make(chan whatsapp.TextMessage, 100),
         imageMessages : make(chan downloadedImageMessage, 100),
         errorMessages : make(chan error, 100)}
-    waHandlers = append(waHandlers, &handler)
+    waHandlers[connID] = &handler
     go connect_and_login(&handler)
-	return i
 }
 
 //export gowhatsapp_go_close
-func gowhatsapp_go_close(i int) {
+func gowhatsapp_go_close(connID C.uintptr_t) {
 	fmt.Fprintf(os.Stderr, "gowhatsapp close()\n")
-	handler := waHandlers[i]
+	handler := waHandlers[connID]
 	//handler.wac.wsConn.Close() // inaccessible :(
 	handler.wac = nil
-	waHandlers[i] = nil
+	waHandlers[connID] = nil
 }
 
 func login(handler *waHandler) error {
@@ -231,7 +229,7 @@ func writeSession(session whatsapp.Session) error {
 }
 
 func main() {
-    i := gowhatsapp_go_login()
+    gowhatsapp_go_login(0)
 	<-time.After(1 * time.Minute)
-	gowhatsapp_go_close(i)
+	gowhatsapp_go_close(0)
 }

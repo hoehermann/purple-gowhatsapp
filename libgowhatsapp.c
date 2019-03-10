@@ -46,8 +46,7 @@
 typedef struct {
     PurpleAccount *account;
     PurpleConnection *pc;
-    
-    int index;
+
     guint event_timer;
     GList *used_images;
 } GoWhatsappAccount;
@@ -122,14 +121,14 @@ gboolean
 gowhatsapp_eventloop(gpointer userdata)
 {
     PurpleConnection *pc = (PurpleConnection *) userdata;
-    GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
+    //GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
 
     PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
     gowhatsapp_message_t empty = {};
     for (
-        gowhatsapp_message_t gwamsg = gowhatsapp_go_getMessage(sa->index);
+        gowhatsapp_message_t gwamsg = gowhatsapp_go_getMessage((uintptr_t)pc);
         memcmp(&gwamsg, &empty, sizeof(gowhatsapp_message_t));
-        gwamsg = gowhatsapp_go_getMessage(sa->index)
+        gwamsg = gowhatsapp_go_getMessage((uintptr_t)pc)
     ) {
         purple_debug_info(
             "gowhatsapp", "Recieved message: %ld %ld %s %s\n",
@@ -182,7 +181,7 @@ gowhatsapp_login(PurpleAccount *account)
     purple_connection_set_protocol_data(pc, sa);
     sa->account = account;
     sa->pc = pc;
-    sa->index = gowhatsapp_go_login();
+    gowhatsapp_go_login((uintptr_t)pc); // abusing guaranteed-to-be-unique address as connection identifier
     sa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
 }
@@ -192,7 +191,7 @@ gowhatsapp_close(PurpleConnection *pc)
 {
     purple_debug_info("gowhatsapp", "gowhatsapp_close()\n");
     GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
-    gowhatsapp_go_close(sa->index);
+    gowhatsapp_go_close((uintptr_t)pc);
     purple_connection_set_state(pc, PURPLE_DISCONNECTED);
     purple_timeout_remove(sa->event_timer);
     g_free(sa);
