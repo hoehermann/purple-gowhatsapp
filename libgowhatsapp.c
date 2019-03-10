@@ -104,19 +104,14 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
         return FALSE;
     } else {
         const char SEPARATOR = ',';
-        const unsigned short MAX_ENTRIES = 100;
-        unsigned short occurrences = 0;
-        char *offset = (char *)received_messages_ids_str + strlen(received_messages_ids_str);
-        for (; offset == received_messages_ids_str; offset--) {
-            if (*offset == SEPARATOR) {
-                occurrences++;
-                if (occurrences > MAX_ENTRIES) {
-                    break;
-                }
-            }
+        const size_t MAX_LENGTH = 2048; // TODO: make user configurable
+        // prune list of received message IDs
+        char *offset = (char *)received_messages_ids_str;
+        size_t l = strlen(received_messages_ids_str);
+        if (l > MAX_LENGTH) {
+            offset += l - MAX_LENGTH; // this can cut IDs, but that is ok for substring searches
         }
         gchar *new_received_messages_ids_str = g_strdup_printf("%s%c%s", offset, SEPARATOR, message_id);
-        //g_free(received_messages_ids_str); // TODO: check if this is necessary
         purple_account_set_string(account, RECEIVED_MESSAGES_ID_KEY, new_received_messages_ids_str);
         purple_debug_info(
             "gowhatsapp", "received_messages_ids_str now contains %s\n",
