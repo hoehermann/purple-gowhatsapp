@@ -33,6 +33,8 @@ LOCALES = $(patsubst %.po, %.mo, $(wildcard po/*.po))
 all: $(TARGET)
 
 purplegwa.a: purplegwa.go
+	go get github.com/Rhymen/go-whatsapp
+	go get github.com/skip2/go-qrcode
 	go build -buildmode=c-archive -o purplegwa.a purplegwa.go
 
 libgowhatsapp.so: $(PURPLE_C_FILES) $(PURPLE_COMPAT_FILES) purplegwa.a
@@ -46,4 +48,3 @@ clean:
 
 gdb:
 	gdb --args pidgin -d -c .pidgin
-

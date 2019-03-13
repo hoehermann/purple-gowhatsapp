@@ -43,6 +43,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"strings"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/skip2/go-qrcode"
@@ -74,8 +75,9 @@ func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) C.
     if err := handler.wac.Send(message); err != nil {
         handler.messages <- makeConversationErrorMessage(message.Info,
             fmt.Sprintf("Unable to send message: %v", err))
+            return 0
     }
-    return 0 // never echo message (the server will do this)
+    return 1 // TODO: wait for ack and/or investigate server-side message echo
 }
 
 // TODO: find out how to enable C99's bool type in cgo
@@ -97,45 +99,57 @@ func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 			// thanks to https://stackoverflow.com/questions/39023475/
 			return C.struct_gowhatsapp_message{
 				msgtype : C.int64_t(C.gowhatsapp_message_type_error),
-				text : C.CString(message.err.Error())}
+				text    : C.CString(message.err.Error()),
+			}
 		}
 		if (message.text != nil) {
+		    info := message.text.Info
+			if (!message.system) {
+			    handler.wac.Read(info.RemoteJid, info.Id) // mark message as "displayed" TODO: make this user-configurable
+			}
 			return C.struct_gowhatsapp_message{
-				msgtype : C.int64_t(C.gowhatsapp_message_type_text),
-				timestamp : C.time_t(message.text.Info.Timestamp),
-				id : C.CString(message.text.Info.Id),
-				remoteJid : C.CString(message.text.Info.RemoteJid),
-				senderJid : C.CString(message.text.Info.SenderJid),
-				fromMe : bool_to_Cchar(message.text.Info.FromMe),
-				text : C.CString(message.text.Text),
-				system :  bool_to_Cchar(message.system)}
+			    msgtype   : C.int64_t(C.gowhatsapp_message_type_text),
+				timestamp : C.time_t(info.Timestamp),
+				id        : C.CString(info.Id),
+				remoteJid : C.CString(info.RemoteJid),
+				senderJid : C.CString(info.SenderJid),
+				fromMe    : bool_to_Cchar(info.FromMe),
+				text      : C.CString(message.text.Text),
+				system    : bool_to_Cchar(message.system),
+			}
 		}
 		if (message.image != nil) {
+		    info := message.image.Info
+			if (!message.system) {
+			    handler.wac.Read(info.RemoteJid, info.Id) // mark message as "displayed"
+			}
 			return C.struct_gowhatsapp_message{
-				msgtype : C.int64_t(C.gowhatsapp_message_type_image),
-				timestamp : C.time_t(message.image.Info.Timestamp),
-				id : C.CString(message.image.Info.Id),
-				remoteJid : C.CString(message.image.Info.RemoteJid),
-				senderJid : C.CString(message.image.Info.SenderJid),
-				fromMe : bool_to_Cchar(message.image.Info.FromMe),
-				text : C.CString(message.image.Caption),
-				blob : C.CBytes(message.data),
-				blobsize : C.size_t(len(message.data)),
-				system : bool_to_Cchar(message.system)}
+			    msgtype   : C.int64_t(C.gowhatsapp_message_type_image),
+				timestamp : C.time_t(info.Timestamp),
+				id        : C.CString(info.Id),
+				remoteJid : C.CString(info.RemoteJid),
+				senderJid : C.CString(info.SenderJid),
+				fromMe    : bool_to_Cchar(info.FromMe),
+				text      : C.CString(message.image.Caption),
+				blob      : C.CBytes(message.data),
+				blobsize  : C.size_t(len(message.data)),
+				system    : bool_to_Cchar(message.system),
+			}
 		}
 		if (message.session != nil) {
 			return C.struct_gowhatsapp_message{
-				msgtype : C.int64_t(C.gowhatsapp_message_type_session),
-				clientId : C.CString(message.session.ClientId),
+			    msgtype     : C.int64_t(C.gowhatsapp_message_type_session),
+				clientId    : C.CString(message.session.ClientId),
 				clientToken : C.CString(message.session.ClientToken),
 				serverToken : C.CString(message.session.ServerToken),
-				encKey_b64 : C.CString(base64.StdEncoding.EncodeToString(message.session.EncKey)),
-				macKey_b64 : C.CString(base64.StdEncoding.EncodeToString(message.session.MacKey)),
-				wid : C.CString(message.session.Wid)}
+				encKey_b64  : C.CString(base64.StdEncoding.EncodeToString(message.session.EncKey)),
+				macKey_b64  : C.CString(base64.StdEncoding.EncodeToString(message.session.MacKey)),
+				wid         : C.CString(message.session.Wid),
+			}
 		}
 		return C.struct_gowhatsapp_message{
 			msgtype : C.int64_t(C.gowhatsapp_message_type_error),
-			text : C.CString("This should actually never happen. Please file a bug.")}
+			text    : C.CString("This should actually never happen. Please file a bug.")}
 	default:
 		return C.struct_gowhatsapp_message{}
 	}
@@ -143,8 +157,12 @@ func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 }
 
 func (handler *waHandler) HandleError(err error) {
-	fmt.Fprintf(os.Stderr, "gowhatsapp error occoured: %v", err)
-	handler.messages <- MessageAggregate{err : err}
+	if (strings.Contains(err.Error(), whatsapp.ErrInvalidWsData.Error())) { // TODO: less ugly error comparison
+		fmt.Fprintf(os.Stderr, "gowhatsapp: error %v ignored.\n", err)
+	} else {
+		fmt.Fprintf(os.Stderr, "gowhatsapp: error occoured: %v", err)
+		handler.messages <- MessageAggregate{err : err}
+	}
 }
 
 /*

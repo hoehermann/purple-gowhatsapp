@@ -20,7 +20,7 @@ Being developed on Ubuntu 18.04.
 
 * Receive text messages
 * Receive image messages
-* Sending a message (yes, currently only one)
+* Sending messages
 
 ![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")  
 
@@ -30,10 +30,9 @@ Being developed on Ubuntu 18.04.
 
 ### What could be done next
 
-* Investigate "received invalid data" ErrInvalidWsData on sending (disconnect is needed).
-* Add option to flush stored session data
-* Support group conversations properly
+* Wait for server message received acknowledgement, display sent message only then (and do not re-display already sent messages when logging in next time)
+* Add option to flush stored session data.
+* Support group conversations properly.
 * Implement receiving audio, media, and document messages.
 * Sort old messages by date.
-* Find spurious segfault
-* Investigate getting username from login
+* Find spurious segfault.

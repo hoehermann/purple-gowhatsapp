@@ -107,7 +107,7 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
         return FALSE;
     } else {
         static const char GOWHATSAPP_MESSAGEIDSTORE_SEPARATOR = ',';
-        static const size_t GOWHATSAPP_MESSAGEIDSTORE_MAX_BYTES = 2048; // TODO: make user configurable
+        static const size_t GOWHATSAPP_MESSAGEIDSTORE_MAX_BYTES = 8192; // TODO: make user configurable
         // prune list of received message IDs
         char *offset = (char *)received_messages_ids_str;
         size_t l = strlen(received_messages_ids_str);
