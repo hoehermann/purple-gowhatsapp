@@ -30,9 +30,9 @@ Being developed on Ubuntu 18.04.
 
 ### What could be done next
 
-* Wait for server message received acknowledgement, display sent message only then (and do not re-display already sent messages when logging in next time)
 * Add option to flush stored session data.
 * Support group conversations properly.
 * Implement receiving audio, media, and document messages.
+* Wait for server message received acknowledgement before displaying sent message locally.
 * Sort old messages by date.
 * Find spurious segfault.

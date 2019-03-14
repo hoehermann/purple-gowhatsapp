@@ -23,6 +23,7 @@
 #include <unistd.h>
 #endif
 #include "purplegwa.h"
+#include <errno.h>
 
 #ifdef ENABLE_NLS
 // TODO: implement localisation
@@ -284,10 +285,16 @@ gowhatsapp_send_im(PurpleConnection *pc,
     // dumbly removing const qualifiers (cgo does not know them)
     char *w = g_strdup(who);
     char *m = g_strdup(message);
-    int ret = gowhatsapp_go_sendMessage((intptr_t)pc, w, m);
+    char *msgid = gowhatsapp_go_sendMessage((intptr_t)pc, w, m);
     g_free(w);
     g_free(m);
-    return ret;
+    if (msgid) {
+        gowhatsapp_append_message_id_if_not_exists(pc->account, msgid);
+        g_free(msgid);
+        return 1; // TODO: wait for server receipt before displaying message locally?
+    } else {
+        return -ECOMM;
+    }
 }
 
 static void

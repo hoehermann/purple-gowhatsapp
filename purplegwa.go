@@ -40,10 +40,12 @@ import "C"
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"time"
 	"strings"
+	"math/rand"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/skip2/go-qrcode"
@@ -64,10 +66,13 @@ type waHandler struct {
 var waHandlers = make(map[C.uintptr_t]*waHandler)
 
 //export gowhatsapp_go_sendMessage
-func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) C.char {
+func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) *C.char {
+    b := make([]byte, 10)
+    rand.Read(b) // according to https://github.com/Rhymen/go-whatsapp/issues/43
     message := whatsapp.TextMessage{
         Info: whatsapp.MessageInfo{
             RemoteJid: C.GoString(who),
+            Id: strings.ToUpper(hex.EncodeToString(b)),
         },
         Text: C.GoString(text),
     }
@@ -75,9 +80,9 @@ func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) C.
     if err := handler.wac.Send(message); err != nil {
         handler.messages <- makeConversationErrorMessage(message.Info,
             fmt.Sprintf("Unable to send message: %v", err))
-            return 0
+            return nil
     }
-    return 1 // TODO: wait for ack and/or investigate server-side message echo
+    return C.CString(message.Info.Id)
 }
 
 // TODO: find out how to enable C99's bool type in cgo
