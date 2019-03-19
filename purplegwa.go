@@ -137,7 +137,7 @@ func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 				fromMe    : bool_to_Cchar(info.FromMe),
 				text      : C.CString(message.image.Caption),
 				blob      : C.CBytes(message.data),
-				blobsize  : C.size_t(len(message.data)),
+				blobsize  : C.ulonglong(len(message.data)),
 				system    : bool_to_Cchar(message.system),
 			}
 		}

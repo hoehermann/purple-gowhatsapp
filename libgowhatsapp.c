@@ -27,6 +27,7 @@
 
 #ifdef ENABLE_NLS
 // TODO: implement localisation
+#include <glib/gi18n.h>
 #else
 #      define _(a) (a)
 #      define N_(a) (a)
@@ -156,7 +157,8 @@ gowhatsapp_eventloop(gpointer userdata)
     PurpleConnection *pc = (PurpleConnection *) userdata;
     GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
 
-    gowhatsapp_message_t empty = {};
+    gowhatsapp_message_t empty; // = {} // some C compilers does not support empty brace initialization
+    memset(&empty, 0, sizeof(empty));
     for (
         gowhatsapp_message_t gwamsg = gowhatsapp_go_getMessage((uintptr_t)pc);
         memcmp(&gwamsg, &empty, sizeof(gowhatsapp_message_t));
@@ -293,7 +295,7 @@ gowhatsapp_send_im(PurpleConnection *pc,
         g_free(msgid);
         return 1; // TODO: wait for server receipt before displaying message locally?
     } else {
-        return -ECOMM;
+        return -70;
     }
 }
 
