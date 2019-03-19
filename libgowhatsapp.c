@@ -261,7 +261,7 @@ gowhatsapp_status_types(PurpleAccount *account)
     GList *types = NULL;
     PurpleStatusType *status;
 
-    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE, GOWHATSAPP_STATUS_STR_ONLINE, _("Online"), TRUE, FALSE, FALSE);
+    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE, GOWHATSAPP_STATUS_STR_ONLINE, _("Online"), TRUE, TRUE, FALSE);
     types = g_list_append(types, status);
 
     status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, GOWHATSAPP_STATUS_STR_OFFLINE, _("Offline"), TRUE, TRUE, FALSE);
