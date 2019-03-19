@@ -118,6 +118,7 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
         }
         gchar *new_received_messages_ids_str = g_strdup_printf("%s%c%s", offset, GOWHATSAPP_MESSAGEIDSTORE_SEPARATOR, message_id);
         purple_account_set_string(account, RECEIVED_MESSAGES_ID_KEY, new_received_messages_ids_str);
+        g_free(new_received_messages_ids_str);
         return TRUE;
     }
 }
