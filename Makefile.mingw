@@ -8,11 +8,10 @@ GIT_REVISION_ID = $(shell git -C .git rev-parse --short HEAD 2>/dev/null)
 PLUGIN_VERSION ?= $(shell cat VERSION)~git$(GIT_REVISION_ID)
 
 CFLAGS	?= -O2 -g -pipe -Wall
-LDFLAGS ?= 
 
 CFLAGS  += -std=c99 -DSIGNALD_PLUGIN_VERSION='"$(PLUGIN_VERSION)"' -DMARKDOWN_PIDGIN
 
-CC ?= $(WIN32_DEV_TOP)/mingw-4.7.2/bin/gcc
+WIN32_CC ?= $(WIN32_DEV_TOP)/mingw-4.7.2/bin/gcc
 GO ?= go
 
 TARGET = libgowhatsapp.dll
@@ -47,7 +46,7 @@ purplegwa.a: purplegwa.go
 	$(GO) build -buildmode=c-archive -o purplegwa.a purplegwa.go
 
 $(TARGET): $(PURPLE_C_FILES) $(PURPLE_COMPAT_FILES) purplegwa.a
-	$(CC) $(CFLAGS) $(CPPFLAGS) -shared -o $@ $^ $(LDFLAGS)  $(INCLUDES) -Ipurple2compat -g -ggdb
+	$(WIN32_CC) $(CFLAGS) $(CPPFLAGS) -shared -o $@ $^ $(LDFLAGS)  $(INCLUDES) -Ipurple2compat -g -ggdb
 
 FAILNOPURPLE:
 	echo "You need libpurple development headers installed to be able to compile this plugin"
@@ -55,8 +54,9 @@ FAILNOPURPLE:
 clean:
 	rm -f $(TARGET) purplegwa.a
 
-install:
+install: $(TARGET)
 	mkdir -m 0755 -p $(DEST)
-	install -m 0755 -p $(TARGET) $(
+	install -m 0755 -p $(TARGET) $(DEST)
+	
 gdb:
 	gdb --args pidgin -d -c .pidgin
