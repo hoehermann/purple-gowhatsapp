@@ -38,7 +38,7 @@ purplegwa.a: purplegwa.go
 	go build -buildmode=c-archive -o purplegwa.a purplegwa.go
 
 libgowhatsapp.so: $(PURPLE_C_FILES) $(PURPLE_COMPAT_FILES) purplegwa.a
-	$(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -shared -o $@ $^ $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 json-glib-1.0 --libs --cflags`  $(INCLUDES) -Ipurple2compat -g -ggdb
+	$(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -shared -o $@ $^ $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 --libs --cflags` $(INCLUDES) -Ipurple2compat -g -ggdb
 
 FAILNOPURPLE:
 	echo "You need libpurple development headers installed to be able to compile this plugin"
