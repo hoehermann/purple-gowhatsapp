@@ -285,9 +285,8 @@ gowhatsapp_send_im(PurpleConnection *pc,
                 const gchar *who, const gchar *message, PurpleMessageFlags flags)
 {
 #endif
-    // dumbly removing const qualifiers (cgo does not know them)
-    char *w = g_strdup(who);
-    char *m = g_strdup(message);
+    char *w = g_strdup(who); // dumbly removing const qualifier (cgo does not know them)
+    char *m = purple_markup_strip_html(message); // related: https://github.com/majn/telegram-purple/issues/12 and https://github.com/majn/telegram-purple/commit/fffe7519d7269cf4e5029a65086897c77f5283ac
     char *msgid = gowhatsapp_go_sendMessage((intptr_t)pc, w, m);
     g_free(w);
     g_free(m);
