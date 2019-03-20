@@ -20,7 +20,7 @@ struct gowhatsapp_message {
     char *senderJid;
     char *text;
     void *blob;
-    uint64_t blobsize;
+    size_t blobsize;
     time_t timestamp;
     char fromMe;
     char system;
@@ -137,7 +137,7 @@ func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 				fromMe    : bool_to_Cchar(info.FromMe),
 				text      : C.CString(message.image.Caption),
 				blob      : C.CBytes(message.data),
-				blobsize  : C.ulonglong(len(message.data)),
+				blobsize  : C.size_t(len(message.data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
 				system    : bool_to_Cchar(message.system),
 			}
 		}
