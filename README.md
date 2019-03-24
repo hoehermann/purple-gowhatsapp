@@ -20,7 +20,7 @@ Being developed on Ubuntu 18.04.
 
 * Receive text messages
 * Receive image messages
-* Sending messages
+* Sending text messages
 
 ![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")  
 

@@ -57,7 +57,7 @@ typedef struct gowhatsapp_message gowhatsapp_message_t;
 static const char *
 gowhatsapp_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
 {
-    return "gowhatsapp";
+    return "whatsapp";
 }
 
 void
