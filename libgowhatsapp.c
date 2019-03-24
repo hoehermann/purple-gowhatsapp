@@ -23,7 +23,6 @@
 #include <unistd.h>
 #endif
 #include "purplegwa.h"
-#include <errno.h>
 
 #ifdef ENABLE_NLS
 // TODO: implement localisation
@@ -226,20 +225,30 @@ gowhatsapp_login(PurpleAccount *account)
     pc_flags |= PURPLE_CONNECTION_NO_BGCOLOR;
     purple_connection_set_flags(pc, pc_flags);
 
-    GoWhatsappAccount *sa = g_new0(GoWhatsappAccount, 1);
-    purple_connection_set_protocol_data(pc, sa);
-    sa->account = account;
-    sa->pc = pc;
+    GoWhatsappAccount *gwa = g_new0(GoWhatsappAccount, 1);
+    purple_connection_set_protocol_data(pc, gwa);
+    gwa->account = account;
+    gwa->pc = pc;
+
+    char *client_id = NULL;
+    char *client_token = NULL;
+    char *server_token = NULL;
+    char *enckey = NULL;
+    char *mackey = NULL;
+    char *wid = NULL;
+    if(purple_account_get_bool(gwa->account, "restore-session", TRUE)) {
+        client_id    = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_CLIENDID_KEY, NULL);
+        client_token = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, NULL);
+        server_token = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, NULL);
+        enckey       = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_ENCKEY_KEY, NULL);
+        mackey       = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_MACKEY_KEY, NULL);
+        wid          = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_WID_KEY, NULL);
+    }
     gowhatsapp_go_login(
         (uintptr_t)pc, // abusing guaranteed-to-be-unique address as connection identifier
-        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_CLIENDID_KEY, NULL),
-        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, NULL),
-        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, NULL),
-        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_ENCKEY_KEY, NULL),
-        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_MACKEY_KEY, NULL),
-        (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_WID_KEY, NULL)
+        client_id, client_token, server_token, enckey, mackey, wid
      );
-    sa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
+    gwa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
 }
 
@@ -293,7 +302,7 @@ gowhatsapp_send_im(PurpleConnection *pc,
         g_free(msgid);
         return 1; // TODO: wait for server receipt before displaying message locally?
     } else {
-        return -70;
+        return -70; // was -ECOMM
     }
 }
 
@@ -320,6 +329,13 @@ gowhatsapp_add_account_options(GList *account_options)
     option = purple_account_option_bool_new(
                 _("Display all contacts as online"),
                 "fake-online",
+                TRUE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
+                _("Use stored credentials for login"),
+                "restore-session",
                 TRUE
                 );
     account_options = g_list_append(account_options, option);
