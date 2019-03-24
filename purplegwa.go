@@ -172,7 +172,8 @@ func (handler *waHandler) HandleError(err error) {
 
 /*
 func (handler *waHandler) HandleJsonMessage(message string) {
-	fmt.Printf("%+v\n", message)
+	// ineffective as long https://github.com/Rhymen/go-whatsapp/issues/129 is not fixed
+	fmt.Printf("gowhatsapp: JsonMessage: %+v\n", message)
 }
 */
 
