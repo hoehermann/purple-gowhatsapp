@@ -248,9 +248,7 @@ gowhatsapp_close(PurpleConnection *pc)
 {
     purple_debug_info("gowhatsapp", "gowhatsapp_close()\n");
     GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
-    if (PURPLE_CONNECTION_IS_CONNECTED(pc)) { // check needed while https://github.com/Rhymen/go-whatsapp/issues/123 remains
-        gowhatsapp_go_close((uintptr_t)pc);
-    }
+    gowhatsapp_go_close((uintptr_t)pc);
     purple_connection_set_state(pc, PURPLE_DISCONNECTED);
     purple_timeout_remove(sa->event_timer);
     g_free(sa);
