@@ -177,7 +177,13 @@ gowhatsapp_eventloop(gpointer userdata)
         }
         switch(gwamsg.msgtype) {
             case gowhatsapp_message_type_error:
-                purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
+                if (strstr(gwamsg.text, "401")) {
+                    // received error mentioning 401 – assume login failed and try again without stored session
+                    gowhatsapp_go_login((uintptr_t)pc, NULL, NULL, NULL, NULL, NULL, NULL);
+                    // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg.text);
+                } else {
+                    purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
+                }
                 break;
             case gowhatsapp_message_type_session:
                 purple_account_set_string(pc->account, GOWHATSAPP_SESSION_CLIENDID_KEY, gwamsg.clientId);

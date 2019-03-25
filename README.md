@@ -36,7 +36,6 @@ Being developed on Ubuntu 18.04.
 
 ### What could be done next
 
-* Differentiate between phone not connected and stored session rejected.
 * Support group conversations properly.
 * Implement receiving audio, media, and document messages.
 * Wait for server message received acknowledgement before displaying sent message locally.
