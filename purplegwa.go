@@ -67,31 +67,35 @@ var waHandlers = make(map[C.uintptr_t]*waHandler)
 
 //export gowhatsapp_go_sendMessage
 func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) *C.char {
-    b := make([]byte, 10)
-    rand.Read(b) // according to https://github.com/Rhymen/go-whatsapp/issues/43
-    message := whatsapp.TextMessage{
-        Info: whatsapp.MessageInfo{
-            RemoteJid: C.GoString(who),
-            Id: strings.ToUpper(hex.EncodeToString(b)),
-        },
-        Text: C.GoString(text),
-    }
-    handler := waHandlers[connID]
-    if err := handler.wac.Send(message); err != nil {
-        handler.messages <- makeConversationErrorMessage(message.Info,
-            fmt.Sprintf("Unable to send message: %v", err))
-            return nil
-    }
-    return C.CString(message.Info.Id)
+	remoteJid := C.GoString(who)
+	if remoteJid == "login@s.whatsapp.net" {
+		return nil
+	}
+	b := make([]byte, 10)
+	rand.Read(b) // according to https://github.com/Rhymen/go-whatsapp/issues/43
+	message := whatsapp.TextMessage{
+		Info: whatsapp.MessageInfo{
+			RemoteJid: remoteJid,
+			Id: strings.ToUpper(hex.EncodeToString(b)),
+		},
+		Text: C.GoString(text),
+	}
+	handler := waHandlers[connID]
+	if err := handler.wac.Send(message); err != nil {
+		handler.messages <- makeConversationErrorMessage(message.Info,
+			fmt.Sprintf("Unable to send message: %v", err))
+			return nil
+	}
+	return C.CString(message.Info.Id)
 }
 
 // TODO: find out how to enable C99's bool type in cgo
 func bool_to_Cchar(b bool) C.char {
-    if (b) {
-        return C.char(1)
-    } else {
-        return C.char(0)
-    }
+	if (b) {
+		return C.char(1)
+	} else {
+		return C.char(0)
+	}
 }
 
 //export gowhatsapp_go_getMessage
@@ -172,7 +176,6 @@ func (handler *waHandler) HandleError(err error) {
 
 /*
 func (handler *waHandler) HandleJsonMessage(message string) {
-	// ineffective as long https://github.com/Rhymen/go-whatsapp/issues/129 is not fixed
 	fmt.Printf("gowhatsapp: JsonMessage: %+v\n", message)
 }
 */
@@ -312,6 +315,12 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 		    return fmt.Errorf("error during login: %v\n", err)
 		}
 		handler.messages <- MessageAggregate{session : &session}
+		messageInfo := whatsapp.MessageInfo{
+			RemoteJid: "login@s.whatsapp.net"}
+		message := whatsapp.TextMessage{
+			Info: messageInfo,
+			Text: "You are now logged in. You may close this window."}
+		handler.messages <- MessageAggregate{text : &message, system : true}
 	}
 	return nil
 }
