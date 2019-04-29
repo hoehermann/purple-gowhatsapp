@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   gowhatsapp plugin for libpurple
  *   Copyright (C) 2016 hermann Höhne
  *
@@ -78,7 +78,8 @@ gowhatsapp_assume_all_buddies_online(GoWhatsappAccount *sa)
 
 // Copied from p2tgl_imgstore_add_with_id, tgp_msg_photo_display, tgp_format_img
 void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *caption, void *data, size_t len, PurpleMessageFlags flags, time_t time) {
-    int id = purple_imgstore_add_with_id(data, len, NULL);
+    const gpointer data_copy = g_memdup(data, len); // create a copy so freeing is consistent in caller, but imgstore may free the copy it is given
+    int id = purple_imgstore_add_with_id(data_copy, len, NULL);
     if (id <= 0) {
         purple_debug_info("gowhatsapp", "Cannot display picture, adding to imgstore failed.");
         return;
@@ -227,7 +228,7 @@ gowhatsapp_login(PurpleAccount *account)
     pc_flags = purple_connection_get_flags(pc);
     pc_flags |= PURPLE_CONNECTION_NO_IMAGES;
     pc_flags |= PURPLE_CONNECTION_NO_FONTSIZE;
-    pc_flags |= PURPLE_CONNECTION_NO_NEWLINES;
+    pc_flags |= PURPLE_CONNECTION_NO_NEWLINES; // TODO: find out how whatsapp represents newlines, use them
     pc_flags |= PURPLE_CONNECTION_NO_BGCOLOR;
     purple_connection_set_flags(pc, pc_flags);
 
