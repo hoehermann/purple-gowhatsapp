@@ -36,9 +36,10 @@ Being developed on Ubuntu 18.04.
 
 ### What could be done next
 
+* Sort old messages by date.
 * Support group conversations properly.
 * Implement receiving audio, media, and document messages.
 * Wait for server message received acknowledgement before displaying sent message locally.
-* Sort old messages by date.
+* Do not block while sending message.
 * Find spurious segfault.
 * Implement sending image, audio, media, and document messages.
