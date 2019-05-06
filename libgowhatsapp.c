@@ -36,7 +36,7 @@
 
 #define GOWHATSAPP_PLUGIN_ID "prpl-hehoe-gowhatsapp"
 #ifndef GOWHATSAPP_PLUGIN_VERSION
-#define GOWHATSAPP_PLUGIN_VERSION "0.0.1"
+#error Must set GOWHATSAPP_PLUGIN_VERSION in Makefile
 #endif
 #define GOWHATSAPP_PLUGIN_WEBSITE "https://github.com/hoehermann/libpurple-gowhatsapp"
 
