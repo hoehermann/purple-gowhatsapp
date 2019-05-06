@@ -108,14 +108,21 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
         );
         return FALSE;
     } else {
+        // count ids currently in store
         static const char GOWHATSAPP_MESSAGEIDSTORE_SEPARATOR = ',';
-        static const size_t GOWHATSAPP_MESSAGEIDSTORE_MAX_BYTES = 8192; // TODO: make user configurable
-        // prune list of received message IDs
-        char *offset = (char *)received_messages_ids_str;
-        size_t l = strlen(received_messages_ids_str);
-        if (l > GOWHATSAPP_MESSAGEIDSTORE_MAX_BYTES) {
-            offset += l - GOWHATSAPP_MESSAGEIDSTORE_MAX_BYTES; // this can cut IDs, but that is ok for substring searches
+        const unsigned int GOWHATSAPP_MESSAGEIDSTORE_SIZE = purple_account_get_int(account, "message-id-store-size", 1000);
+        unsigned int occurrences = 0;
+        char *offset = (char *)received_messages_ids_str + strlen(received_messages_ids_str);
+        for (; offset > received_messages_ids_str; offset--) {
+            if (*offset == GOWHATSAPP_MESSAGEIDSTORE_SEPARATOR) {
+                occurrences++;
+                if (occurrences >= GOWHATSAPP_MESSAGEIDSTORE_SIZE) {
+                    // store is full, stop counting
+                    break;
+                }
+            }
         }
+        // append new ID
         gchar *new_received_messages_ids_str = g_strdup_printf("%s%c%s", offset, GOWHATSAPP_MESSAGEIDSTORE_SEPARATOR, message_id);
         purple_account_set_string(account, RECEIVED_MESSAGES_ID_KEY, new_received_messages_ids_str);
         g_free(new_received_messages_ids_str);
@@ -344,6 +351,13 @@ gowhatsapp_add_account_options(GList *account_options)
                 _("Use stored credentials for login"),
                 "restore-session",
                 TRUE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_int_new(
+                _("Number of received messages to remember"),
+                "message-id-store-size",
+                1000
                 );
     account_options = g_list_append(account_options, option);
 
