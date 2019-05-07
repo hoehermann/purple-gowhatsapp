@@ -52,6 +52,8 @@ typedef struct {
     GList *used_images;
 } GoWhatsappAccount;
 typedef struct gowhatsapp_message gowhatsapp_message_t;
+guint32 session_most_recent_ts;
+guint32 minimum_ts;
 
 static const char *
 gowhatsapp_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
@@ -94,6 +96,19 @@ void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *c
 }
 
 gboolean
+gowhatsapp_append_message_if_not_old(PurpleAccount *account, guint32 ts) {
+    if (ts <= minimum_ts)
+    	return FALSE;
+    
+    if (ts > session_most_recent_ts) {
+        session_most_recent_ts = ts;
+        static const gchar *MIN_TS = "not_older_than_ts";
+        purple_account_set_int(account, MIN_TS, session_most_recent_ts);
+    }
+    return TRUE;
+}
+
+gboolean
 gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message_id)
 {
     if (message_id == NULL || message_id[0] == 0) {
@@ -131,7 +146,7 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
 }
 
 void
-gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
+gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, gboolean filter_by_ts)
 {
     PurpleMessageFlags flags = 0;
     if (gwamsg->fromMe) {
@@ -142,7 +157,9 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     if (gwamsg->system) {
         flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;
     }
-    if (gowhatsapp_append_message_id_if_not_exists(pc->account, gwamsg->id)) {
+    GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
+    if ((!filter_by_ts && gowhatsapp_append_message_id_if_not_exists(sa->account, gwamsg->id))
+	     || (filter_by_ts && gowhatsapp_append_message_if_not_old(sa->account, gwamsg->timestamp))) {
         if (gwamsg->blob) {
             gowhatsapp_display_image_message(pc, gwamsg->remoteJid, gwamsg->text, gwamsg->blob, gwamsg->blobsize, flags, gwamsg->timestamp);
         } else if (gwamsg->text) {
@@ -208,7 +225,7 @@ gowhatsapp_eventloop(gpointer userdata)
                 }
                 break;
             default:
-                gowhatsapp_display_message(pc, &gwamsg);
+                gowhatsapp_display_message(pc, &gwamsg, purple_account_get_bool(gwa->account, "ts-filter", FALSE));
         }
         free(gwamsg.id);
         free(gwamsg.remoteJid);
@@ -244,6 +261,9 @@ gowhatsapp_login(PurpleAccount *account)
     gwa->account = account;
     gwa->pc = pc;
 
+    static const gchar *MIN_TS = "not_older_than_ts";
+    minimum_ts = purple_account_get_int(account, MIN_TS, 0);
+    session_most_recent_ts = minimum_ts;
     char *client_id = NULL;
     char *client_token = NULL;
     char *server_token = NULL;
@@ -312,7 +332,10 @@ gowhatsapp_send_im(PurpleConnection *pc,
     g_free(w);
     g_free(m);
     if (msgid) {
-        gowhatsapp_append_message_id_if_not_exists(pc->account, msgid);
+        GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
+        if (!purple_account_get_bool(sa->account, "ts-filter", FALSE)) {
+        	gowhatsapp_append_message_id_if_not_exists(pc->account, msgid);
+	}
         g_free(msgid);
         return 1; // TODO: wait for server receipt before displaying message locally?
     } else {
@@ -344,6 +367,13 @@ gowhatsapp_add_account_options(GList *account_options)
                 _("Display all contacts as online"),
                 "fake-online",
                 TRUE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
+                _("Use timestamps to filter older messages"),
+                "ts-filter",
+                FALSE
                 );
     account_options = g_list_append(account_options, option);
 
