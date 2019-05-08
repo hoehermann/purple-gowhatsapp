@@ -50,10 +50,10 @@ typedef struct {
 
     guint event_timer;
     GList *used_images;
+
+    guint32 minimum_ts;
 } GoWhatsappAccount;
 typedef struct gowhatsapp_message gowhatsapp_message_t;
-guint32 session_most_recent_ts;
-guint32 minimum_ts;
 
 static const char *
 gowhatsapp_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
@@ -96,14 +96,14 @@ void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *c
 }
 
 gboolean
-gowhatsapp_append_message_if_not_old(PurpleAccount *account, guint32 ts) {
+gowhatsapp_append_message_if_not_old(PurpleAccount *account, const guint32 ts, const guint32 minimum_ts) {
     if (ts <= minimum_ts)
     	return FALSE;
     
+    static const gchar *MIN_TS = "not_older_than_ts";
+    guint32 session_most_recent_ts = purple_account_get_int(account, MIN_TS, 0);
     if (ts > session_most_recent_ts) {
-        session_most_recent_ts = ts;
-        static const gchar *MIN_TS = "not_older_than_ts";
-        purple_account_set_int(account, MIN_TS, session_most_recent_ts);
+        purple_account_set_int(account, MIN_TS, ts);
     }
     return TRUE;
 }
@@ -159,7 +159,7 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, g
     }
     GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
     if ((!filter_by_ts && gowhatsapp_append_message_id_if_not_exists(sa->account, gwamsg->id))
-	     || (filter_by_ts && gowhatsapp_append_message_if_not_old(sa->account, gwamsg->timestamp))) {
+	     || (filter_by_ts && gowhatsapp_append_message_if_not_old(sa->account, gwamsg->timestamp, sa->minimum_ts))) {
         if (gwamsg->blob) {
             gowhatsapp_display_image_message(pc, gwamsg->remoteJid, gwamsg->text, gwamsg->blob, gwamsg->blobsize, flags, gwamsg->timestamp);
         } else if (gwamsg->text) {
@@ -261,9 +261,9 @@ gowhatsapp_login(PurpleAccount *account)
     gwa->account = account;
     gwa->pc = pc;
 
+    GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
     static const gchar *MIN_TS = "not_older_than_ts";
-    minimum_ts = purple_account_get_int(account, MIN_TS, 0);
-    session_most_recent_ts = minimum_ts;
+    sa->minimum_ts = purple_account_get_int(account, MIN_TS, 0);
     char *client_id = NULL;
     char *client_token = NULL;
     char *server_token = NULL;
