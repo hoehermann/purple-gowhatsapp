@@ -95,15 +95,19 @@ void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *c
     g_free(content);
 }
 
+static const gchar *GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY = "last-new-messages-timestamp";
+
 gboolean
-gowhatsapp_message_newer_than_last_session (GoWhatsappAccount *gwa, const guint32 ts) {
-    if (ts <= gwa->previous_sessions_last_messages_timestamp) {
+gowhatsapp_message_newer_than_last_session (GoWhatsappAccount *gwa, const time_t ts) {
+    if (ts < gwa->previous_sessions_last_messages_timestamp) {
     	return FALSE;
     } else {
-        purple_account_set_int(gwa->account, "not_older_than_ts", ts);
+        purple_account_set_int(gwa->account, GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY, ts); // TODO: find out if this narrowing of time_t aka. long int to int imposes a problem
         return TRUE;
     }
 }
+
+static const gchar *GOWHATSAPP_MESSAGE_ID_STORE_SIZE_OPTION = "message-id-store-size";
 
 gboolean
 gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message_id)
@@ -122,7 +126,7 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
     } else {
         // count ids currently in store
         static const char GOWHATSAPP_MESSAGEIDSTORE_SEPARATOR = ',';
-        const unsigned int GOWHATSAPP_MESSAGEIDSTORE_SIZE = purple_account_get_int(account, "message-id-store-size", 1000);
+        const unsigned int GOWHATSAPP_MESSAGEIDSTORE_SIZE = purple_account_get_int(account, GOWHATSAPP_MESSAGE_ID_STORE_SIZE_OPTION, 1000);
         unsigned int occurrences = 0;
         char *offset = (char *)received_messages_ids_str + strlen(received_messages_ids_str);
         for (; offset > received_messages_ids_str; offset--) {
@@ -142,6 +146,8 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
     }
 }
 
+static const gchar *GOWHATSAPP_TIMESTAMP_FILTERING_OPTION = "message-timestamp-filter";
+
 void
 gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
@@ -157,7 +163,7 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
     int message_is_new =
             gowhatsapp_append_message_id_if_not_exists(gwa->account, gwamsg->id) &&
-            (!purple_account_get_bool(gwa->account, "ts-filter", TRUE) || gowhatsapp_message_newer_than_last_session(gwa, gwamsg->timestamp));
+            (!purple_account_get_bool(gwa->account, GOWHATSAPP_TIMESTAMP_FILTERING_OPTION, FALSE) || gowhatsapp_message_newer_than_last_session(gwa, gwamsg->timestamp));
     if (message_is_new) {
         if (gwamsg->blob) {
             gowhatsapp_display_image_message(pc, gwamsg->remoteJid, gwamsg->text, gwamsg->blob, gwamsg->blobsize, flags, gwamsg->timestamp);
@@ -166,6 +172,8 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
         }
     }
 }
+
+static const gchar *GOWHATSAPP_FAKE_ONLINE_OPTION = "fake-online";
 
 static const gchar *GOWHATSAPP_SESSION_CLIENDID_KEY = "clientid";
 static const gchar *GOWHATSAPP_SESSION_CLIENTTOKEN_KEY = "clientToken";
@@ -218,7 +226,7 @@ gowhatsapp_eventloop(gpointer userdata)
                 purple_account_set_string(pc->account, GOWHATSAPP_SESSION_WID_KEY, gwamsg.wid);
                 if (!PURPLE_CONNECTION_IS_CONNECTED(pc)) {
                     purple_connection_set_state(pc, PURPLE_CONNECTED);
-                    if (purple_account_get_bool(gwa->account, "fake-online", TRUE)) {
+                    if (purple_account_get_bool(gwa->account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
                         gowhatsapp_assume_all_buddies_online(gwa);
                     }
                 }
@@ -241,6 +249,8 @@ gowhatsapp_eventloop(gpointer userdata)
     return TRUE;
 }
 
+static const gchar *GOWHATSAPP_RESTORE_SESSION_OPTION = "restore-session";
+
 void
 gowhatsapp_login(PurpleAccount *account)
 {
@@ -260,14 +270,14 @@ gowhatsapp_login(PurpleAccount *account)
     gwa->account = account;
     gwa->pc = pc;
 
-    gwa->previous_sessions_last_messages_timestamp = purple_account_get_int(account, "not_older_than_ts", 0);
+    gwa->previous_sessions_last_messages_timestamp = purple_account_get_int(account, GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY, 0);
     char *client_id = NULL;
     char *client_token = NULL;
     char *server_token = NULL;
     char *enckey = NULL;
     char *mackey = NULL;
     char *wid = NULL;
-    if(purple_account_get_bool(gwa->account, "restore-session", TRUE)) {
+    if(purple_account_get_bool(gwa->account, GOWHATSAPP_RESTORE_SESSION_OPTION, TRUE)) {
         client_id    = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_CLIENDID_KEY, NULL);
         client_token = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, NULL);
         server_token = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, NULL);
@@ -347,7 +357,7 @@ gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *grou
 {
     // does not actually do anything. buddy is added to pidgin's local list and is usable from there.
     GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
-    if (purple_account_get_bool(sa->account, "fake-online", TRUE)) {
+    if (purple_account_get_bool(sa->account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
         gowhatsapp_assume_buddy_online(sa->account, buddy);
     }
 }
@@ -359,29 +369,29 @@ gowhatsapp_add_account_options(GList *account_options)
 
     option = purple_account_option_bool_new(
                 _("Display all contacts as online"),
-                "fake-online",
+                GOWHATSAPP_FAKE_ONLINE_OPTION,
                 TRUE
-                );
-    account_options = g_list_append(account_options, option);
-
-    option = purple_account_option_bool_new(
-                _("Do not show messages older than previous session"),
-                "ts-filter",
-                FALSE
                 );
     account_options = g_list_append(account_options, option);
 
     option = purple_account_option_bool_new(
                 _("Use stored credentials for login"),
-                "restore-session",
+                GOWHATSAPP_RESTORE_SESSION_OPTION,
                 TRUE
                 );
     account_options = g_list_append(account_options, option);
 
     option = purple_account_option_int_new(
-                _("Number of received messages to remember"),
-                "message-id-store-size",
+                _("Number of received messages to remember as already shown"),
+                GOWHATSAPP_MESSAGE_ID_STORE_SIZE_OPTION,
                 1000
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
+                _("Do not show messages older than previous session"),
+                GOWHATSAPP_TIMESTAMP_FILTERING_OPTION,
+                FALSE
                 );
     account_options = g_list_append(account_options, option);
 

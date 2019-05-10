@@ -43,3 +43,4 @@ Being developed on Ubuntu 18.04.
 * Do not block while sending message.
 * Find spurious segfault.
 * Implement sending image, audio, media, and document messages.
+* Consistently use dashes in key names.
