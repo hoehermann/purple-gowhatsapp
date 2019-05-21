@@ -34,8 +34,13 @@ Being developed on Ubuntu 18.04.
 
 * Anything beyond simple messaging, really
 
+### Known Problems
+
+* Images (including QR code for login) are not displayed, if Pidgin's "Conversation Colors" plug-in is enabled.
+
 ### What could be done next
 
+* Pin go dependency version.
 * Sort old messages by date.
 * Support group conversations properly.
 * Implement receiving audio, media, and document messages.
