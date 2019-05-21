@@ -96,7 +96,12 @@ func bool_to_Cchar(b bool) C.char {
 
 //export gowhatsapp_go_getMessage
 func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
-	handler := waHandlers[connID]
+	handler, ok := waHandlers[connID]
+	if (!ok) {
+		return C.struct_gowhatsapp_message{
+			msgtype : C.int64_t(C.gowhatsapp_message_type_error),
+			text    : C.CString("Tried to get a message from a non-existant connection. Please file a bug.")}
+	}
 	select {
 	case message := <- handler.messages:
 		//fmt.Printf("%+v\n", message)
@@ -154,7 +159,7 @@ func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 		}
 		return C.struct_gowhatsapp_message{
 			msgtype : C.int64_t(C.gowhatsapp_message_type_error),
-			text    : C.CString("This should actually never happen. Please file a bug.")}
+			text    : C.CString("Encountered unhandled internal message type. This should actually never happen. Please file a bug.")}
 	default:
 		return C.struct_gowhatsapp_message{}
 	}
