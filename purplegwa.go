@@ -168,7 +168,7 @@ func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 
 func (handler *waHandler) HandleError(err error) {
 	if (strings.Contains(err.Error(), whatsapp.ErrInvalidWsData.Error())) { // TODO: less ugly error comparison
-		fmt.Fprintf(os.Stderr, "gowhatsapp: error %v ignored.\n", err)
+	    //fmt.Fprintf(os.Stderr, "gowhatsapp: %v ignored.\n", err)
 	} else {
 		fmt.Fprintf(os.Stderr, "gowhatsapp: error occoured: %v", err)
 		handler.messages <- MessageAggregate{err : err}
