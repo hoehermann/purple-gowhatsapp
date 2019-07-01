@@ -44,6 +44,7 @@ import (
 	"os"
 	"time"
 	"strings"
+	/*"path/filepath"*/
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/skip2/go-qrcode"
@@ -52,6 +53,9 @@ import (
 type MessageAggregate struct {
 	text *whatsapp.TextMessage
 	image *whatsapp.ImageMessage
+	video *whatsapp.VideoMessage
+	audio *whatsapp.AudioMessage
+	document *whatsapp.DocumentMessage
 	session *whatsapp.Session
 	data []byte
 	err error
@@ -60,6 +64,7 @@ type MessageAggregate struct {
 type waHandler struct {
 	wac *whatsapp.Conn
 	messages chan MessageAggregate
+	dowloadsDirectory string
 }
 var waHandlers = make(map[C.uintptr_t]*waHandler)
 
@@ -181,30 +186,53 @@ func (handler *waHandler) HandleJsonMessage(message string) {
 }
 */
 
-func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
-	handler.messages <- MessageAggregate{text : &message}
-}
-
-func (handler *waHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
-	handler.messages <- makeConversationErrorMessage(message.Info, 
-		"Contact sent a video message, but this plug-in cannot handle video messages.")
-}
-
-func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
-	handler.messages <- makeConversationErrorMessage(message.Info, 
-		"Contact sent an audio message, but this plug-in cannot handle audio messages.")
-}
-
-func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
-	handler.messages <- makeConversationErrorMessage(message.Info, 
-		"Contact sent a document message, but this plug-in cannot handle document messages.")
-}
-
 func makeConversationErrorMessage(originalInfo whatsapp.MessageInfo, errorMessage string) MessageAggregate {
     m := whatsapp.TextMessage{
         Info : originalInfo,
         Text : errorMessage}
     return MessageAggregate{system: true, text : &m}
+}
+
+func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
+	handler.messages <- MessageAggregate{text : &message}
+}
+
+// TODO: use purple requests api (example available at /media/ssd/volatil/Kompilieren/telegram-purple/tgp-ft.c)
+
+func (handler *waHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
+    data, err := message.Download() // TODO: do not implicitly download on receival (i.e. due to message already recevived and suppressed), ask user before downloading large images
+    if err != nil {
+        fmt.Printf("gowhatsapp message %v video from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
+        handler.messages <- makeConversationErrorMessage(message.Info,
+            fmt.Sprintf("A video message with caption \"%v\" was received, but the download failed: %v", message.Caption, err))
+    } else {
+        fmt.Printf("gowhatsapp message %v video from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
+        handler.messages <- MessageAggregate{video : &message, data : data}
+    }
+}
+
+func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
+    data, err := message.Download() // TODO: do not implicitly download on receival (i.e. due to message already recevived and suppressed), ask user before downloading large images
+    if err != nil {
+        fmt.Printf("gowhatsapp message %v audio from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
+        handler.messages <- makeConversationErrorMessage(message.Info,
+            fmt.Sprintf("An audio message was received, but the download failed: %v", err))
+    } else {
+        fmt.Printf("gowhatsapp message %v audio from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
+        handler.messages <- MessageAggregate{audio : &message, data : data}
+    }
+}
+
+func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
+    data, err := message.Download() // TODO: do not implicitly download on receival (i.e. due to message already recevived and suppressed), ask user before downloading large images
+    if err != nil {
+        fmt.Printf("gowhatsapp message %v document from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
+        handler.messages <- makeConversationErrorMessage(message.Info,
+            fmt.Sprintf("A document message was received, but the download failed: %v", err))
+    } else {
+        fmt.Printf("gowhatsapp message %v document from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
+        handler.messages <- MessageAggregate{document : &message, data : data}
+    }
 }
 
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
@@ -250,11 +278,14 @@ func gowhatsapp_go_login(
 	encKey_b64 *C.char,
 	macKey_b64 *C.char,
 	wid *C.char,
+	dowloadsDirectory *C.char,
 	) {
 	// TODO: protect against concurrent invocation
 	handler := waHandler {
 		wac : nil,
-		messages : make(chan MessageAggregate, 100)}
+		messages : make(chan MessageAggregate, 100),
+		dowloadsDirectory : C.GoString(dowloadsDirectory),
+	}
 	waHandlers[connID] = &handler
 	var session *whatsapp.Session;
 	if (clientId != nil && clientToken != nil && serverToken != nil && encKey_b64 != nil && macKey_b64 != nil && wid != nil) {
@@ -327,7 +358,7 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 }
 
 func main() {
-	gowhatsapp_go_login(0, nil, nil, nil, nil, nil, nil)
+    gowhatsapp_go_login(0, nil, nil, nil, nil, nil, nil, C.CString("."))
 	<-time.After(1 * time.Minute)
 	gowhatsapp_go_close(0)
 }

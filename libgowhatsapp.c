@@ -210,8 +210,14 @@ gowhatsapp_eventloop(gpointer userdata)
         switch(gwamsg.msgtype) {
             case gowhatsapp_message_type_error:
                 if (strstr(gwamsg.text, "401")) {
+                    char *dd = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
                     // received error mentioning 401 – assume login failed and try again without stored session
-                    gowhatsapp_go_login((uintptr_t)pc, NULL, NULL, NULL, NULL, NULL, NULL);
+                    gowhatsapp_go_login(
+                        (uintptr_t)pc,
+                        NULL, NULL, NULL, NULL, NULL, NULL,
+                        dd
+                    );
+                    g_free(dd);
                     // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg.text);
                 } else {
                     purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
@@ -285,10 +291,13 @@ gowhatsapp_login(PurpleAccount *account)
         mackey       = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_MACKEY_KEY, NULL);
         wid          = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_WID_KEY, NULL);
     }
+    char *dd = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
     gowhatsapp_go_login(
         (uintptr_t)pc, // abusing guaranteed-to-be-unique address as connection identifier
-        client_id, client_token, server_token, enckey, mackey, wid
-     );
+        client_id, client_token, server_token, enckey, mackey, wid,
+        dd
+    );
+    g_free(dd);
     gwa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
 }
