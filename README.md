@@ -6,6 +6,8 @@ Powered by [go-whatsapp](https://github.com/Rhymen/go-whatsapp), which is writte
 
 Being developed on Ubuntu 18.04.
 
+**Note:** This branch is not well tested.
+
 ### Building
 
 * Have [go-whatsapp cc103e6](https://github.com/Rhymen/go-whatsapp/commit/cc103e60c5a4519207981cb47c011e06c448c80ff).
@@ -25,8 +27,9 @@ Being developed on Ubuntu 18.04.
 ### Features
 
 * Receive text messages
-* Receive image messages
 * Sending text messages
+* Download files from image, audio, media, and document messages  
+  Files are downloaded to `~/.pidgin/gowhatsapp`.
 
 ![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")  
 
@@ -34,18 +37,14 @@ Being developed on Ubuntu 18.04.
 
 * Anything beyond simple messaging, really
 
-### Known Problems
-
-* Images (including QR code for login) are not displayed, if Pidgin's "Conversation Colors" plug-in is enabled.
-
 ### What could be done next
 
 * Pin go dependency version.
 * Sort old messages by date.
 * Support group conversations properly.
-* Implement receiving audio, media, and document messages.
+* Reintroduce inline display of images.
 * Wait for server message received acknowledgement before displaying sent message locally.
 * Do not block while sending message.
-* Find spurious segfault.
 * Implement sending image, audio, media, and document messages.
+* Find spurious segfault.
 * Consistently use dashes in key names.
