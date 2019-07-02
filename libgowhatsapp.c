@@ -157,9 +157,13 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     } else {
         flags |= PURPLE_MESSAGE_RECV;
     }
+    /*
+     * spectrum2 swallows system messages
+     * TODO: make user configurable
     if (gwamsg->system) {
         flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;
     }
+    */
     GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
     int message_is_new =
             gowhatsapp_append_message_id_if_not_exists(gwa->account, gwamsg->id) &&
