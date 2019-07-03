@@ -48,6 +48,7 @@ static const gchar *GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY = "last-new-messag
 static const gchar *GOWHATSAPP_MESSAGE_ID_STORE_SIZE_OPTION = "message-id-store-size";
 static const gchar *GOWHATSAPP_TIMESTAMP_FILTERING_OPTION = "message-timestamp-filter";
 static const gchar *GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES = "system-messages-are-ordinary-messages";
+static const gchar *GOWHATSAPP_DOWNLOAD_ATTACHMENTS = "download-attachments";
 
 typedef struct {
     PurpleAccount *account;
@@ -215,7 +216,7 @@ gowhatsapp_eventloop(gpointer userdata)
                     gowhatsapp_go_login(
                         (uintptr_t)pc,
                         NULL, NULL, NULL, NULL, NULL, NULL,
-                        dd
+                        dd, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS, FALSE)
                     );
                     g_free(dd);
                     // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg.text);
@@ -295,7 +296,7 @@ gowhatsapp_login(PurpleAccount *account)
     gowhatsapp_go_login(
         (uintptr_t)pc, // abusing guaranteed-to-be-unique address as connection identifier
         client_id, client_token, server_token, enckey, mackey, wid,
-        dd
+        dd, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS, FALSE)
     );
     g_free(dd);
     gwa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
@@ -407,6 +408,13 @@ gowhatsapp_add_account_options(GList *account_options)
     option = purple_account_option_bool_new(
                 _("Treat system messages like normal messages (spectrum2 compatibility)"),
                 GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES,
+                FALSE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
+                _("Download files from media (image, audio, video, document) messages"),
+                GOWHATSAPP_DOWNLOAD_ATTACHMENTS,
                 FALSE
                 );
     account_options = g_list_append(account_options, option);

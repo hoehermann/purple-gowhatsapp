@@ -61,6 +61,7 @@ type waHandler struct {
 	wac *whatsapp.Conn
 	messages chan MessageAggregate
 	downloadsDirectory string
+	doDownloads bool
 }
 var waHandlers = make(map[C.uintptr_t]*waHandler)
 
@@ -163,7 +164,6 @@ func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
     handler.messages <- MessageAggregate{text : message.Text, info : message.Info}
 }
 
-// TODO: do not implicitly download on receival (i.e. due to message already recevived and suppressed), ask user before downloading large files
 // TODO: find out how to reduce redundancy
 
 func wantToDownload(downloadsDirectory string, Id string) (filename string, want bool) {
@@ -194,64 +194,78 @@ func storeDownloadedData(handler *waHandler, info whatsapp.MessageInfo, filename
 }
 
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
-    filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
-    if (wtd) {
-        data, err := message.Download()
-        if err != nil {
-            fmt.Printf("gowhatsapp message %v image from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
-            handler.messages <- makeConversationErrorMessage(message.Info,
-                fmt.Sprintf("An image message (ID %s) with caption \"%v\" was received, but the download failed: %v", message.Info.Id, message.Caption, err))
-        } else {
-            fmt.Printf("gowhatsapp message %v image from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
-            handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
-            storeDownloadedData(handler, message.Info, filename, data)
+    if (handler.doDownloads) {
+        filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
+        if (wtd) {
+            data, err := message.Download()
+            if err != nil {
+                handler.messages <- makeConversationErrorMessage(message.Info,
+                    fmt.Sprintf("An image message (ID %s) with caption \"%v\" was received, but the download failed: %v", message.Info.Id, message.Caption, err))
+            } else {
+                handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
+                storeDownloadedData(handler, message.Info, filename, data)
+            }
         }
+    } else {
+        handler.messages <- MessageAggregate{text : message.Caption + "[File download disabled in settings.]", info : message.Info}
     }
 }
 
 func (handler *waHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
-    filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
-    if (wtd) {
-        data, err := message.Download()
-        if err != nil {
-            fmt.Printf("gowhatsapp message %v video from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
-            handler.messages <- makeConversationErrorMessage(message.Info,
-                fmt.Sprintf("A video message (ID %s) with caption \"%v\" was received, but the download failed: %v", message.Info.Id, message.Caption, err))
-        } else {
-            fmt.Printf("gowhatsapp message %v video from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
-            handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
-            storeDownloadedData(handler, message.Info, filename, data)
+    if (handler.doDownloads) {
+        filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
+        if (wtd) {
+            data, err := message.Download()
+            if err != nil {
+                fmt.Printf("gowhatsapp message %v video from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
+                handler.messages <- makeConversationErrorMessage(message.Info,
+                    fmt.Sprintf("A video message (ID %s) with caption \"%v\" was received, but the download failed: %v", message.Info.Id, message.Caption, err))
+            } else {
+                fmt.Printf("gowhatsapp message %v video from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
+                handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
+                storeDownloadedData(handler, message.Info, filename, data)
+            }
         }
+    } else {
+        handler.messages <- MessageAggregate{text : message.Caption + "[File download disabled in settings.]", info : message.Info}
     }
 }
 
 func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
-    filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
-    if (wtd) {
-        data, err := message.Download()
-        if err != nil {
-            fmt.Printf("gowhatsapp message %v audio from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
-            handler.messages <- makeConversationErrorMessage(message.Info,
-                fmt.Sprintf("An audio message (ID %s) was received, but the download failed: %v", message.Info.Id, err))
-        } else {
-            fmt.Printf("gowhatsapp message %v audio from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
-            storeDownloadedData(handler, message.Info, filename, data)
+    if (handler.doDownloads) {
+        filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
+        if (wtd) {
+            data, err := message.Download()
+            if err != nil {
+                fmt.Printf("gowhatsapp message %v audio from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
+                handler.messages <- makeConversationErrorMessage(message.Info,
+                    fmt.Sprintf("An audio message (ID %s) was received, but the download failed: %v", message.Info.Id, err))
+            } else {
+                fmt.Printf("gowhatsapp message %v audio from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
+                storeDownloadedData(handler, message.Info, filename, data)
+            }
         }
+    } else {
+        handler.messages <- MessageAggregate{text : "[File download disabled in settings.]", info : message.Info}
     }
 }
 
 func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
-    filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
-    if (wtd) {
-        data, err := message.Download()
-        if err != nil {
-            fmt.Printf("gowhatsapp message %v document from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
-            handler.messages <- makeConversationErrorMessage(message.Info,
-                fmt.Sprintf("A document message (ID %s) was received, but the download failed: %v", message.Info.Id, err))
-        } else {
-            fmt.Printf("gowhatsapp message %v document from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
-            storeDownloadedData(handler, message.Info, filename, data)
+    if (handler.doDownloads) {
+        filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
+        if (wtd) {
+            data, err := message.Download()
+            if err != nil {
+                fmt.Printf("gowhatsapp message %v document from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
+                handler.messages <- makeConversationErrorMessage(message.Info,
+                    fmt.Sprintf("A document message (ID %s) was received, but the download failed: %v", message.Info.Id, err))
+            } else {
+                fmt.Printf("gowhatsapp message %v document from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
+                storeDownloadedData(handler, message.Info, filename, data)
+            }
         }
+    } else {
+        handler.messages <- MessageAggregate{text : "[File download disabled in settings.]", info : message.Info}
     }
 }
 
@@ -287,12 +301,14 @@ func gowhatsapp_go_login(
 	macKey_b64 *C.char,
 	wid *C.char,
 	downloadsDirectory *C.char,
+	doDownloads bool,
 	) {
 	// TODO: protect against concurrent invocation
 	handler := waHandler {
 		wac : nil,
 		messages : make(chan MessageAggregate, 100),
 		downloadsDirectory : C.GoString(downloadsDirectory),
+		doDownloads : doDownloads,
 	}
 	waHandlers[connID] = &handler
 	var session *whatsapp.Session;
@@ -368,7 +384,7 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 }
 
 func main() {
-    gowhatsapp_go_login(0, nil, nil, nil, nil, nil, nil, C.CString("."))
+    gowhatsapp_go_login(0, nil, nil, nil, nil, nil, nil, C.CString("."), true)
 	<-time.After(1 * time.Minute)
 	gowhatsapp_go_close(0)
 }
