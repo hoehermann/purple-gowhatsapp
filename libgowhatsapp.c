@@ -44,6 +44,11 @@
 #define GOWHATSAPP_STATUS_STR_OFFLINE  "offline"
 #define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
 
+static const gchar *GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY = "last-new-messages-timestamp";
+static const gchar *GOWHATSAPP_MESSAGE_ID_STORE_SIZE_OPTION = "message-id-store-size";
+static const gchar *GOWHATSAPP_TIMESTAMP_FILTERING_OPTION = "message-timestamp-filter";
+static const gchar *GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES = "system-messages-are-ordinary-messages";
+
 typedef struct {
     PurpleAccount *account;
     PurpleConnection *pc;
@@ -95,8 +100,6 @@ void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *c
     g_free(content);
 }
 
-static const gchar *GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY = "last-new-messages-timestamp";
-
 gboolean
 gowhatsapp_message_newer_than_last_session (GoWhatsappAccount *gwa, const time_t ts) {
     if (ts < gwa->previous_sessions_last_messages_timestamp) {
@@ -106,8 +109,6 @@ gowhatsapp_message_newer_than_last_session (GoWhatsappAccount *gwa, const time_t
         return TRUE;
     }
 }
-
-static const gchar *GOWHATSAPP_MESSAGE_ID_STORE_SIZE_OPTION = "message-id-store-size";
 
 gboolean
 gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message_id)
@@ -146,25 +147,20 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
     }
 }
 
-static const gchar *GOWHATSAPP_TIMESTAMP_FILTERING_OPTION = "message-timestamp-filter";
-
 void
 gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
+    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
     PurpleMessageFlags flags = 0;
     if (gwamsg->fromMe) {
         flags |= PURPLE_MESSAGE_SEND;
     } else {
         flags |= PURPLE_MESSAGE_RECV;
     }
-    /*
-     * spectrum2 swallows system messages
-     * TODO: make user configurable
-    if (gwamsg->system) {
+    if (gwamsg->system && !purple_account_get_bool(gwa->account, GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES, FALSE)) {
+        // spectrum2 swallows system messages – that is why these flags can be suppressed
         flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;
     }
-    */
-    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
     int message_is_new =
             gowhatsapp_append_message_id_if_not_exists(gwa->account, gwamsg->id) &&
             (!purple_account_get_bool(gwa->account, GOWHATSAPP_TIMESTAMP_FILTERING_OPTION, FALSE) || gowhatsapp_message_newer_than_last_session(gwa, gwamsg->timestamp));
@@ -404,6 +400,13 @@ gowhatsapp_add_account_options(GList *account_options)
     option = purple_account_option_bool_new(
                 _("Do not show messages older than previous session"),
                 GOWHATSAPP_TIMESTAMP_FILTERING_OPTION,
+                FALSE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
+                _("Treat system messages like normal messages (spectrum2 compatibility)"),
+                GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES,
                 FALSE
                 );
     account_options = g_list_append(account_options, option);
