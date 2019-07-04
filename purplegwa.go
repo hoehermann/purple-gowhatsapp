@@ -65,26 +65,61 @@ type waHandler struct {
 }
 var waHandlers = make(map[C.uintptr_t]*waHandler)
 
+func (handler *waHandler) sendMessage(message interface{}, info whatsapp.MessageInfo) *C.char {
+	msgId, err := handler.wac.Send(message)
+	if err != nil {
+		handler.messages <- makeConversationErrorMessage(info,
+			fmt.Sprintf("Unable to send message: %v", err))
+			return nil
+	}
+	return C.CString(msgId)
+}
+
 //export gowhatsapp_go_sendMessage
 func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) *C.char {
 	remoteJid := C.GoString(who)
 	if remoteJid == "login@s.whatsapp.net" {
 		return nil
 	}
-	message := whatsapp.TextMessage{
-		Info: whatsapp.MessageInfo{
-			RemoteJid: remoteJid,
-		},
-		Text: C.GoString(text),
-	}
 	handler := waHandlers[connID]
-	msgId, err := handler.wac.Send(message)
-	if err != nil {
-		handler.messages <- makeConversationErrorMessage(message.Info,
-			fmt.Sprintf("Unable to send message: %v", err))
-			return nil
+	info := whatsapp.MessageInfo{
+		RemoteJid: remoteJid,
 	}
-	return C.CString(msgId)
+	gotext := C.GoString(text)
+	if (strings.HasPrefix(gotext, "/sendmedia")) {
+		data, err := os.Open(filepath.Join(handler.downloadsDirectory, "outgoing"))
+		if err != nil {
+			handler.messages <- makeConversationErrorMessage(info,
+				fmt.Sprintf("Unable to read file which was going to be sent: %v", err))
+				return nil
+		}
+		// TODO: guess mime type
+		if (strings.Contains(gotext, "image")) {
+			message := whatsapp.ImageMessage{
+				Info: info,
+				Type: "image/jpeg",
+				Content: data,
+			}
+			return handler.sendMessage(message, info)
+		} else if (strings.Contains(gotext, "audio")) {
+			message := whatsapp.AudioMessage{
+				Info: info,
+				Type: "audio/ogg",
+				Content: data,
+			}
+			return handler.sendMessage(message, info)
+		} else {
+			handler.messages <- makeConversationErrorMessage(info,
+				"Please specify file type image or audio")
+			return nil
+		}
+	} else {
+		message := whatsapp.TextMessage{
+			Info: info,
+			Text: gotext,
+		}
+		return handler.sendMessage(message, info)
+	}
 }
 
 // TODO: find out how to enable C99's bool type in cgo
