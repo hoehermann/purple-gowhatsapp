@@ -166,6 +166,15 @@ func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 
 // TODO: find out how to reduce redundancy
 
+func isSaneId(s string) bool {
+    for _, r := range s {
+        if (r < 'A' || r > 'Z') && (r < '0' || r > '9') {
+            return false
+        }
+    }
+    return true
+}
+
 func wantToDownload(downloadsDirectory string, Id string) (filename string, want bool) {
     fp, _ := filepath.Abs(filepath.Join(downloadsDirectory, Id))
     fileInfo, err := os.Stat(fp)
@@ -195,16 +204,21 @@ func storeDownloadedData(handler *waHandler, info whatsapp.MessageInfo, filename
 
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
     if (handler.doDownloads) {
-        filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
-        if (wtd) {
-            data, err := message.Download()
-            if err != nil {
-                handler.messages <- makeConversationErrorMessage(message.Info,
-                    fmt.Sprintf("An image message (ID %s) with caption \"%v\" was received, but the download failed: %v", message.Info.Id, message.Caption, err))
-            } else {
-                handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
-                storeDownloadedData(handler, message.Info, filename, data)
+        if isSaneId(message.Info.Id) {
+            filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
+            if (wtd) {
+                data, err := message.Download()
+                if err != nil {
+                    handler.messages <- makeConversationErrorMessage(message.Info,
+                        fmt.Sprintf("An image message (ID %s) with caption \"%v\" was received, but the download failed: %v", message.Info.Id, message.Caption, err))
+                } else {
+                    handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
+                    storeDownloadedData(handler, message.Info, filename, data)
+                }
             }
+        } else {
+            handler.messages <- makeConversationErrorMessage(message.Info,
+                fmt.Sprintf("An image message (ID %s) with caption \"%v\" was received, but ID looks odd – downloading skipped.", message.Info.Id, message.Caption))
         }
     } else {
         handler.messages <- MessageAggregate{text : message.Caption + "[File download disabled in settings.]", info : message.Info}
