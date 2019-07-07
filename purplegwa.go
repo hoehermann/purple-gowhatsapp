@@ -43,7 +43,6 @@ import (
 	"os"
 	"time"
 	"strings"
-	"path/filepath"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/skip2/go-qrcode"
@@ -87,32 +86,7 @@ func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) *C
 	}
 	gotext := C.GoString(text)
 	if (strings.HasPrefix(gotext, "/sendmedia")) {
-		data, err := os.Open(filepath.Join(handler.downloadsDirectory, "outgoing"))
-		if err != nil {
-			handler.messages <- makeConversationErrorMessage(info,
-				fmt.Sprintf("Unable to read file which was going to be sent: %v", err))
-				return nil
-		}
-		// TODO: guess mime type
-		if (strings.Contains(gotext, "image")) {
-			message := whatsapp.ImageMessage{
-				Info: info,
-				Type: "image/jpeg",
-				Content: data,
-			}
-			return handler.sendMessage(message, info)
-		} else if (strings.Contains(gotext, "audio")) {
-			message := whatsapp.AudioMessage{
-				Info: info,
-				Type: "audio/ogg",
-				Content: data,
-			}
-			return handler.sendMessage(message, info)
-		} else {
-			handler.messages <- makeConversationErrorMessage(info,
-				"Please specify file type image or audio")
-			return nil
-		}
+		return handler.sendMediaMessage(info, gotext)
 	} else {
 		message := whatsapp.TextMessage{
 			Info: info,
@@ -199,86 +173,22 @@ func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
     handler.messages <- MessageAggregate{text : message.Text, info : message.Info}
 }
 
-// TODO: find out how to reduce redundancy
-
-func isSaneId(s string) bool {
-    for _, r := range s {
-        if (r < 'A' || r > 'Z') && (r < '0' || r > '9') {
-            return false
-        }
-    }
-    return true
-}
-
-func wantToDownload(downloadsDirectory string, Id string) (filename string, want bool) {
-    fp, _ := filepath.Abs(filepath.Join(downloadsDirectory, Id))
-    fileInfo, err := os.Stat(fp)
-    return fp, os.IsNotExist(err) || fileInfo.Size() == 0
-}
-
-func storeDownloadedData(handler *waHandler, info whatsapp.MessageInfo, filename string, data []byte) {
-    os.MkdirAll(handler.downloadsDirectory, os.ModePerm)
-    file, err := os.Create(filename)
-    defer file.Close()
-    if err != nil {
-        handler.messages <- makeConversationErrorMessage(info,
-            fmt.Sprintf("Data was downloaded, but file %s creation failed due to %v", filename, err))
-    } else {
-        _, err := file.Write(data)
-        if err != nil {
-        handler.messages <- makeConversationErrorMessage(info,
-            fmt.Sprintf("Data was downloaded, but could not be written to file %s due to %v", filename, err))
-        } else {
-            handler.messages <- MessageAggregate{
-                text : fmt.Sprintf("file://%s", filename),
-                info : info,
-                system : true}
-        }
-    }
-}
-
-type downloadable interface {
-    Download() ([]byte, error)
-}
-
-func Download(handler *waHandler, message downloadable, info whatsapp.MessageInfo) {
-    filename, wtd := wantToDownload(handler.downloadsDirectory, info.Id)
-    if (wtd) {
-        if (handler.doDownloads) {
-            if isSaneId(info.Id) {
-                data, err := message.Download()
-                if err != nil {
-                    handler.messages <- makeConversationErrorMessage(info,
-                        fmt.Sprintf("A media message (ID %s) was received, but the download failed: %v", info.Id, err))
-                } else {
-                    storeDownloadedData(handler, info, filename, data)
-                }
-            } else {
-                handler.messages <- makeConversationErrorMessage(info,
-                    fmt.Sprintf("A media message (ID %s) was received, but ID looks odd – downloading skipped.", info.Id))
-            }
-        } else {
-            handler.messages <- MessageAggregate{text : "[File download disabled in settings.]", system : true}
-        }
-    }
-}
-
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
     handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
-    Download(handler, &message, message.Info)
+    handler.downloadMessage(&message, message.Info)
 }
 
 func (handler *waHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
     handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
-    Download(handler, &message, message.Info)
+    handler.downloadMessage(&message, message.Info)
 }
 
 func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
-    Download(handler, &message, message.Info)
+    handler.downloadMessage(&message, message.Info)
 }
 
 func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
-    Download(handler, &message, message.Info)
+    handler.downloadMessage(&message, message.Info)
 }
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {
@@ -376,8 +286,8 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 				    text : "Scan this QR code within 20 seconds to log in.",
 					info : messageInfo,
 					system : true}
-				filename, _ := wantToDownload(handler.downloadsDirectory, "login")
-				storeDownloadedData(handler, messageInfo, filename, png)
+				filename := generateFilepath(handler.downloadsDirectory, messageInfo)
+				handler.storeDownloadedData(messageInfo, filename, png)
 			}
 		}()
 		session, err := wac.Login(qr)
