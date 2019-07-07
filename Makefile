@@ -11,6 +11,7 @@ LDFLAGS ?= -Wl,-z,relro
 CFLAGS  += -std=c99 -DGOWHATSAPP_PLUGIN_VERSION='"$(PLUGIN_VERSION)"' -DMARKDOWN_PIDGIN
 
 CC ?= gcc
+GO ?= go
 
 ifeq ($(shell $(PKG_CONFIG) --exists purple 2>/dev/null && echo "true"),)
   TARGET = FAILNOPURPLE
@@ -26,18 +27,18 @@ CFLAGS += -DLOCALEDIR=\"$(LOCALEDIR)\"
 PURPLE_COMPAT_FILES :=
 PURPLE_C_FILES := libgowhatsapp.c $(C_FILES)
 
-.PHONY:	all FAILNOPURPLE clean
+.PHONY:	all FAILNOPURPLE clean gdb install
 
 LOCALES = $(patsubst %.po, %.mo, $(wildcard po/*.po))
 
 all: $(TARGET)
 
 purplegwa.a: purplegwa.go purplegwa-media.go
-	go get github.com/Rhymen/go-whatsapp
-	go get github.com/skip2/go-qrcode
-	go build -buildmode=c-archive -o purplegwa.a purplegwa.go purplegwa-media.go
+	$(GO) get github.com/Rhymen/go-whatsapp
+	$(GO) get github.com/skip2/go-qrcode
+	$(GO) build -buildmode=c-archive -o purplegwa.a purplegwa.go purplegwa-media.go
 
-libgowhatsapp.so: $(PURPLE_C_FILES) $(PURPLE_COMPAT_FILES) purplegwa.a
+$(TARGET): $(PURPLE_C_FILES) $(PURPLE_COMPAT_FILES) purplegwa.a
 	$(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -shared -o $@ $^ $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 --libs --cflags` $(INCLUDES) -Ipurple2compat -g -ggdb
 
 FAILNOPURPLE:
@@ -46,5 +47,9 @@ FAILNOPURPLE:
 clean:
 	rm -f $(TARGET) purplegwa.a
 
+install: $(TARGET)
+	mkdir -m 0755 -p $(DEST)
+	install -m 0755 -p $(TARGET) $(DEST)
+	
 gdb:
 	gdb --args pidgin -d -c .pidgin

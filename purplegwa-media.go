@@ -59,7 +59,7 @@ func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, text strin
 
 /*
  * Checks for the message ID looking sane.
- * The message ID is used to infer a file-name. 
+ * The message ID is used to infer a file-name.
  * This is to migitate attacks breaking out from the downloads directory.
  */
 func isSaneId(s string) bool {
