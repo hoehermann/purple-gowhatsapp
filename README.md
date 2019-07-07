@@ -21,6 +21,7 @@ Being developed on Ubuntu 18.04.
   This way, Pigin's logs look sane.
 * Upon login, a fake conversation should pop up, showing a QR code.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with the browser-based WhatsApp Web.
+* Note: Some settings only take effect after a re-connect.
 
 ### Features
 

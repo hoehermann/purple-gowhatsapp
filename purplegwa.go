@@ -216,7 +216,6 @@ func (handler *waHandler) HandleError(err error) {
 
 /*
  * Creates an error message as reaction to an actual message.
- * With the same message ID, the front-end may not try to display the message.
  */
 func makeConversationErrorMessage(originalInfo whatsapp.MessageInfo, errorMessage string) MessageAggregate {
 	return MessageAggregate{system: true, info: originalInfo, text: errorMessage}
@@ -332,7 +331,8 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 				handler.messages <- MessageAggregate{err: fmt.Errorf("login qr code generation failed: %v\n", err)}
 			} else {
 				messageInfo := whatsapp.MessageInfo{
-					RemoteJid: "login@s.whatsapp.net"}
+					RemoteJid: "login@s.whatsapp.net",
+					Id: "login"}
 				handler.messages <- MessageAggregate{
 					text:   "Scan this QR code within 20 seconds to log in.",
 					info:   messageInfo,
