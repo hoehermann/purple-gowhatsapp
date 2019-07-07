@@ -6,11 +6,9 @@ Powered by [go-whatsapp](https://github.com/Rhymen/go-whatsapp), which is writte
 
 Being developed on Ubuntu 18.04.
 
-**Note:** This branch is not well tested.
-
 ### Building
 
-* Have [go-whatsapp cc103e6](https://github.com/Rhymen/go-whatsapp/commit/cc103e60c5a4519207981cb47c011e06c448c80ff).
+* Have [go-whatsapp 4c0e263](https://github.com/Rhymen/go-whatsapp/commit/4c0e263).
 * Build using the supplied Makefile.
 * Place the binary in your Pidgin's plugin directory (`~/.purple/plugins` on Linux).
 
