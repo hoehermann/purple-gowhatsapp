@@ -237,85 +237,48 @@ func storeDownloadedData(handler *waHandler, info whatsapp.MessageInfo, filename
     }
 }
 
-func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
-    if (handler.doDownloads) {
-        if isSaneId(message.Info.Id) {
-            filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
-            if (wtd) {
+type downloadable interface {
+    Download() ([]byte, error)
+}
+
+func Download(handler *waHandler, message downloadable, info whatsapp.MessageInfo) {
+    filename, wtd := wantToDownload(handler.downloadsDirectory, info.Id)
+    if (wtd) {
+        if (handler.doDownloads) {
+            if isSaneId(info.Id) {
                 data, err := message.Download()
                 if err != nil {
-                    handler.messages <- makeConversationErrorMessage(message.Info,
-                        fmt.Sprintf("An image message (ID %s) with caption \"%v\" was received, but the download failed: %v", message.Info.Id, message.Caption, err))
+                    handler.messages <- makeConversationErrorMessage(info,
+                        fmt.Sprintf("A media message (ID %s) was received, but the download failed: %v", info.Id, err))
                 } else {
-                    handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
-                    storeDownloadedData(handler, message.Info, filename, data)
+                    storeDownloadedData(handler, info, filename, data)
                 }
+            } else {
+                handler.messages <- makeConversationErrorMessage(info,
+                    fmt.Sprintf("A media message (ID %s) was received, but ID looks odd – downloading skipped.", info.Id))
             }
         } else {
-            handler.messages <- makeConversationErrorMessage(message.Info,
-                fmt.Sprintf("An image message (ID %s) with caption \"%v\" was received, but ID looks odd – downloading skipped.", message.Info.Id, message.Caption))
+            handler.messages <- MessageAggregate{text : "[File download disabled in settings.]", system : true}
         }
-    } else {
-        handler.messages <- MessageAggregate{text : message.Caption + "[File download disabled in settings.]", info : message.Info}
     }
+}
+
+func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
+    handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
+    Download(handler, &message, message.Info)
 }
 
 func (handler *waHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
-    if (handler.doDownloads) {
-        filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
-        if (wtd) {
-            data, err := message.Download()
-            if err != nil {
-                fmt.Printf("gowhatsapp message %v video from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
-                handler.messages <- makeConversationErrorMessage(message.Info,
-                    fmt.Sprintf("A video message (ID %s) with caption \"%v\" was received, but the download failed: %v", message.Info.Id, message.Caption, err))
-            } else {
-                fmt.Printf("gowhatsapp message %v video from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
-                handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
-                storeDownloadedData(handler, message.Info, filename, data)
-            }
-        }
-    } else {
-        handler.messages <- MessageAggregate{text : message.Caption + "[File download disabled in settings.]", info : message.Info}
-    }
+    handler.messages <- MessageAggregate{text : message.Caption, info : message.Info}
+    Download(handler, &message, message.Info)
 }
 
 func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
-    if (handler.doDownloads) {
-        filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
-        if (wtd) {
-            data, err := message.Download()
-            if err != nil {
-                fmt.Printf("gowhatsapp message %v audio from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
-                handler.messages <- makeConversationErrorMessage(message.Info,
-                    fmt.Sprintf("An audio message (ID %s) was received, but the download failed: %v", message.Info.Id, err))
-            } else {
-                fmt.Printf("gowhatsapp message %v audio from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
-                storeDownloadedData(handler, message.Info, filename, data)
-            }
-        }
-    } else {
-        handler.messages <- MessageAggregate{text : "[File download disabled in settings.]", info : message.Info}
-    }
+    Download(handler, &message, message.Info)
 }
 
 func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
-    if (handler.doDownloads) {
-        filename, wtd := wantToDownload(handler.downloadsDirectory, message.Info.Id)
-        if (wtd) {
-            data, err := message.Download()
-            if err != nil {
-                fmt.Printf("gowhatsapp message %v document from %v download failed: %v\n", message.Info.Timestamp, message.Info.RemoteJid, err)
-                handler.messages <- makeConversationErrorMessage(message.Info,
-                    fmt.Sprintf("A document message (ID %s) was received, but the download failed: %v", message.Info.Id, err))
-            } else {
-                fmt.Printf("gowhatsapp message %v document from %v size is %d.\n", message.Info.Timestamp, message.Info.RemoteJid, len(data))
-                storeDownloadedData(handler, message.Info, filename, data)
-            }
-        }
-    } else {
-        handler.messages <- MessageAggregate{text : "[File download disabled in settings.]", info : message.Info}
-    }
+    Download(handler, &message, message.Info)
 }
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {
