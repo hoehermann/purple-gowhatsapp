@@ -1,3 +1,21 @@
+/*
+ *   gowhatsapp plugin for libpurple
+ *   Copyright (C) 2019 Hermann Höhne
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package main
 
 import (
@@ -39,6 +57,11 @@ func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, text strin
 	}
 }
 
+/*
+ * Checks for the message ID looking sane.
+ * The message ID is used to infer a file-name. 
+ * This is to migitate attacks breaking out from the downloads directory.
+ */
 func isSaneId(s string) bool {
 	for _, r := range s {
 		if (r < 'A' || r > 'Z') && (r < '0' || r > '9') {
@@ -98,7 +121,7 @@ func (handler *waHandler) downloadMessage(message downloadable, info whatsapp.Me
 				}
 			} else {
 				handler.messages <- makeConversationErrorMessage(info,
-					fmt.Sprintf("A media message (ID %s) was received, but ID looks odd – downloading skipped.", info.Id))
+					fmt.Sprintf("A media message (ID %s) was received, but ID looks not sane – downloading skipped.", info.Id))
 			}
 		} else {
 			handler.messages <- MessageAggregate{text: "[File download disabled in settings.]", system: true}

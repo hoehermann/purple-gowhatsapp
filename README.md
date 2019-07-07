@@ -42,9 +42,13 @@ Being developed on Ubuntu 18.04.
 * Pin go dependency version.
 * Sort old messages by date.
 * Support group conversations properly.
+* Use a pipe instead of polling.
+* Use a call-back for getting current preferences rather than setting them during log-in.
 * Reintroduce inline display of images.
+* Detect media file mime type.
+* Support sending image, audio, media, and document messages by drag-and-drop.
+* Find out how whatsapp represents newlines.
 * Wait for server message received acknowledgement before displaying sent message locally.
 * Do not block while sending message.
-* Implement sending image, audio, media, and document messages.
 * Find spurious segfault.
 * Consistently use dashes in key names.

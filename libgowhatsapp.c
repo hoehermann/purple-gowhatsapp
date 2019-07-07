@@ -1,6 +1,6 @@
 ﻿/*
  *   gowhatsapp plugin for libpurple
- *   Copyright (C) 2016 hermann Höhne
+ *   Copyright (C) 2019 Hermann Höhne
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -15,6 +15,11 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+ 
+ /*
+  * Please note this is the third purple plugin I have ever written.
+  * I still have no idea what I am doing.
+  */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,20 +49,42 @@
 #define GOWHATSAPP_STATUS_STR_OFFLINE  "offline"
 #define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
 
-static const gchar *GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY = "last-new-messages-timestamp";
+/*
+ * String keys for user-configurable settings.
+ */
+static const gchar *GOWHATSAPP_RESTORE_SESSION_OPTION = "restore-session";
+static const gchar *GOWHATSAPP_FAKE_ONLINE_OPTION = "fake-online";
 static const gchar *GOWHATSAPP_MESSAGE_ID_STORE_SIZE_OPTION = "message-id-store-size";
 static const gchar *GOWHATSAPP_TIMESTAMP_FILTERING_OPTION = "message-timestamp-filter";
-static const gchar *GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES = "system-messages-are-ordinary-messages";
-static const gchar *GOWHATSAPP_DOWNLOAD_ATTACHMENTS = "download-attachments";
+static const gchar *GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES_OPTION = "system-messages-are-ordinary-messages";
+static const gchar *GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION = "download-attachments";
 
+/*
+ * String key for administrative data.
+ */
+static const gchar *GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY = "last-new-messages-timestamp";
+
+/*
+ * String keys for log-in data.
+ */
+static const gchar *GOWHATSAPP_SESSION_CLIENDID_KEY = "clientid";
+static const gchar *GOWHATSAPP_SESSION_CLIENTTOKEN_KEY = "clientToken";
+static const gchar *GOWHATSAPP_SESSION_SERVERTOKEN_KEY = "serverToken";
+static const gchar *GOWHATSAPP_SESSION_ENCKEY_KEY = "encKey";
+static const gchar *GOWHATSAPP_SESSION_MACKEY_KEY = "macKey";
+static const gchar *GOWHATSAPP_SESSION_WID_KEY = "wid";
+
+/*
+ * Holds all information related to this account (connection) instance.
+ */
 typedef struct {
     PurpleAccount *account;
     PurpleConnection *pc;
 
-    guint event_timer;
-    GList *used_images;
+    guint event_timer; // for polling
+    GList *used_images; // for inline images (currently not used)
 
-    guint32 previous_sessions_last_messages_timestamp;
+    guint32 previous_sessions_last_messages_timestamp; // keeping track of last received message's date
 } GoWhatsappAccount;
 typedef struct gowhatsapp_message gowhatsapp_message_t;
 
@@ -84,7 +111,10 @@ gowhatsapp_assume_all_buddies_online(GoWhatsappAccount *gwa)
     }
 }
 
-// Copied from p2tgl_imgstore_add_with_id, tgp_msg_photo_display, tgp_format_img
+/*
+ * Displays an image in the conversation window (currently not used).
+ * Copied from p2tgl_imgstore_add_with_id, tgp_msg_photo_display, tgp_format_img.
+ */
 void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *caption, void *data, size_t len, PurpleMessageFlags flags, time_t time) {
     const gpointer data_copy = g_memdup(data, len); // create a copy so freeing is consistent in caller, but imgstore may free the copy it is given
     int id = purple_imgstore_add_with_id(data_copy, len, NULL);
@@ -101,6 +131,9 @@ void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *c
     g_free(content);
 }
 
+/*
+ * Checks whether message is old.
+ */
 gboolean
 gowhatsapp_message_newer_than_last_session (GoWhatsappAccount *gwa, const time_t ts) {
     if (ts < gwa->previous_sessions_last_messages_timestamp) {
@@ -111,6 +144,11 @@ gowhatsapp_message_newer_than_last_session (GoWhatsappAccount *gwa, const time_t
     }
 }
 
+/*
+ * Builds a persistent list of IDs of messages already received.
+ * 
+ * @return Message ID is new.
+ */
 gboolean
 gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message_id)
 {
@@ -158,13 +196,14 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     } else {
         flags |= PURPLE_MESSAGE_RECV;
     }
-    if (gwamsg->system && !purple_account_get_bool(gwa->account, GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES, FALSE)) {
+    if (gwamsg->system && !purple_account_get_bool(gwa->account, GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES_OPTION, FALSE)) {
         // spectrum2 swallows system messages – that is why these flags can be suppressed
         flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;
     }
+    gboolean check_message_date = purple_account_get_bool(gwa->account, GOWHATSAPP_TIMESTAMP_FILTERING_OPTION, FALSE);
     int message_is_new =
             gowhatsapp_append_message_id_if_not_exists(gwa->account, gwamsg->id) &&
-            (!purple_account_get_bool(gwa->account, GOWHATSAPP_TIMESTAMP_FILTERING_OPTION, FALSE) || gowhatsapp_message_newer_than_last_session(gwa, gwamsg->timestamp));
+            (!check_message_date || gowhatsapp_message_newer_than_last_session(gwa, gwamsg->timestamp));
     if (message_is_new) {
         if (gwamsg->blob) {
             gowhatsapp_display_image_message(pc, gwamsg->remoteJid, gwamsg->text, gwamsg->blob, gwamsg->blobsize, flags, gwamsg->timestamp);
@@ -174,16 +213,11 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     }
 }
 
-static const gchar *GOWHATSAPP_FAKE_ONLINE_OPTION = "fake-online";
-
-static const gchar *GOWHATSAPP_SESSION_CLIENDID_KEY = "clientid";
-static const gchar *GOWHATSAPP_SESSION_CLIENTTOKEN_KEY = "clientToken";
-static const gchar *GOWHATSAPP_SESSION_SERVERTOKEN_KEY = "serverToken";
-static const gchar *GOWHATSAPP_SESSION_ENCKEY_KEY = "encKey";
-static const gchar *GOWHATSAPP_SESSION_MACKEY_KEY = "macKey";
-static const gchar *GOWHATSAPP_SESSION_WID_KEY = "wid";
-
-// Polling technique copied from https://github.com/EionRobb/pidgin-opensteamworks/blob/master/libsteamworks.cpp .
+/*
+ * This function is designed to be called periodically.
+ * It polls for new data presented by the golang-parts of the plug-in.
+ * Polling technique copied from https://github.com/EionRobb/pidgin-opensteamworks/blob/master/libsteamworks.cpp .
+ */
 gboolean
 gowhatsapp_eventloop(gpointer userdata)
 {
@@ -210,21 +244,24 @@ gowhatsapp_eventloop(gpointer userdata)
         }
         switch(gwamsg.msgtype) {
             case gowhatsapp_message_type_error:
+                // purplegwa presents an error, handle it
                 if (strstr(gwamsg.text, "401")) {
-                    char *dd = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
+                    // TODO: find a better way to discriminate errors
                     // received error mentioning 401 – assume login failed and try again without stored session
+                    char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
                     gowhatsapp_go_login(
                         (uintptr_t)pc,
                         NULL, NULL, NULL, NULL, NULL, NULL,
-                        dd, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS, FALSE)
+                        download_directory, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, FALSE)
                     );
-                    g_free(dd);
+                    g_free(download_directory);
                     // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg.text);
                 } else {
                     purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
                 }
                 break;
             case gowhatsapp_message_type_session:
+                // purplegwa presents session data, store it
                 purple_account_set_string(pc->account, GOWHATSAPP_SESSION_CLIENDID_KEY, gwamsg.clientId);
                 purple_account_set_string(pc->account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, gwamsg.clientToken);
                 purple_account_set_string(pc->account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, gwamsg.serverToken);
@@ -232,6 +269,7 @@ gowhatsapp_eventloop(gpointer userdata)
                 purple_account_set_string(pc->account, GOWHATSAPP_SESSION_MACKEY_KEY, gwamsg.macKey_b64);
                 purple_account_set_string(pc->account, GOWHATSAPP_SESSION_WID_KEY, gwamsg.wid);
                 if (!PURPLE_CONNECTION_IS_CONNECTED(pc)) {
+                    // connection has now been established, show it in UI
                     purple_connection_set_state(pc, PURPLE_CONNECTED);
                     if (purple_account_get_bool(gwa->account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
                         gowhatsapp_assume_all_buddies_online(gwa);
@@ -256,8 +294,6 @@ gowhatsapp_eventloop(gpointer userdata)
     return TRUE;
 }
 
-static const gchar *GOWHATSAPP_RESTORE_SESSION_OPTION = "restore-session";
-
 void
 gowhatsapp_login(PurpleAccount *account)
 {
@@ -277,6 +313,7 @@ gowhatsapp_login(PurpleAccount *account)
     gwa->account = account;
     gwa->pc = pc;
 
+    // load persisted data into memory
     gwa->previous_sessions_last_messages_timestamp = purple_account_get_int(account, GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY, 0);
     char *client_id = NULL;
     char *client_token = NULL;
@@ -292,21 +329,24 @@ gowhatsapp_login(PurpleAccount *account)
         mackey       = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_MACKEY_KEY, NULL);
         wid          = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_WID_KEY, NULL);
     }
-    char *dd = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
+    char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
     gowhatsapp_go_login(
         (uintptr_t)pc, // abusing guaranteed-to-be-unique address as connection identifier
         client_id, client_token, server_token, enckey, mackey, wid,
-        dd, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS, FALSE)
+        download_directory, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, FALSE)
     );
-    g_free(dd);
+    g_free(download_directory);
+    
+    // start polling for new data
     gwa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
+    
+    // this connecting is now considered logging in
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
 }
 
 static void
 gowhatsapp_close(PurpleConnection *pc)
 {
-    purple_debug_info("gowhatsapp", "gowhatsapp_close()\n");
     GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
     gowhatsapp_go_close((uintptr_t)pc);
     purple_connection_set_state(pc, PURPLE_DISCONNECTED);
@@ -407,14 +447,14 @@ gowhatsapp_add_account_options(GList *account_options)
 
     option = purple_account_option_bool_new(
                 _("Treat system messages like normal messages (spectrum2 compatibility)"),
-                GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES,
+                GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES_OPTION,
                 FALSE
                 );
     account_options = g_list_append(account_options, option);
 
     option = purple_account_option_bool_new(
                 _("Download files from media (image, audio, video, document) messages"),
-                GOWHATSAPP_DOWNLOAD_ATTACHMENTS,
+                GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION,
                 FALSE
                 );
     account_options = g_list_append(account_options, option);

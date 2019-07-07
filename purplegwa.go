@@ -1,4 +1,24 @@
-// package name: purplegwa
+/*
+ *   gowhatsapp plugin for libpurple
+ *   Copyright (C) 2019 Hermann Höhne
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*
+ * Apparently, the main package must be named main, even though this is a library
+ */
 package main
 
 /*
@@ -18,7 +38,7 @@ struct gowhatsapp_message {
     char *remoteJid;
     char *senderJid;
     char *text;
-    void *blob;
+    void *blob; // arbitrary binary data (only for image data, currently unused)
     size_t blobsize;
     time_t timestamp;
     char fromMe;
@@ -48,6 +68,10 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
+/*
+ * Holds all data which is exposed to the C part ("front-end") of the plug-in.
+ * Per message.
+ */
 type MessageAggregate struct {
 	info    whatsapp.MessageInfo
 	text    string
@@ -56,6 +80,10 @@ type MessageAggregate struct {
 	err     error
 	system  bool
 }
+
+/*
+ * Holds all data for one account (connection) instance.
+ */
 type waHandler struct {
 	wac                *whatsapp.Conn
 	messages           chan MessageAggregate
@@ -63,8 +91,15 @@ type waHandler struct {
 	doDownloads        bool
 }
 
+/*
+ * This plug-in can handle multiple connections (identified by C pointer adresses).
+ */
 var waHandlers = make(map[C.uintptr_t]*waHandler)
 
+/*
+ * Send a gereric message.
+ * Forward error message to front-end.
+ */
 func (handler *waHandler) sendMessage(message interface{}, info whatsapp.MessageInfo) *C.char {
 	msgId, err := handler.wac.Send(message)
 	if err != nil {
@@ -75,6 +110,10 @@ func (handler *waHandler) sendMessage(message interface{}, info whatsapp.Message
 	return C.CString(msgId)
 }
 
+/*
+ * Send a text message.
+ * Called by the front-end.
+ */
 //export gowhatsapp_go_sendMessage
 func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) *C.char {
 	remoteJid := C.GoString(who)
@@ -106,6 +145,12 @@ func bool_to_Cchar(b bool) C.char {
 	}
 }
 
+/*
+ * Receive a message from the channel.
+ * Periodically called by the front-end.
+ * All different messages types (text, media, error, session data) are mangled into the same C struct.
+ * Returns an all-zero C-Struct in case of an empty channel (no messages).
+ */
 //export gowhatsapp_go_getMessage
 func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 	handler, ok := waHandlers[connID]
@@ -116,7 +161,6 @@ func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 	}
 	select {
 	case message := <-handler.messages:
-		//fmt.Printf("%+v\n", message)
 		if message.err != nil {
 			// thanks to https://stackoverflow.com/questions/39023475/
 			return C.struct_gowhatsapp_message{
@@ -157,15 +201,23 @@ func gowhatsapp_go_getMessage(connID C.uintptr_t) C.struct_gowhatsapp_message {
 
 }
 
+/*
+ * Handles errors reported by go-whatsapp.
+ * Errors will likely cause the front-end to destroy the connection.
+ */
 func (handler *waHandler) HandleError(err error) {
 	if strings.Contains(err.Error(), whatsapp.ErrInvalidWsData.Error()) { // TODO: less ugly error comparison
+		// this error is not actually an error
 		//fmt.Fprintf(os.Stderr, "gowhatsapp: %v ignored.\n", err)
 	} else {
-		fmt.Fprintf(os.Stderr, "gowhatsapp: error occoured: %v", err)
 		handler.messages <- MessageAggregate{err: err}
 	}
 }
 
+/*
+ * Creates an error message as reaction to an actual message.
+ * With the same message ID, the front-end may not try to display the message.
+ */
 func makeConversationErrorMessage(originalInfo whatsapp.MessageInfo, errorMessage string) MessageAggregate {
 	return MessageAggregate{system: true, info: originalInfo, text: errorMessage}
 }
@@ -202,14 +254,12 @@ func connect_and_login(handler *waHandler, session *whatsapp.Session) {
 	if err != nil {
 		wac = nil
 		handler.messages <- MessageAggregate{err: err}
-		fmt.Fprintf(os.Stderr, "gowhatsapp error creating connection: %v\n", err)
 	} else {
 		wac.AddHandler(handler)
 		err = login(handler, session)
 		if err != nil {
 			wac = nil
 			handler.messages <- MessageAggregate{err: err}
-			fmt.Fprintf(os.Stderr, "gowhatsapp error logging in: %v\n", err)
 		}
 	}
 }
