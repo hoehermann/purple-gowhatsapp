@@ -255,6 +255,7 @@ gowhatsapp_eventloop(gpointer userdata)
                         download_directory, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, FALSE)
                     );
                     g_free(download_directory);
+                    purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
                     // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg.text);
                 } else {
                     purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
