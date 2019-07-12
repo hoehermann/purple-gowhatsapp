@@ -78,8 +78,8 @@ func generateFilepath(downloadsDirectory string, info whatsapp.MessageInfo) stri
 
 func (handler *waHandler) wantToDownload(info whatsapp.MessageInfo) (filename string, want bool) {
 	fp := generateFilepath(handler.downloadsDirectory, info)
-	fileInfo, err := os.Stat(fp)
-	return fp, os.IsNotExist(err) || fileInfo.Size() == 0
+	_, err := os.Stat(fp)
+	return fp, os.IsNotExist(err)
 }
 
 func (handler *waHandler) storeDownloadedData(info whatsapp.MessageInfo, filename string, data []byte) {
