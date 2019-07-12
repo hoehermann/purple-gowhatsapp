@@ -12,6 +12,7 @@ CFLAGS  += -std=c99 -DGOWHATSAPP_PLUGIN_VERSION='"$(PLUGIN_VERSION)"' -DMARKDOWN
 
 CC ?= gcc
 GO ?= go
+GIT ?= git
 
 ifeq ($(shell $(PKG_CONFIG) --exists purple 2>/dev/null && echo "true"),)
   TARGET = FAILNOPURPLE
@@ -27,14 +28,24 @@ CFLAGS += -DLOCALEDIR=\"$(LOCALEDIR)\"
 PURPLE_COMPAT_FILES :=
 PURPLE_C_FILES := libgowhatsapp.c $(C_FILES)
 
-.PHONY:	all FAILNOPURPLE clean gdb install
+.PHONY:	all FAILNOPURPLE clean update-dep gdb install
 
 LOCALES = $(patsubst %.po, %.mo, $(wildcard po/*.po))
 
 all: $(TARGET)
 
-purplegwa.a: purplegwa.go purplegwa-media.go
+GO_WHATSAPP_A = $(shell $(GO) env GOPATH)/pkg/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)/github.com/Rhymen/go-whatsapp.a
+GO_WHATSAPP_GIT = $(shell $(GO) env GOPATH)/src/github.com/Rhymen/go-whatsapp/.git
+GO_WHATSAPP_DATE =$(shell $(GIT) --git-dir="$(GO_WHATSAPP_GIT)" log -1 --date=rfc --format=%cd)
+
+update-dep:
+	$(GO) get -u github.com/Rhymen/go-whatsapp
+	touch -d "$(GO_WHATSAPP_DATE)" $(GO_WHATSAPP_A)
+
+$(GO_WHATSAPP_A):
 	$(GO) get github.com/Rhymen/go-whatsapp
+
+purplegwa.a: purplegwa.go purplegwa-media.go $(GO_WHATSAPP_A)
 	$(GO) get github.com/skip2/go-qrcode
 	$(GO) build -buildmode=c-archive -o purplegwa.a purplegwa.go purplegwa-media.go
 
