@@ -31,8 +31,8 @@ import (
 func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, text string) *C.char {
 	data, err := os.Open(filepath.Join(handler.downloadsDirectory, "outgoing"))
 	if err != nil {
-		handler.messages <- makeConversationErrorMessage(info,
-			fmt.Sprintf("Unable to read file which was going to be sent: %v", err))
+		handler.presentMessage(makeConversationErrorMessage(info,
+			fmt.Sprintf("Unable to read file which was going to be sent: %v", err)))
 		return nil
 	}
 	// TODO: guess mime type
@@ -51,8 +51,8 @@ func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, text strin
 		}
 		return handler.sendMessage(message, info)
 	} else {
-		handler.messages <- makeConversationErrorMessage(info,
-			"Please specify file type image or audio")
+		handler.presentMessage(makeConversationErrorMessage(info,
+			"Please specify file type image or audio"))
 		return nil
 	}
 }
@@ -87,18 +87,18 @@ func (handler *waHandler) storeDownloadedData(info whatsapp.MessageInfo, filenam
 	file, err := os.Create(filename)
 	defer file.Close()
 	if err != nil {
-		handler.messages <- makeConversationErrorMessage(info,
-			fmt.Sprintf("Data was downloaded, but file %s creation failed due to %v", filename, err))
+		handler.presentMessage(makeConversationErrorMessage(info,
+			fmt.Sprintf("Data was downloaded, but file %s creation failed due to %v", filename, err)))
 	} else {
 		_, err := file.Write(data)
 		if err != nil {
-			handler.messages <- makeConversationErrorMessage(info,
-				fmt.Sprintf("Data was downloaded, but could not be written to file %s due to %v", filename, err))
+			handler.presentMessage(makeConversationErrorMessage(info,
+				fmt.Sprintf("Data was downloaded, but could not be written to file %s due to %v", filename, err)))
 		} else {
-			handler.messages <- MessageAggregate{
+			handler.presentMessage(MessageAggregate{
 				text:   fmt.Sprintf("file://%s", filename),
 				info:   info,
-				system: true}
+				system: true})
 		}
 	}
 }
@@ -114,17 +114,17 @@ func (handler *waHandler) downloadMessage(message downloadable, info whatsapp.Me
 			if isSaneId(info.Id) {
 				data, err := message.Download()
 				if err != nil {
-					handler.messages <- makeConversationErrorMessage(info,
-						fmt.Sprintf("A media message (ID %s) was received, but the download failed: %v", info.Id, err))
+					handler.presentMessage(makeConversationErrorMessage(info,
+						fmt.Sprintf("A media message (ID %s) was received, but the download failed: %v", info.Id, err)))
 				} else {
 					handler.storeDownloadedData(info, filename, data)
 				}
 			} else {
-				handler.messages <- makeConversationErrorMessage(info,
-					fmt.Sprintf("A media message (ID %s) was received, but ID looks not sane – downloading skipped.", info.Id))
+				handler.presentMessage(makeConversationErrorMessage(info,
+					fmt.Sprintf("A media message (ID %s) was received, but ID looks not sane – downloading skipped.", info.Id)))
 			}
 		} else {
-			handler.messages <- MessageAggregate{text: "[File download disabled in settings.]", system: true}
+			handler.presentMessage(MessageAggregate{text: "[File download disabled in settings.]", system: true})
 		}
 	}
 }
