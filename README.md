@@ -4,12 +4,13 @@ A libpurple/Pidgin plugin for WhatsApp **Web**.
 
 Powered by [go-whatsapp](https://github.com/Rhymen/go-whatsapp), which is written by Lucas Engelke.
 
-Being developed on Ubuntu 18.04.
+Being developed on Ubuntu 18.04.  
+Last seen working with [go-whatsapp fcfd0ab](https://github.com/Rhymen/go-whatsapp/commit/fcfd0ab).
 
 ### Building
 
-* Have [go-whatsapp 4c0e263](https://github.com/Rhymen/go-whatsapp/commit/4c0e263).
-* Build using the supplied Makefile.
+* Build using the supplied Makefile.  
+  Optional: Try `make update-dep` for the most recent go-whatsapp version.
 
 or
 
@@ -54,7 +55,9 @@ Please also notice the wiki page regarding [common problems](Common-Problems).
 * Pin go dependency version.
 * Sort old messages by date.
 * Support group conversations properly.
-* Use a pipe instead of polling.
+* Improve spectrum support:
+  * Make online status work.
+  * Handle incoming files the way purple-skypeweb does.
 * Use a call-back for getting current preferences rather than setting them during log-in.
 * Reintroduce inline display of images.
 * Detect media file mime type for sending files.

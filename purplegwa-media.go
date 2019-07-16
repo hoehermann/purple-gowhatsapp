@@ -42,6 +42,8 @@ func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, text strin
 			Type:    "image/jpeg",
 			Content: data,
 		}
+		// TODO: inject system message "[File successfully sent.]"
+		// TODO: display own message now, else image will be received out (of order) on reconnect
 		return handler.sendMessage(message, info)
 	} else if strings.Contains(text, "audio") {
 		message := whatsapp.AudioMessage{

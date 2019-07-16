@@ -91,7 +91,7 @@ type MessageAggregate struct {
 type waHandler struct {
 	wac                *whatsapp.Conn
 	pipeFileDescriptor C.int
-	messageSize        C.size_t // TODO: find out how to determine in cgo
+	messageSize        C.size_t // TODO: find out how to determine the size in cgo
 	downloadsDirectory string
 	doDownloads        bool
 }
