@@ -84,7 +84,7 @@ typedef struct {
     guint event_timer; // for polling
     GList *used_images; // for inline images (currently not used)
 
-    guint32 previous_sessions_last_messages_timestamp; // keeping track of last received message's date
+    time_t previous_sessions_last_messages_timestamp; // keeping track of last received message's date
 } GoWhatsappAccount;
 typedef struct gowhatsapp_message gowhatsapp_message_t;
 
