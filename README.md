@@ -32,6 +32,10 @@ or
 
 Please also notice the wiki page regarding [common problems](Common-Problems).
 
+#### spectrum2 specifics
+
+[Spectrum 2](https://spectrum.im/) users must set this plug-in's option `system-messages-are-ordinary-messages` to true. By default, the log-in message is a system message and Spectrum 2 ignores system messages.
+
 ### Features
 
 * Receive text messages.
