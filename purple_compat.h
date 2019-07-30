@@ -1,5 +1,5 @@
 /*
- *   signald plugin for libpurple
+ *   go-whatsapp plugin for libpurple
  *   Copyright (C) 2016-2017 Eion Robb
  *
  *   This program is free software: you can redistribute it and/or modify
