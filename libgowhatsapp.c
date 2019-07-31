@@ -248,6 +248,7 @@ gowhatsapp_eventloop(gpointer userdata)
                 if (strstr(gwamsg.text, "401")) {
                     // TODO: find a better way to discriminate errors
                     // received error mentioning 401 – assume login failed and try again without stored session
+                    purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
                     char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
                     gowhatsapp_go_login(
                         (uintptr_t)pc,
@@ -255,7 +256,6 @@ gowhatsapp_eventloop(gpointer userdata)
                         download_directory, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, FALSE)
                     );
                     g_free(download_directory);
-                    purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
                     // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg.text);
                 } else {
                     purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
@@ -330,6 +330,9 @@ gowhatsapp_login(PurpleAccount *account)
         mackey       = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_MACKEY_KEY, NULL);
         wid          = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_WID_KEY, NULL);
     }
+    // this connecting is now considered logging in
+    purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
+    // where to put downloaded files
     char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
     gowhatsapp_go_login(
         (uintptr_t)pc, // abusing guaranteed-to-be-unique address as connection identifier
@@ -340,9 +343,6 @@ gowhatsapp_login(PurpleAccount *account)
     
     // start polling for new data
     gwa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
-    
-    // this connecting is now considered logging in
-    purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
 }
 
 static void
