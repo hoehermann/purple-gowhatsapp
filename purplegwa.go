@@ -68,6 +68,7 @@ import (
 	"unsafe"
 
 	"github.com/Rhymen/go-whatsapp"
+	"github.com/pkg/errors"
 	"github.com/skip2/go-qrcode"
 )
 
@@ -205,8 +206,11 @@ func convertMessage(message MessageAggregate) C.struct_gowhatsapp_message {
  * Errors will likely cause the front-end to destroy the connection.
  */
 func (handler *waHandler) HandleError(err error) {
-	if strings.Contains(err.Error(), whatsapp.ErrInvalidWsData.Error()) { // TODO: less ugly error comparison
-		// this error is not actually an error
+	cause := errors.Cause(err)
+	if cause == whatsapp.ErrInvalidWsData ||
+		cause == whatsapp.ErrInvalidWsState ||
+		strings.Contains(err.Error(), "invalid string with tag 174") { // TODO: less ugly error comparison
+		// these errors are not actually errors, rather than warnings
 		//fmt.Fprintf(os.Stderr, "gowhatsapp: %v ignored.\n", err)
 	} else {
 		handler.presentMessage(MessageAggregate{err: err})

@@ -257,7 +257,7 @@ gowhatsapp_read_cb(gpointer userdata, gint source, PurpleInputCondition cond)
                     g_free(download_directory);
                     // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg.text);
                 } else {
-                purple_connection_error(gwa->pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg.text);
+                    purple_connection_error(gwa->pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg.text);
                 }
                 break;
             case gowhatsapp_message_type_session:
