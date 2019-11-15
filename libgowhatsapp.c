@@ -292,6 +292,14 @@ gowhatsapp_read_cb(gpointer userdata, gint source, PurpleInputCondition cond)
         free(gwamsg.wid);
 }
 
+#ifdef _WIN32
+#ifndef _O_BINARY
+#define _O_BINARY 0x8000
+#endif
+
+#define pipe(a) _pipe((a), 256, _O_BINARY)
+#endif
+
 void
 gowhatsapp_login(PurpleAccount *account)
 {
