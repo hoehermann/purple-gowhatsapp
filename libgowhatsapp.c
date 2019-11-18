@@ -78,6 +78,8 @@ static const gchar *GOWHATSAPP_SESSION_WID_KEY = "wid";
  * Holds all information related to this account (connection) instance.
  */
 typedef struct {
+    unsigned int debug_marker;
+    
     PurpleAccount *account;
     PurpleConnection *pc;
 
@@ -217,24 +219,24 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     }
 }
 
-void gowhatsapp_trigger_read() {
-    printf("This is within the prpl.\n");
-}
-
 /*
  * This function reads data presented by the golang-parts of the plug-in.
  */
-void
-gowhatsapp_read_cb(gpointer userdata, gint source, PurpleInputCondition cond)
+int
+gowhatsapp_read(gpointer userdata)
 {
-    GoWhatsappAccount *gwa = userdata;
+    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(userdata);
+    
+    printf("gowhatsapp_read debug_marker %x\n", gwa->debug_marker);
+    if (gwa->debug_marker != 0xDEADBEEF) {
+        return FALSE;
+    }
 
     gowhatsapp_message_t gwamsg;
     ssize_t bytesread = read(gwa->fd_read, &gwamsg, sizeof(gwamsg));
     if (bytesread != sizeof(gwamsg)) {
         purple_connection_error(gwa->pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, "Could not read data from go-whatsapp.");
-        return;
-    }
+    } else {
         purple_debug_info(
             "gowhatsapp", "Recieved: at %ld id %s remote %s sender %s (fromMe %d)\n",
             gwamsg.timestamp,
@@ -297,6 +299,13 @@ gowhatsapp_read_cb(gpointer userdata, gint source, PurpleInputCondition cond)
         free(gwamsg.encKey_b64);
         free(gwamsg.macKey_b64);
         free(gwamsg.wid);
+    }
+    return FALSE;
+}
+
+void gowhatsapp_trigger_read(uintptr_t userdata) {
+    printf("This is within the prpl with %lx.\n", userdata);
+    purple_timeout_add(0, gowhatsapp_read, (gpointer)userdata);
 }
 
 void
@@ -314,6 +323,7 @@ gowhatsapp_login(PurpleAccount *account)
     purple_connection_set_flags(pc, pc_flags);
 
     GoWhatsappAccount *gwa = g_new0(GoWhatsappAccount, 1);
+    gwa->debug_marker = 0xDEADBEEF;
     purple_connection_set_protocol_data(pc, gwa);
     gwa->account = account;
     gwa->pc = pc;
@@ -325,9 +335,8 @@ gowhatsapp_login(PurpleAccount *account)
     }
     gwa->fd_read = fdp[0];
     gwa->fd_write = fdp[1];
-    // start polling for new data
-    //gwa->event_timer = purple_timeout_add_seconds(1, (GSourceFunc)gowhatsapp_eventloop, pc);
-    gwa->watcher = purple_input_add(gwa->fd_read, PURPLE_INPUT_READ, gowhatsapp_read_cb, gwa);
+    // do not watch – wait for Go to call us back
+    //gwa->watcher = purple_input_add(gwa->fd_read, PURPLE_INPUT_READ, gowhatsapp_read_cb, gwa);
 
     // load persisted data into memory
     gwa->previous_sessions_last_messages_timestamp = purple_account_get_int(account, GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY, 0);
@@ -363,8 +372,8 @@ gowhatsapp_close(PurpleConnection *pc)
 {
     GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
     gowhatsapp_go_close((uintptr_t)pc);
-    purple_input_remove(gwa->watcher);
-    gwa->watcher = 0;
+    //purple_input_remove(gwa->watcher);
+    //gwa->watcher = 0;
     close(gwa->fd_read);
     gwa->fd_read = 0;
     close(gwa->fd_write);

@@ -26,7 +26,7 @@ package main
 #include <time.h>
 #include <unistd.h>
 
-void gowhatsapp_trigger_read();
+void gowhatsapp_trigger_read(uintptr_t userdata);
 
 enum gowhatsapp_message_type {
     gowhatsapp_message_type_error = -1,
@@ -98,6 +98,7 @@ type waHandler struct {
 	messageSize        C.size_t // TODO: find out how to determine the size in cgo
 	downloadsDirectory string
 	doDownloads        bool
+	purpleConnectionPointer     C.uintptr_t
 }
 
 /*
@@ -164,7 +165,7 @@ func (handler *waHandler) presentMessage(message MessageAggregate) {
 	}
 	cmessage := convertMessage(message)
 	C.write(handler.pipeFileDescriptor, unsafe.Pointer(&cmessage), handler.messageSize)
-	C.gowhatsapp_trigger_read()
+	C.gowhatsapp_trigger_read(handler.purpleConnectionPointer)
 }
 
 /*
@@ -291,6 +292,7 @@ func gowhatsapp_go_login(
 		messageSize:        messageSize,
 		downloadsDirectory: C.GoString(downloadsDirectory),
 		doDownloads:        doDownloads,
+		purpleConnectionPointer:	connID,
 	}
 	waHandlers[connID] = &handler
 	var session *whatsapp.Session
