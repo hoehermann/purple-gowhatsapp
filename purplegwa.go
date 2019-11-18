@@ -95,7 +95,6 @@ type MessageAggregate struct {
  */
 type waHandler struct {
 	wac                *whatsapp.Conn
-	pipeFileDescriptor C.int
 	messageSize        C.size_t // TODO: find out how to determine the size in cgo
 	downloadsDirectory string
 	doDownloads        bool
@@ -284,13 +283,11 @@ func gowhatsapp_go_login(
 	wid *C.char,
 	downloadsDirectory *C.char,
 	doDownloads bool,
-	fileDescriptor C.int,
 	messageSize C.size_t,
 ) {
 	// TODO: protect against concurrent invocation
 	handler := waHandler{
 		wac:                nil,
-		pipeFileDescriptor: fileDescriptor,
 		messageSize:        messageSize,
 		downloadsDirectory: C.GoString(downloadsDirectory),
 		doDownloads:        doDownloads,
@@ -370,7 +367,7 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 }
 
 func main() {
-	gowhatsapp_go_login(0, nil, nil, nil, nil, nil, nil, C.CString("."), true, 0, 0)
+	gowhatsapp_go_login(0, nil, nil, nil, nil, nil, nil, C.CString("."), true, 0)
 	<-time.After(1 * time.Minute)
 	gowhatsapp_go_close(0)
 }

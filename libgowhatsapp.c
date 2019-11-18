@@ -81,10 +81,6 @@ typedef struct {
     PurpleAccount *account;
     PurpleConnection *pc;
 
-    long fd_read;
-    long fd_write;
-    guint watcher;
-
     GList *used_images; // for inline images (currently not used)
 
     time_t previous_sessions_last_messages_timestamp; // keeping track of last received message's date
@@ -140,7 +136,7 @@ void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *c
 gboolean
 gowhatsapp_message_newer_than_last_session (GoWhatsappAccount *gwa, const time_t ts) {
     if (ts < gwa->previous_sessions_last_messages_timestamp) {
-    	return FALSE;
+        return FALSE;
     } else {
         purple_account_set_int(gwa->account, GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY, ts); // TODO: find out if this narrowing of time_t aka. long int to int imposes a problem
         return TRUE;
@@ -203,6 +199,7 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
         // spectrum2 swallows system messages – that is why these flags can be suppressed
         flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;
     }
+    // purple_connection_update_progress(gwa->pc, _("Waiting for QR code scan"), 1, 3);
     gboolean check_message_date = purple_account_get_bool(gwa->account, GOWHATSAPP_TIMESTAMP_FILTERING_OPTION, FALSE);
     int message_is_new =
             gowhatsapp_append_message_id_if_not_exists(gwa->account, gwamsg->id) &&
@@ -219,119 +216,78 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 void
 gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
-	GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
-	PurpleAccount *account = purple_connection_get_account(pc);
-	
-	purple_debug_info(
-		"gowhatsapp", "Recieved: at %ld id %s remote %s sender %s (fromMe %d)\n",
-		gwamsg->timestamp,
-		gwamsg->id,
-		gwamsg->remoteJid,
-		gwamsg->senderJid,
-		gwamsg->fromMe
-	);
-	if (!gwamsg->timestamp) {
-		gwamsg->timestamp = time(NULL);
-	}
-	switch(gwamsg->msgtype) {
-		case gowhatsapp_message_type_error:
-			// purplegwa presents an error, handle it
-			if (strstr(gwamsg->text, "401")) {
-				// TODO: find a better way to discriminate errors
-				// received error mentioning 401 – assume login failed and try again without stored session
-				purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
-				char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
-				gowhatsapp_go_login(
-					(uintptr_t)(pc),
-					NULL, NULL, NULL, NULL, NULL, NULL,
-				download_directory, purple_account_get_bool(account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, FALSE), gwa->fd_write, sizeof(gowhatsapp_message_t)
-				);
-				g_free(download_directory);
-				// alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg->text);
-			} else {
-				purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg->text);
-			}
-			break;
-		
-		case gowhatsapp_message_type_session:
-			// purplegwa presents session data, store it
-			purple_account_set_string(account, GOWHATSAPP_SESSION_CLIENDID_KEY, gwamsg->clientId);
-			purple_account_set_string(account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, gwamsg->clientToken);
-			purple_account_set_string(account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, gwamsg->serverToken);
-			purple_account_set_string(account, GOWHATSAPP_SESSION_ENCKEY_KEY, gwamsg->encKey_b64);
-			purple_account_set_string(account, GOWHATSAPP_SESSION_MACKEY_KEY, gwamsg->macKey_b64);
-			purple_account_set_string(account, GOWHATSAPP_SESSION_WID_KEY, gwamsg->wid);
-			if (!PURPLE_CONNECTION_IS_CONNECTED(pc)) {
-					// connection has now been established, show it in UI
-				purple_connection_set_state(pc, PURPLE_CONNECTED);
-				if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
-					gowhatsapp_assume_all_buddies_online(gwa);
-				}
-			}
-			break;
-		
-		default:
-			gowhatsapp_display_message(pc, gwamsg);
-	}
+    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
+    PurpleAccount *account = purple_connection_get_account(pc);
+    
+    purple_debug_info(
+        "gowhatsapp", "Recieved: at %ld id %s remote %s sender %s (fromMe %d)\n",
+        gwamsg->timestamp,
+        gwamsg->id,
+        gwamsg->remoteJid,
+        gwamsg->senderJid,
+        gwamsg->fromMe
+    );
+    if (!gwamsg->timestamp) {
+        gwamsg->timestamp = time(NULL);
+    }
+    switch(gwamsg->msgtype) {
+        case gowhatsapp_message_type_error:
+            // purplegwa presents an error, handle it
+            if (strstr(gwamsg->text, "401")) {
+                // TODO: find a better way to discriminate errors
+                // received error mentioning 401 – assume login failed and try again without stored session
+                purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
+                purple_connection_update_progress(gwa->pc, _("Connecting"), 0, 3);
+                char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
+                gowhatsapp_go_login(
+                    (uintptr_t)(pc),
+                    NULL, NULL, NULL, NULL, NULL, NULL,
+                download_directory, purple_account_get_bool(account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, FALSE), sizeof(gowhatsapp_message_t)
+                );
+                g_free(download_directory);
+                // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg->text);
+            } else {
+                purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg->text);
+            }
+            break;
+        
+        case gowhatsapp_message_type_session:
+            // purplegwa presents session data, store it
+            purple_account_set_string(account, GOWHATSAPP_SESSION_CLIENDID_KEY, gwamsg->clientId);
+            purple_account_set_string(account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, gwamsg->clientToken);
+            purple_account_set_string(account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, gwamsg->serverToken);
+            purple_account_set_string(account, GOWHATSAPP_SESSION_ENCKEY_KEY, gwamsg->encKey_b64);
+            purple_account_set_string(account, GOWHATSAPP_SESSION_MACKEY_KEY, gwamsg->macKey_b64);
+            purple_account_set_string(account, GOWHATSAPP_SESSION_WID_KEY, gwamsg->wid);
+            if (!PURPLE_CONNECTION_IS_CONNECTED(pc)) {
+                    // connection has now been established, show it in UI
+                purple_connection_set_state(pc, PURPLE_CONNECTED);
+                if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
+                    gowhatsapp_assume_all_buddies_online(gwa);
+                }
+            }
+            break;
+        
+        default:
+            gowhatsapp_display_message(pc, gwamsg);
+    }
 }
 
 gboolean
 gowhatsapp_process_message_bridge_mainthread(gpointer data)
 {
-	PurpleConnection *pc = g_dataset_get_data(data, "pc");
-	g_dataset_destroy(data);
-	
-	gowhatsapp_process_message(pc, (gowhatsapp_message_t *)data);
-	
-	return FALSE;
+    PurpleConnection *pc = g_dataset_get_data(data, "pc");
+    g_dataset_destroy(data);
+    gowhatsapp_process_message(pc, (gowhatsapp_message_t *)data);
+    return FALSE;
 }
 
 void
 gowhatsapp_process_message_bridge(uintptr_t pc, void *gwamsg)
 {
-	g_dataset_set_data(gwamsg, "pc", (gpointer) pc);
-	
-	purple_timeout_add(0, gowhatsapp_process_message_bridge_mainthread, gwamsg);
-	
+    g_dataset_set_data(gwamsg, "pc", (gpointer) pc);
+    purple_timeout_add(0, gowhatsapp_process_message_bridge_mainthread, gwamsg);   
 }
-
-/*
- * This function reads data presented by the golang-parts of the plug-in.
- */
-void
-gowhatsapp_read_cb(gpointer userdata, gint source, PurpleInputCondition cond)
-{
-    GoWhatsappAccount *gwa = userdata;
-
-    gowhatsapp_message_t gwamsg;
-    ssize_t bytesread = read(gwa->fd_read, &gwamsg, sizeof(gwamsg));
-    if (bytesread != sizeof(gwamsg)) {
-        purple_connection_error(gwa->pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, "Could not read data from go-whatsapp.");
-        return;
-    }
-    
-	gowhatsapp_process_message(gwa->pc, &gwamsg);
-	
-	free(gwamsg.id);
-	free(gwamsg.remoteJid);
-	free(gwamsg.senderJid);
-	free(gwamsg.text);
-	free(gwamsg.blob);
-	free(gwamsg.clientId);
-	free(gwamsg.clientToken);
-	free(gwamsg.serverToken);
-	free(gwamsg.encKey_b64);
-	free(gwamsg.macKey_b64);
-	free(gwamsg.wid);
-}
-
-#ifdef _WIN32
-#ifndef _O_BINARY
-#define _O_BINARY 0x8000
-#endif
-
-#define pipe(a) _pipe((a), 65536, _O_BINARY)
-#endif
 
 void
 gowhatsapp_login(PurpleAccount *account)
@@ -351,18 +307,6 @@ gowhatsapp_login(PurpleAccount *account)
     purple_connection_set_protocol_data(pc, gwa);
     gwa->account = account;
     gwa->pc = pc;
-
-#ifndef _WIN32
-    int fdp[2];
-    if(pipe(fdp)) {
-        purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, "Pipe creation failed");
-        return;
-    }
-    gwa->fd_read = fdp[0];
-    gwa->fd_write = fdp[1];
-    // start polling for new data
-    gwa->watcher = purple_input_add(gwa->fd_read, PURPLE_INPUT_READ, gowhatsapp_read_cb, gwa);
-#endif
 
     // load persisted data into memory
     gwa->previous_sessions_last_messages_timestamp = purple_account_get_int(account, GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY, 0);
@@ -387,7 +331,7 @@ gowhatsapp_login(PurpleAccount *account)
     gowhatsapp_go_login(
         (uintptr_t)pc, // abusing guaranteed-to-be-unique address as connection identifier
         client_id, client_token, server_token, enckey, mackey, wid,
-        download_directory, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, FALSE), gwa->fd_write, sizeof(gowhatsapp_message_t)
+        download_directory, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, FALSE), sizeof(gowhatsapp_message_t)
     );
     g_free(download_directory);
     
@@ -398,15 +342,6 @@ gowhatsapp_close(PurpleConnection *pc)
 {
     GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
     gowhatsapp_go_close((uintptr_t)pc);
-    purple_connection_set_state(pc, PURPLE_DISCONNECTED);
-    purple_input_remove(gwa->watcher);
-    gwa->watcher = 0;
-#ifndef _WIN32
-    close(gwa->fd_read);
-    gwa->fd_read = 0;
-    close(gwa->fd_write);
-    gwa->fd_write = 0;
-#endif
     g_free(gwa);
 }
 
