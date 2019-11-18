@@ -45,7 +45,10 @@ update-dep:
 $(GO_WHATSAPP_A):
 	$(GO) get github.com/Rhymen/go-whatsapp
 
-purplegwa.a: purplegwa.go purplegwa-media.go $(GO_WHATSAPP_A)
+gowhatsapp_trigger_read_dummy.o: gowhatsapp_trigger_read_dummy.c
+	gcc -o gowhatsapp_trigger_read_dummy.o -c gowhatsapp_trigger_read_dummy.c
+
+purplegwa.a: purplegwa.go purplegwa-media.go $(GO_WHATSAPP_A) gowhatsapp_trigger_read_dummy.o
 	$(GO) get github.com/skip2/go-qrcode
 	$(GO) build -buildmode=c-archive -o purplegwa.a purplegwa.go purplegwa-media.go
 
@@ -56,7 +59,7 @@ FAILNOPURPLE:
 	echo "You need libpurple development headers installed to be able to compile this plugin"
 
 clean:
-	rm -f $(TARGET) purplegwa.a
+	rm -f $(TARGET) purplegwa.a gowhatsapp_trigger_read_dummy.o
 
 install: $(TARGET)
 	mkdir -m 0755 -p $(DEST)

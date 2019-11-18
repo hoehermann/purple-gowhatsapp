@@ -26,6 +26,8 @@ package main
 #include <time.h>
 #include <unistd.h>
 
+void gowhatsapp_trigger_read();
+
 enum gowhatsapp_message_type {
     gowhatsapp_message_type_error = -1,
     gowhatsapp_message_type_none = 0,
@@ -58,6 +60,7 @@ struct gowhatsapp_message {
 struct gowhatsapp_session {
 };
 */
+// #cgo LDFLAGS: gowhatsapp_trigger_read_dummy.o
 import "C"
 
 import (
@@ -161,6 +164,7 @@ func (handler *waHandler) presentMessage(message MessageAggregate) {
 	}
 	cmessage := convertMessage(message)
 	C.write(handler.pipeFileDescriptor, unsafe.Pointer(&cmessage), handler.messageSize)
+	C.gowhatsapp_trigger_read()
 }
 
 /*

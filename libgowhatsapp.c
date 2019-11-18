@@ -217,6 +217,10 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     }
 }
 
+void gowhatsapp_trigger_read() {
+    printf("This is within the prpl.\n");
+}
+
 /*
  * This function reads data presented by the golang-parts of the plug-in.
  */
