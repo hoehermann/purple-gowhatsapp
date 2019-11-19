@@ -45,9 +45,12 @@ update-dep:
 $(GO_WHATSAPP_A):
 	$(GO) get github.com/Rhymen/go-whatsapp
 
-purplegwa.a: purplegwa.go purplegwa-media.go $(GO_WHATSAPP_A)
+purplegwa.a: purplegwa.go purplegwa-media.go $(GO_WHATSAPP_A) gwa-to-purple.o
 	$(GO) get github.com/skip2/go-qrcode
 	$(GO) build -buildmode=c-archive -o purplegwa.a purplegwa.go purplegwa-media.go
+
+gwa-to-purple.o: gwa-to-purple.c
+	$(CC) -c -o $@ $^ -g -ggdb
 
 $(TARGET): $(PURPLE_C_FILES) $(PURPLE_COMPAT_FILES) purplegwa.a
 	$(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -shared -o $@ $^ $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 --libs --cflags` $(INCLUDES) -Ipurple2compat -g -ggdb
@@ -56,7 +59,7 @@ FAILNOPURPLE:
 	echo "You need libpurple development headers installed to be able to compile this plugin"
 
 clean:
-	rm -f $(TARGET) purplegwa.a
+	rm -f $(TARGET) purplegwa.a gwa-to-purple.o
 
 install: $(TARGET)
 	mkdir -m 0755 -p $(DEST)
