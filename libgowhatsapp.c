@@ -213,6 +213,9 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     }
 }
 
+/*
+ * Interprets a message received from go-whatsapp. Handles login sucess and failures. Forwards errors.
+ */
 void
 gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
@@ -273,6 +276,14 @@ gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     }
 }
 
+/*
+ * Handler for a message received by go-whatsapp.
+ * Called inside of the GTK eventloop.
+ *
+ * TODO: Check if this can be called directly from within Go.
+ *
+ * @return Whether to execute again. Always FALSE.
+ */
 gboolean
 gowhatsapp_process_message_bridge_mainthread(gpointer data)
 {
@@ -282,6 +293,10 @@ gowhatsapp_process_message_bridge_mainthread(gpointer data)
     return FALSE;
 }
 
+/*
+ * Handler for a message received by go-whatsapp.
+ * Called by go-whatsapp (outside of the GTK eventloop).
+ */
 void
 gowhatsapp_process_message_bridge(uintptr_t pc, void *gwamsg)
 {

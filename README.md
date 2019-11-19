@@ -12,9 +12,10 @@ Last seen working with [go-whatsapp fcfd0ab](https://github.com/Rhymen/go-whatsa
 * Build using the supplied Makefile.  
   Optional: Try `make update-dep` for the most recent go-whatsapp version.
 
-or
+### Pre-Built Binaries
 
-* Download a [nightly build](https://buildbot.hehoe.de/purple-gowhatsapp/builds/).
+* Download a [nightly build](https://buildbot.hehoe.de/purple-gowhatsapp/builds/) (Ubuntu 18.04).
+* Win32 binaries might be obtained from [EionRobb](https://github.com/EionRobb/purple-gowhatsapp).
 
 ### Installation
 
@@ -52,14 +53,21 @@ Please also notice the wiki page regarding [common problems](Common-Problems).
 
 ### What could be done next
 
+From approximate most important to approximate least interesting.
+
+* Regard `I/fb36` a valid message ID.
+* Display login QR code via the [request API](https://github.com/EionRobb/pidgin-opensteamworks/blob/master/steam-mobile/libsteam.c#L378-L412).
+* Reintroduce inline display of images.
+* Use a call-back for getting current preferences rather than setting them during log-in.
+* If file download failed, do not try to download again (make user configurable).
+* If file download is disabled, mention file only once.  
+* Add option to ignore invalid message IDs silently.
+* Support group conversations properly.
 * Pin go dependency version.
 * Sort old messages by date.
-* Support group conversations properly.
 * Improve spectrum support:
   * Make online status work.
   * Handle incoming files the way purple-skypeweb does.
-* Use a call-back for getting current preferences rather than setting them during log-in.
-* Reintroduce inline display of images.
 * Detect media file mime type for sending files.
 * Support sending image, audio, media, and document messages by drag-and-drop.
 * Find out how whatsapp represents newlines.
