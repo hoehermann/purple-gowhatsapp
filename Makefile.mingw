@@ -40,10 +40,13 @@ LOCALES = $(patsubst %.po, %.mo, $(wildcard po/*.po))
 
 all: $(TARGET)
 
-purplegwa.a: purplegwa.go purplegwa-media.go
+purplegwa.a: purplegwa.go purplegwa-media.go gwa-to-purple.o
 	$(GO) get github.com/Rhymen/go-whatsapp
 	$(GO) get github.com/skip2/go-qrcode
 	$(GO) build -buildmode=c-archive -o purplegwa.a purplegwa.go purplegwa-media.go
+
+gwa-to-purple.o: gwa-to-purple.c
+	$(WIN32_CC) -c -o $@ $^ -g -ggdb
 
 $(TARGET): $(PURPLE_C_FILES) $(PURPLE_COMPAT_FILES) purplegwa.a
 	$(WIN32_CC) $(CFLAGS) $(CPPFLAGS) -shared -o $@ $^ $(LDFLAGS)  $(INCLUDES) -Ipurple2compat -g -ggdb

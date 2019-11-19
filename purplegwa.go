@@ -57,6 +57,10 @@ struct gowhatsapp_message {
 
 struct gowhatsapp_session {
 };
+
+extern void gowhatsapp_process_message_bridge(uintptr_t pc, void * gwamsg);
+#cgo LDFLAGS: gwa-to-purple.o
+
 */
 import "C"
 
@@ -95,6 +99,7 @@ type waHandler struct {
 	messageSize        C.size_t // TODO: find out how to determine the size in cgo
 	downloadsDirectory string
 	doDownloads        bool
+	connID             C.uintptr_t
 }
 
 /*
@@ -151,6 +156,7 @@ func bool_to_Cchar(b bool) C.char {
 	}
 }
 
+
 /*
  * Forwards a message to the front-end.
  */
@@ -160,7 +166,8 @@ func (handler *waHandler) presentMessage(message MessageAggregate) {
 		handler.wac.Read(message.info.RemoteJid, message.info.Id) // mark message as "displayed"
 	}
 	cmessage := convertMessage(message)
-	C.write(handler.pipeFileDescriptor, unsafe.Pointer(&cmessage), handler.messageSize)
+	//C.write(handler.pipeFileDescriptor, unsafe.Pointer(&cmessage), handler.messageSize)
+	C.gowhatsapp_process_message_bridge(handler.connID, unsafe.Pointer(&cmessage))
 }
 
 /*
@@ -287,6 +294,7 @@ func gowhatsapp_go_login(
 		messageSize:        messageSize,
 		downloadsDirectory: C.GoString(downloadsDirectory),
 		doDownloads:        doDownloads,
+		connID:             connID,
 	}
 	waHandlers[connID] = &handler
 	var session *whatsapp.Session
