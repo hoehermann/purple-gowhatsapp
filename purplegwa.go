@@ -101,7 +101,6 @@ type MessageAggregate struct {
 type waHandler struct {
 	wac                *whatsapp.Conn
 	downloadsDirectory string
-	doDownloads        bool
 	connID             C.uintptr_t
 }
 
@@ -160,9 +159,8 @@ func bool_to_Cchar(b bool) C.char {
 }
 
 func Cint_to_bool(i C.int) bool {
-    return i != 0
+	return i != 0
 }
-
 
 /*
  * Forwards a message to the front-end.
@@ -243,20 +241,24 @@ func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 	handler.presentMessage(MessageAggregate{text: message.Caption, info: message.Info})
-	handler.downloadMessage(&message, message.Info)
+	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
+	handler.downloadMessage(&message, message.Info, downloadsEnabled)
 }
 
 func (handler *waHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
 	handler.presentMessage(MessageAggregate{text: message.Caption, info: message.Info})
-	handler.downloadMessage(&message, message.Info)
+	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
+	handler.downloadMessage(&message, message.Info, downloadsEnabled)
 }
 
 func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
-	handler.downloadMessage(&message, message.Info)
+	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
+	handler.downloadMessage(&message, message.Info, downloadsEnabled)
 }
 
 func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
-	handler.downloadMessage(&message, message.Info)
+	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
+	handler.downloadMessage(&message, message.Info, downloadsEnabled)
 }
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {
@@ -285,32 +287,33 @@ func gowhatsapp_go_login(
 	downloadsDirectory *C.char,
 ) {
 	// TODO: protect against concurrent invocation
-	clientId := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENDID_KEY, nil)
-	clientToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, nil)
-	serverToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_SERVERTOKEN_KEY, nil)
-	encKey_b64 := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_ENCKEY_KEY, nil)
-	macKey_b64 := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_MACKEY_KEY, nil)
-	wid := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_WID_KEY, nil)
-    doDownloads := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
 	handler := waHandler{
 		wac:                nil,
 		downloadsDirectory: C.GoString(downloadsDirectory),
-		doDownloads:        doDownloads,
 		connID:             connID,
 	}
 	waHandlers[connID] = &handler
 	var session *whatsapp.Session
-	if clientId != nil && clientToken != nil && serverToken != nil && encKey_b64 != nil && macKey_b64 != nil && wid != nil {
-		encKey, encKeyErr := base64.StdEncoding.DecodeString(C.GoString(encKey_b64))
-		macKey, macKeyErr := base64.StdEncoding.DecodeString(C.GoString(macKey_b64))
-		if encKeyErr == nil && macKeyErr == nil {
-			session = &whatsapp.Session{
-				ClientId:    C.GoString(clientId),
-				ClientToken: C.GoString(clientToken),
-				ServerToken: C.GoString(serverToken),
-				EncKey:      encKey,
-				MacKey:      macKey,
-				Wid:         C.GoString(wid)}
+	restoreSession := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_RESTORE_SESSION_OPTION, 1))
+	if restoreSession {
+		clientId := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENDID_KEY, nil)
+		clientToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, nil)
+		serverToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_SERVERTOKEN_KEY, nil)
+		encKey_b64 := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_ENCKEY_KEY, nil)
+		macKey_b64 := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_MACKEY_KEY, nil)
+		wid := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_WID_KEY, nil)
+		if clientId != nil && clientToken != nil && serverToken != nil && encKey_b64 != nil && macKey_b64 != nil && wid != nil {
+			encKey, encKeyErr := base64.StdEncoding.DecodeString(C.GoString(encKey_b64))
+			macKey, macKeyErr := base64.StdEncoding.DecodeString(C.GoString(macKey_b64))
+			if encKeyErr == nil && macKeyErr == nil {
+				session = &whatsapp.Session{
+					ClientId:    C.GoString(clientId),
+					ClientToken: C.GoString(clientToken),
+					ServerToken: C.GoString(serverToken),
+					EncKey:      encKey,
+					MacKey:      macKey,
+					Wid:         C.GoString(wid)}
+			}
 		}
 	}
 	go connect_and_login(&handler, session)
@@ -372,7 +375,7 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 }
 
 func main() {
-    gowhatsapp_go_login(0, C.CString("."))
+	gowhatsapp_go_login(0, C.CString("."))
 	<-time.After(1 * time.Minute)
 	gowhatsapp_go_close(0)
 }

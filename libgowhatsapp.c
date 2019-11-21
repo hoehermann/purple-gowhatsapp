@@ -268,7 +268,6 @@ gowhatsapp_login(PurpleAccount *account)
 
     // load persisted data into memory
     gwa->previous_sessions_last_messages_timestamp = purple_account_get_int(account, GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY, 0);
-    // TODO: move to go purple_account_get_bool(gwa->account, GOWHATSAPP_RESTORE_SESSION_OPTION, TRUE))
     // this connecting is now considered logging in
     purple_connection_set_state(gwa->pc, PURPLE_CONNECTION_CONNECTING);
     // where to put downloaded files

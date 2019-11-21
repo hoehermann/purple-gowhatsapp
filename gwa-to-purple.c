@@ -16,11 +16,11 @@ gowhatsapp_get_account(void *pc)
 const char * 
 gowhatsapp_account_get_string(void *account, const char *name, const char *default_value)
 {
-    return "Dummy implementation";
+    return 0;
 }
 
 int 
 gowhatsapp_account_get_bool(void *account, const char *name, int default_value)
 {
-    return 0xDEADBEEF;
+    return 0;
 }

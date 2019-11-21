@@ -109,10 +109,10 @@ type downloadable interface {
 	Download() ([]byte, error)
 }
 
-func (handler *waHandler) downloadMessage(message downloadable, info whatsapp.MessageInfo) {
+func (handler *waHandler) downloadMessage(message downloadable, info whatsapp.MessageInfo, downloadsEnabled bool) {
 	filename, wtd := handler.wantToDownload(info)
 	if wtd {
-		if handler.doDownloads {
+		if downloadsEnabled {
 			if isSaneId(info.Id) {
 				data, err := message.Download()
 				if err != nil {
