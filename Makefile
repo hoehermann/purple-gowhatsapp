@@ -26,7 +26,6 @@ endif
 CFLAGS += -DLOCALEDIR=\"$(LOCALEDIR)\"
 
 PURPLE_COMPAT_FILES :=
-PURPLE_C_FILES := libgowhatsapp.c $(C_FILES)
 
 .PHONY:	all FAILNOPURPLE clean update-dep gdb install
 
@@ -49,11 +48,11 @@ purplegwa.a: purplegwa.go purplegwa-media.go $(GO_WHATSAPP_A) gwa-to-purple.o
 	$(GO) get github.com/skip2/go-qrcode
 	$(GO) build -buildmode=c-archive -o purplegwa.a purplegwa.go purplegwa-media.go
 
-gwa-to-purple.o: gwa-to-purple.c
-	$(CC) -c -o $@ $^ -g -ggdb
+gwa-to-purple.o: gwa-to-purple.c constants.h
+	$(CC) -c -o gwa-to-purple.o gwa-to-purple.c -g -ggdb
 
-$(TARGET): $(PURPLE_C_FILES) $(PURPLE_COMPAT_FILES) purplegwa.a
-	$(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -shared -o $@ $^ $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 --libs --cflags` $(INCLUDES) -Ipurple2compat -g -ggdb
+$(TARGET): libgowhatsapp.c $(PURPLE_COMPAT_FILES) purplegwa.a constants.h
+	$(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -shared -o libgowhatsapp.o libgowhatsapp.c $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 --libs --cflags` $(INCLUDES) -Ipurple2compat -g -ggdb
 
 FAILNOPURPLE:
 	echo "You need libpurple development headers installed to be able to compile this plugin"

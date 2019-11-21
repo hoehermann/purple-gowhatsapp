@@ -50,31 +50,6 @@
 #define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
 
 /*
- * String keys for user-configurable settings.
- */
-static const gchar *GOWHATSAPP_RESTORE_SESSION_OPTION = "restore-session";
-static const gchar *GOWHATSAPP_FAKE_ONLINE_OPTION = "fake-online";
-static const gchar *GOWHATSAPP_MESSAGE_ID_STORE_SIZE_OPTION = "message-id-store-size";
-static const gchar *GOWHATSAPP_TIMESTAMP_FILTERING_OPTION = "message-timestamp-filter";
-static const gchar *GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES_OPTION = "system-messages-are-ordinary-messages";
-static const gchar *GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION = "download-attachments";
-
-/*
- * String key for administrative data.
- */
-static const gchar *GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY = "last-new-messages-timestamp";
-
-/*
- * String keys for log-in data.
- */
-static const gchar *GOWHATSAPP_SESSION_CLIENDID_KEY = "clientid";
-static const gchar *GOWHATSAPP_SESSION_CLIENTTOKEN_KEY = "clientToken";
-static const gchar *GOWHATSAPP_SESSION_SERVERTOKEN_KEY = "serverToken";
-static const gchar *GOWHATSAPP_SESSION_ENCKEY_KEY = "encKey";
-static const gchar *GOWHATSAPP_SESSION_MACKEY_KEY = "macKey";
-static const gchar *GOWHATSAPP_SESSION_WID_KEY = "wid";
-
-/*
  * Holds all information related to this account (connection) instance.
  */
 typedef struct {
@@ -274,34 +249,6 @@ gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
         default:
             gowhatsapp_display_message(pc, gwamsg);
     }
-}
-
-/*
- * Handler for a message received by go-whatsapp.
- * Called inside of the GTK eventloop.
- *
- * TODO: Check if this can be called directly from within Go.
- *
- * @return Whether to execute again. Always FALSE.
- */
-gboolean
-gowhatsapp_process_message_bridge_mainthread(gpointer data)
-{
-    PurpleConnection *pc = g_dataset_get_data(data, "pc");
-    g_dataset_destroy(data);
-    gowhatsapp_process_message(pc, (gowhatsapp_message_t *)data);
-    return FALSE;
-}
-
-/*
- * Handler for a message received by go-whatsapp.
- * Called by go-whatsapp (outside of the GTK eventloop).
- */
-void
-gowhatsapp_process_message_bridge(uintptr_t pc, void *gwamsg)
-{
-    g_dataset_set_data(gwamsg, "pc", (gpointer) pc);
-    purple_timeout_add(0, gowhatsapp_process_message_bridge_mainthread, gwamsg);   
 }
 
 void
@@ -612,3 +559,47 @@ PURPLE_INIT_PLUGIN(gowhatsapp, plugin_init, info);
 /* Purple 3 plugin load functions */
 #perror Purple 3 not supported.
 #endif
+
+///////////////////////////////////////////////////////////
+//                                                       //
+// WELCOME TO THE LAND OF ABANDONMENT OF TYPE AND SAFETY //
+//                   Wanderer, beware.                   //
+//                                                       //
+///////////////////////////////////////////////////////////
+
+void *
+gowhatsapp_get_account(uintptr_t pc)
+{
+    return purple_connection_get_account((PurpleConnection *)pc);
+}
+
+int
+gowhatsapp_account_get_bool(void *account, const char *name, int default_value) {
+    return purple_account_get_bool((const PurpleAccount *)account, name, default_value);
+}
+
+/*
+ * Handler for a message received by go-whatsapp.
+ * Called inside of the GTK eventloop.
+ *
+ * @return Whether to execute again. Always FALSE.
+ */
+gboolean
+gowhatsapp_process_message_bridge_mainthread(gpointer data)
+{
+    PurpleConnection *pc = g_dataset_get_data(data, "pc");
+    g_dataset_destroy(data);
+    gowhatsapp_process_message(pc, (gowhatsapp_message_t *)data);
+    return FALSE;
+}
+
+/*
+ * Handler for a message received by go-whatsapp.
+ * Called by go-whatsapp (outside of the GTK eventloop).
+ */
+void
+gowhatsapp_process_message_bridge(uintptr_t pc, void *gwamsg)
+{
+    g_dataset_set_data(gwamsg, "pc", (gpointer) pc);
+    purple_timeout_add(0, gowhatsapp_process_message_bridge_mainthread, gwamsg); // yes, this is indeed neccessary – we checked
+}

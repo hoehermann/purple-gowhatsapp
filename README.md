@@ -57,7 +57,8 @@ From approximate most important to approximate least interesting.
 
 * Regard `I/fb36` a valid message ID.
 * Display login QR code via the [request API](https://github.com/EionRobb/pidgin-opensteamworks/blob/master/steam-mobile/libsteam.c#L378-L412).
-* Reintroduce inline display of images.
+* Reintroduce inline display of images (user configurable).
+* Support [stickers](https://github.com/Rhymen/go-whatsapp/commit/d7754af4a6b7209d88132b5e498c98f12fb67f70).
 * Use a call-back for getting current preferences rather than setting them during log-in.
 * If file download failed, do not try to download again (make user configurable).
 * If file download is disabled, mention file only once.  
@@ -73,5 +74,6 @@ From approximate most important to approximate least interesting.
 * Find out how whatsapp represents newlines.
 * Wait for server message received acknowledgement before displaying sent message locally.
 * Do not block while sending message.
+* Be compatible with the ["Autoreply"](https://github.com/EionRobb/purple-gowhatsapp/issues/3#issuecomment-555814663) plug-in.
 * Find spurious segfault.
 * Consistently use dashes in key names.
