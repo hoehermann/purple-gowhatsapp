@@ -61,6 +61,7 @@ struct gowhatsapp_session {
 extern void gowhatsapp_process_message_bridge(uintptr_t pc, void * gwamsg);
 extern void * gowhatsapp_get_account(uintptr_t pc);
 extern int gowhatsapp_account_get_bool(void *account, const char *name, int default_value);
+extern const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value);
 #cgo LDFLAGS: gwa-to-purple.o
 
 #cgo CFLAGS: -DCGO
@@ -99,7 +100,6 @@ type MessageAggregate struct {
  */
 type waHandler struct {
 	wac                *whatsapp.Conn
-	messageSize        C.size_t // TODO: find out how to determine the size in cgo
 	downloadsDirectory string
 	doDownloads        bool
 	connID             C.uintptr_t
@@ -173,7 +173,6 @@ func (handler *waHandler) presentMessage(message MessageAggregate) {
 		handler.wac.Read(message.info.RemoteJid, message.info.Id) // mark message as "displayed"
 	}
 	cmessage := convertMessage(message)
-	//C.write(handler.pipeFileDescriptor, unsafe.Pointer(&cmessage), handler.messageSize)
 	C.gowhatsapp_process_message_bridge(handler.connID, unsafe.Pointer(&cmessage))
 }
 
@@ -283,23 +282,20 @@ func connect_and_login(handler *waHandler, session *whatsapp.Session) {
 //export gowhatsapp_go_login
 func gowhatsapp_go_login(
 	connID C.uintptr_t,
-	clientId *C.char,
-	clientToken *C.char,
-	serverToken *C.char,
-	encKey_b64 *C.char,
-	macKey_b64 *C.char,
-	wid *C.char,
 	downloadsDirectory *C.char,
-	doDownloads bool,
-	messageSize C.size_t,
 ) {
-    doDownloadsI := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
 	// TODO: protect against concurrent invocation
+	clientId := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENDID_KEY, nil)
+	clientToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, nil)
+	serverToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_SERVERTOKEN_KEY, nil)
+	encKey_b64 := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_ENCKEY_KEY, nil)
+	macKey_b64 := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_MACKEY_KEY, nil)
+	wid := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_WID_KEY, nil)
+    doDownloads := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
 	handler := waHandler{
 		wac:                nil,
-		messageSize:        messageSize,
 		downloadsDirectory: C.GoString(downloadsDirectory),
-		doDownloads:        doDownloadsI,
+		doDownloads:        doDownloads,
 		connID:             connID,
 	}
 	waHandlers[connID] = &handler
@@ -376,7 +372,7 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 }
 
 func main() {
-	gowhatsapp_go_login(0, nil, nil, nil, nil, nil, nil, C.CString("."), true, 0)
+    gowhatsapp_go_login(0, C.CString("."))
 	<-time.After(1 * time.Minute)
 	gowhatsapp_go_close(0)
 }

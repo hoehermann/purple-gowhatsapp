@@ -13,7 +13,8 @@ gowhatsapp_get_account(void *pc)
     return (void *)0xDEADBEEF;
 }
 
-const char *purple_account_get_string(void *account, const char *name, const char *default_value)
+const char * 
+gowhatsapp_account_get_string(void *account, const char *name, const char *default_value)
 {
     return "Dummy implementation";
 }

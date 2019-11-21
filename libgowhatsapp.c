@@ -217,11 +217,7 @@ gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
                 purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
                 purple_connection_update_progress(gwa->pc, _("Connecting"), 0, 3);
                 char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
-                gowhatsapp_go_login(
-                    (uintptr_t)(pc),
-                    NULL, NULL, NULL, NULL, NULL, NULL,
-                download_directory, purple_account_get_bool(account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, FALSE), sizeof(gowhatsapp_message_t)
-                );
+                gowhatsapp_go_login((uintptr_t)pc, download_directory);
                 g_free(download_directory);
                 // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg->text);
             } else {
@@ -272,29 +268,14 @@ gowhatsapp_login(PurpleAccount *account)
 
     // load persisted data into memory
     gwa->previous_sessions_last_messages_timestamp = purple_account_get_int(account, GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY, 0);
-    char *client_id = NULL;
-    char *client_token = NULL;
-    char *server_token = NULL;
-    char *enckey = NULL;
-    char *mackey = NULL;
-    char *wid = NULL;
-    if(purple_account_get_bool(gwa->account, GOWHATSAPP_RESTORE_SESSION_OPTION, TRUE)) {
-        client_id    = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_CLIENDID_KEY, NULL);
-        client_token = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, NULL);
-        server_token = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, NULL);
-        enckey       = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_ENCKEY_KEY, NULL);
-        mackey       = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_MACKEY_KEY, NULL);
-        wid          = (char *)purple_account_get_string(pc->account, GOWHATSAPP_SESSION_WID_KEY, NULL);
-    }
+    // TODO: move to go purple_account_get_bool(gwa->account, GOWHATSAPP_RESTORE_SESSION_OPTION, TRUE))
     // this connecting is now considered logging in
     purple_connection_set_state(gwa->pc, PURPLE_CONNECTION_CONNECTING);
     // where to put downloaded files
     char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
     gowhatsapp_go_login(
         (uintptr_t)pc, // abusing guaranteed-to-be-unique address as connection identifier
-        client_id, client_token, server_token, enckey, mackey, wid,
-        download_directory, purple_account_get_bool(gwa->account, GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, FALSE), sizeof(gowhatsapp_message_t)
-    );
+        download_directory);
     g_free(download_directory);
     
 }
@@ -574,8 +555,14 @@ gowhatsapp_get_account(uintptr_t pc)
 }
 
 int
-gowhatsapp_account_get_bool(void *account, const char *name, int default_value) {
+gowhatsapp_account_get_bool(void *account, const char *name, int default_value)
+{
     return purple_account_get_bool((const PurpleAccount *)account, name, default_value);
+}
+
+const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value)
+{
+    return purple_account_get_string((const PurpleAccount *)account, name, default_value);
 }
 
 /*
