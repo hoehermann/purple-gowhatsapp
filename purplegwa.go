@@ -235,30 +235,35 @@ func makeConversationErrorMessage(originalInfo whatsapp.MessageInfo, errorMessag
 	return MessageAggregate{system: true, info: originalInfo, text: errorMessage}
 }
 
+func (handler *waHandler) handleDownloadableMessage(message downloadable, info whatsapp.MessageInfo) {
+	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
+	handler.downloadMessage(message, info, downloadsEnabled)
+}
+
 func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	handler.presentMessage(MessageAggregate{text: message.Text, info: message.Info})
 }
 
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 	handler.presentMessage(MessageAggregate{text: message.Caption, info: message.Info})
-	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
-	handler.downloadMessage(&message, message.Info, downloadsEnabled)
+	handler.handleDownloadableMessage(&message, message.Info)
 }
 
 func (handler *waHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
 	handler.presentMessage(MessageAggregate{text: message.Caption, info: message.Info})
-	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
-	handler.downloadMessage(&message, message.Info, downloadsEnabled)
+	handler.handleDownloadableMessage(&message, message.Info)
 }
 
 func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
-	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
-	handler.downloadMessage(&message, message.Info, downloadsEnabled)
+	handler.handleDownloadableMessage(&message, message.Info)
 }
 
 func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
-	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
-	handler.downloadMessage(&message, message.Info, downloadsEnabled)
+	handler.handleDownloadableMessage(&message, message.Info)
+}
+
+func (handler *waHandler) HandleStickerMessage(message whatsapp.DocumentMessage) {
+	handler.handleDownloadableMessage(&message, message.Info)
 }
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {
