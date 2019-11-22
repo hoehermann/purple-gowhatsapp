@@ -209,7 +209,9 @@ func convertMessage(message MessageAggregate) C.struct_gowhatsapp_message {
 		fromMe:    bool_to_Cchar(info.FromMe),
 		text:      C.CString(message.text),
 		system:    bool_to_Cchar(message.system),
-	}
+		blob:      C.CBytes(message.data),
+		blobsize:  C.size_t(len(message.data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
+ 	}
 }
 
 /*
@@ -235,9 +237,9 @@ func makeConversationErrorMessage(originalInfo whatsapp.MessageInfo, errorMessag
 	return MessageAggregate{system: true, info: originalInfo, text: errorMessage}
 }
 
-func (handler *waHandler) handleDownloadableMessage(message downloadable, info whatsapp.MessageInfo) {
+func (handler *waHandler) handleDownloadableMessage(message downloadable, info whatsapp.MessageInfo, inline bool) []byte {
 	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
-	handler.presentDownloadableMessage(message, info, downloadsEnabled, false)
+	return handler.presentDownloadableMessage(message, info, downloadsEnabled, inline)
 }
 
 func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
@@ -245,25 +247,30 @@ func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 }
 
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
-	handler.presentMessage(MessageAggregate{text: message.Caption, info: message.Info})
-	handler.handleDownloadableMessage(&message, message.Info)
+	inlineImages := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_INLINE_IMAGES_OPTION, 1))
+	data := handler.handleDownloadableMessage(&message, message.Info, inlineImages)
+	handler.presentMessage(MessageAggregate{text: message.Caption, info: message.Info, data: data})
+}
+
+func (handler *waHandler) HandleStickerMessage(message whatsapp.StickerMessage) {
+	inlineImages := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_INLINE_IMAGES_OPTION, 0))
+	data := handler.handleDownloadableMessage(&message, message.Info, inlineImages)
+	if (inlineImages) {
+		handler.presentMessage(MessageAggregate{text: "Contact sent a sticker: ", info: message.Info, data: data})
+	}
 }
 
 func (handler *waHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
 	handler.presentMessage(MessageAggregate{text: message.Caption, info: message.Info})
-	handler.handleDownloadableMessage(&message, message.Info)
+	handler.handleDownloadableMessage(&message, message.Info, false)
 }
 
 func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
-	handler.handleDownloadableMessage(&message, message.Info)
+	handler.handleDownloadableMessage(&message, message.Info, false)
 }
 
 func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
-	handler.handleDownloadableMessage(&message, message.Info)
-}
-
-func (handler *waHandler) HandleStickerMessage(message whatsapp.DocumentMessage) {
-	handler.handleDownloadableMessage(&message, message.Info)
+	handler.handleDownloadableMessage(&message, message.Info, false)
 }
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {
@@ -289,6 +296,7 @@ func connect_and_login(handler *waHandler, session *whatsapp.Session) {
 //export gowhatsapp_go_login
 func gowhatsapp_go_login(
 	connID C.uintptr_t,
+	restoreSession C.int,
 	downloadsDirectory *C.char,
 ) {
 	// TODO: protect against concurrent invocation
@@ -299,8 +307,7 @@ func gowhatsapp_go_login(
 	}
 	waHandlers[connID] = &handler
 	var session *whatsapp.Session
-	restoreSession := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_RESTORE_SESSION_OPTION, 1))
-	if restoreSession {
+	if Cint_to_bool(restoreSession) {
 		clientId := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENDID_KEY, nil)
 		clientToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, nil)
 		serverToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_SERVERTOKEN_KEY, nil)
@@ -356,12 +363,23 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 				messageInfo := whatsapp.MessageInfo{
 					RemoteJid: "login@s.whatsapp.net",
 					Id:        "login"}
-				handler.presentMessage(MessageAggregate{
-					text:   "Scan this QR code within 20 seconds to log in.",
-					info:   messageInfo,
-					system: true})
-				filename := generateFilepath(handler.downloadsDirectory, messageInfo)
-				handler.storeDownloadedData(messageInfo, filename, png)
+				// TODO: remove redundancy (treat this more like an ordinary image message) OR display via purple requests API
+				text := "Scan this QR code within 20 seconds to log in."
+				inlineImages := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_INLINE_IMAGES_OPTION, 1))
+				if (inlineImages) {
+					handler.presentMessage(MessageAggregate{
+						text: text, 
+						info: messageInfo, 
+						system: true,
+						data: png})
+				} else {
+					filename := generateFilepath(handler.downloadsDirectory, messageInfo)
+					handler.storeDownloadedData(messageInfo, filename, png)
+					handler.presentMessage(MessageAggregate{
+						text:   text,
+						info:   messageInfo,
+						system: true})
+				}
 			}
 		}()
 		session, err := wac.Login(qr)
@@ -380,7 +398,7 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 }
 
 func main() {
-	gowhatsapp_go_login(0, C.CString("."))
+	gowhatsapp_go_login(0, 0, C.CString("."))
 	<-time.After(1 * time.Minute)
 	gowhatsapp_go_close(0)
 }

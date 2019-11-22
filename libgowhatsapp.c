@@ -56,7 +56,7 @@ typedef struct {
     PurpleAccount *account;
     PurpleConnection *pc;
 
-    GList *used_images; // for inline images (currently not used)
+    GList *used_images; // for inline images
 
     time_t previous_sessions_last_messages_timestamp; // keeping track of last received message's date
 } GoWhatsappAccount;
@@ -86,14 +86,14 @@ gowhatsapp_assume_all_buddies_online(GoWhatsappAccount *gwa)
 }
 
 /*
- * Displays an image in the conversation window (currently not used).
+ * Displays an image in the conversation window.
  * Copied from p2tgl_imgstore_add_with_id, tgp_msg_photo_display, tgp_format_img.
  */
 void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *caption, void *data, size_t len, PurpleMessageFlags flags, time_t time) {
     const gpointer data_copy = g_memdup(data, len); // create a copy so freeing is consistent in caller, but imgstore may free the copy it is given
     int id = purple_imgstore_add_with_id(data_copy, len, NULL);
     if (id <= 0) {
-        purple_debug_info("gowhatsapp", "Cannot display picture, adding to imgstore failed.");
+        purple_debug_info("gowhatsapp", "Cannot display picture, adding to imgstore failed.\n");
         return;
     }
     flags |= PURPLE_MESSAGE_IMAGES;
@@ -174,13 +174,13 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
         // spectrum2 swallows system messages – that is why these flags can be suppressed
         flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;
     }
-    // purple_connection_update_progress(gwa->pc, _("Waiting for QR code scan"), 1, 3);
+    purple_connection_update_progress(gwa->pc, _("Waiting for QR code scan"), 1, 3);
     gboolean check_message_date = purple_account_get_bool(gwa->account, GOWHATSAPP_TIMESTAMP_FILTERING_OPTION, FALSE);
     int message_is_new =
             gowhatsapp_append_message_id_if_not_exists(gwa->account, gwamsg->id) &&
             (!check_message_date || gowhatsapp_message_newer_than_last_session(gwa, gwamsg->timestamp));
     if (message_is_new) {
-        if (gwamsg->blob) {
+        if (gwamsg->blobsize) {
             gowhatsapp_display_image_message(pc, gwamsg->remoteJid, gwamsg->text, gwamsg->blob, gwamsg->blobsize, flags, gwamsg->timestamp);
         } else if (gwamsg->text) {
             purple_serv_got_im(pc, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
@@ -198,12 +198,14 @@ gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     PurpleAccount *account = purple_connection_get_account(pc);
     
     purple_debug_info(
-        "gowhatsapp", "Recieved: at %ld id %s remote %s sender %s (fromMe %d)\n",
+        "gowhatsapp", "Recieved message at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
         gwamsg->timestamp,
         gwamsg->id,
         gwamsg->remoteJid,
         gwamsg->senderJid,
-        gwamsg->fromMe
+        gwamsg->fromMe,
+        gwamsg->system,
+        gwamsg->text
     );
     if (!gwamsg->timestamp) {
         gwamsg->timestamp = time(NULL);
@@ -217,7 +219,7 @@ gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
                 purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
                 purple_connection_update_progress(gwa->pc, _("Connecting"), 0, 3);
                 char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
-                gowhatsapp_go_login((uintptr_t)pc, download_directory);
+                gowhatsapp_go_login((uintptr_t)pc, FALSE, download_directory);
                 g_free(download_directory);
                 // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg->text);
             } else {
@@ -270,10 +272,12 @@ gowhatsapp_login(PurpleAccount *account)
     gwa->previous_sessions_last_messages_timestamp = purple_account_get_int(account, GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY, 0);
     // this connecting is now considered logging in
     purple_connection_set_state(gwa->pc, PURPLE_CONNECTION_CONNECTING);
+    gboolean restore_session = purple_account_get_bool(gwa->account, GOWHATSAPP_RESTORE_SESSION_OPTION, TRUE);
     // where to put downloaded files
     char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
     gowhatsapp_go_login(
         (uintptr_t)pc, // abusing guaranteed-to-be-unique address as connection identifier
+        restore_session,
         download_directory);
     g_free(download_directory);
     
@@ -389,6 +393,13 @@ gowhatsapp_add_account_options(GList *account_options)
                 _("Download files from media (image, audio, video, document) messages"),
                 GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION,
                 FALSE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
+                _("Display images in conversation window"),
+                GOWHATSAPP_INLINE_IMAGES_OPTION,
+                TRUE
                 );
     account_options = g_list_append(account_options, option);
 
@@ -540,25 +551,36 @@ PURPLE_INIT_PLUGIN(gowhatsapp, plugin_init, info);
 #perror Purple 3 not supported.
 #endif
 
-///////////////////////////////////////////////////////////
-//                                                       //
-// WELCOME TO THE LAND OF ABANDONMENT OF TYPE AND SAFETY //
-//                   Wanderer, beware.                   //
-//                                                       //
-///////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+//                                                                 //
+//      WELCOME TO THE LAND OF ABANDONMENT OF TYPE AND SAFETY      //
+//                        Wanderer, beware.                        //
+//                                                                 //
+/////////////////////////////////////////////////////////////////////
 
+/*
+ * This allows cgo to acces the PurpleAccount pointer having only an integer which actually is the PurpleConnection pointer.
+ */
 void *
 gowhatsapp_get_account(uintptr_t pc)
 {
     return purple_connection_get_account((PurpleConnection *)pc);
 }
 
+/*
+ * This allows cgo to get a boolean from the current account settings.
+ * The PurpleAccount pointer is untyped and the gboolean is implicitly promoted to int.
+ */
 int
 gowhatsapp_account_get_bool(void *account, const char *name, int default_value)
 {
     return purple_account_get_bool((const PurpleAccount *)account, name, default_value);
 }
 
+/*
+ * This allows cgo to get a string from the current account settings.
+ * The PurpleAccount pointer is untyped.
+ */
 const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value)
 {
     return purple_account_get_string((const PurpleAccount *)account, name, default_value);

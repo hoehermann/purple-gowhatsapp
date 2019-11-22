@@ -108,7 +108,7 @@ type downloadable interface {
 	Download() ([]byte, error)
 }
 
-func (handler *waHandler) presentDownloadableMessage(message downloadable, info whatsapp.MessageInfo, downloadsEnabled bool, inline bool) {
+func (handler *waHandler) presentDownloadableMessage(message downloadable, info whatsapp.MessageInfo, downloadsEnabled bool, inline bool) []byte {
 	filename, wtd := handler.wantToDownload(info)
 	if wtd {
 		if downloadsEnabled {
@@ -118,13 +118,16 @@ func (handler *waHandler) presentDownloadableMessage(message downloadable, info 
 					handler.presentMessage(makeConversationErrorMessage(info,
 						fmt.Sprintf("A media message (ID %s) was received, but the download failed: %v", info.Id, err)))
 				} else {
-					msg, err := handler.storeDownloadedData(info, filename, data)
-					if (msg != nil) {
-						handler.presentMessage(*msg)
-						//handler.presentBinary(data)
-					}
-					if (err != nil) {
-						handler.presentMessage(makeConversationErrorMessage(info,err.Error()))
+					if (inline) {
+						return data
+					} else {
+						msg, err := handler.storeDownloadedData(info, filename, data)
+						if (msg != nil) {
+							handler.presentMessage(*msg)
+						}
+						if (err != nil) {
+							handler.presentMessage(makeConversationErrorMessage(info,err.Error()))
+						}
 					}
 				}
 			} else {
@@ -135,4 +138,5 @@ func (handler *waHandler) presentDownloadableMessage(message downloadable, info 
 			handler.presentMessage(MessageAggregate{text: "[File download disabled in settings.]", system: true})
 		}
 	}
+	return nil
 }
