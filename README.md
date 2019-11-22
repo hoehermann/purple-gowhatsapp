@@ -5,7 +5,7 @@ A libpurple/Pidgin plugin for WhatsApp **Web**.
 Powered by [go-whatsapp](https://github.com/Rhymen/go-whatsapp), which is written by Lucas Engelke.
 
 Being developed on Ubuntu 18.04.  
-Last seen working with [go-whatsapp fcfd0ab](https://github.com/Rhymen/go-whatsapp/commit/fcfd0ab).
+Last seen working with [go-whatsapp d7754af](https://github.com/Rhymen/go-whatsapp/commit/d7754af).
 
 ### Building
 
@@ -56,7 +56,6 @@ Please also notice the wiki page regarding [common problems](Common-Problems).
 From approximate most important to approximate least interesting.
 
 * Display login QR code via the [request API](https://github.com/EionRobb/pidgin-opensteamworks/blob/master/steam-mobile/libsteam.c#L378-L412).
-* Reintroduce inline display of images (user configurable).
 * Support [stickers](https://github.com/Rhymen/go-whatsapp/commit/d7754af4a6b7209d88132b5e498c98f12fb67f70).
 * Use a call-back for getting current preferences everywhere consistently.
 * If file download failed, do not try to download again (make user configurable).
