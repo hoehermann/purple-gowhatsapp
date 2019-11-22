@@ -84,23 +84,22 @@ func (handler *waHandler) wantToDownload(info whatsapp.MessageInfo) (filename st
 	return fp, os.IsNotExist(err)
 }
 
-func (handler *waHandler) storeDownloadedData(info whatsapp.MessageInfo, filename string, data []byte) {
+func (handler *waHandler) storeDownloadedData(info whatsapp.MessageInfo, filename string, data []byte) (*MessageAggregate, error) {
 	os.MkdirAll(handler.downloadsDirectory, os.ModePerm)
 	file, err := os.Create(filename)
 	defer file.Close()
 	if err != nil {
-		handler.presentMessage(makeConversationErrorMessage(info,
-			fmt.Sprintf("Data was downloaded, but file %s creation failed due to %v", filename, err)))
+		return nil, fmt.Errorf("Data was downloaded, but file %s creation failed due to %v", filename, err)
 	} else {
 		_, err := file.Write(data)
 		if err != nil {
-			handler.presentMessage(makeConversationErrorMessage(info,
-				fmt.Sprintf("Data was downloaded, but could not be written to file %s due to %v", filename, err)))
+			return nil, fmt.Errorf("Data was downloaded, but could not be written to file %s due to %v", filename, err)
 		} else {
-			handler.presentMessage(MessageAggregate{
+			msg := MessageAggregate{
 				text:   fmt.Sprintf("file://%s", filename),
 				info:   info,
-				system: true})
+				system: true}
+			return &msg, nil
 		}
 	}
 }
@@ -109,7 +108,7 @@ type downloadable interface {
 	Download() ([]byte, error)
 }
 
-func (handler *waHandler) downloadMessage(message downloadable, info whatsapp.MessageInfo, downloadsEnabled bool) {
+func (handler *waHandler) presentDownloadableMessage(message downloadable, info whatsapp.MessageInfo, downloadsEnabled bool, inline bool) {
 	filename, wtd := handler.wantToDownload(info)
 	if wtd {
 		if downloadsEnabled {
@@ -119,7 +118,14 @@ func (handler *waHandler) downloadMessage(message downloadable, info whatsapp.Me
 					handler.presentMessage(makeConversationErrorMessage(info,
 						fmt.Sprintf("A media message (ID %s) was received, but the download failed: %v", info.Id, err)))
 				} else {
-					handler.storeDownloadedData(info, filename, data)
+					msg, err := handler.storeDownloadedData(info, filename, data)
+					if (msg != nil) {
+						handler.presentMessage(*msg)
+						//handler.presentBinary(data)
+					}
+					if (err != nil) {
+						handler.presentMessage(makeConversationErrorMessage(info,err.Error()))
+					}
 				}
 			} else {
 				handler.presentMessage(makeConversationErrorMessage(info,

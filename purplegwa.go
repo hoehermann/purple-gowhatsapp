@@ -237,7 +237,7 @@ func makeConversationErrorMessage(originalInfo whatsapp.MessageInfo, errorMessag
 
 func (handler *waHandler) handleDownloadableMessage(message downloadable, info whatsapp.MessageInfo) {
 	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
-	handler.downloadMessage(message, info, downloadsEnabled)
+	handler.presentDownloadableMessage(message, info, downloadsEnabled, false)
 }
 
 func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
