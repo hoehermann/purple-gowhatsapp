@@ -15,7 +15,7 @@ Last seen working with [go-whatsapp d7754af](https://github.com/Rhymen/go-whatsa
 ### Pre-Built Binaries
 
 * Download a [nightly build](https://buildbot.hehoe.de/purple-gowhatsapp/builds/) (Ubuntu 18.04).
-* Win32 binaries might be obtained from [EionRobb](https://github.com/EionRobb/purple-gowhatsapp).
+* [Windows binaries](https://github.com/hoehermann/purple-gowhatsapp/wiki/Windows-Build) are kindly provided by [EionRobb](https://github.com/EionRobb) on occasion.
 
 ### Installation
 
@@ -74,6 +74,6 @@ From approximate most important to approximate least interesting.
 * Find out how whatsapp represents newlines.
 * Wait for server message received acknowledgement before displaying sent message locally.
 * Do not block while sending message.
-* Be compatible with the ["Autoreply"](https://github.com/EionRobb/purple-gowhatsapp/issues/3#issuecomment-555814663) plug-in.
+* Be compatible with the ["Autoreply"](https://github.com/EionRobb/purple-gowhatsapp/issues/3#issuecomment-555814663) plug-in by having an "Away" state.
 * Find spurious segfault.
 * Consistently use dashes in key names.
