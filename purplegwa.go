@@ -211,7 +211,7 @@ func convertMessage(message MessageAggregate) C.struct_gowhatsapp_message {
 		system:    bool_to_Cchar(message.system),
 		blob:      C.CBytes(message.data),
 		blobsize:  C.size_t(len(message.data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
- 	}
+	}
 }
 
 /*
@@ -255,7 +255,7 @@ func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 func (handler *waHandler) HandleStickerMessage(message whatsapp.StickerMessage) {
 	inlineImages := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_INLINE_IMAGES_OPTION, 0))
 	data := handler.handleDownloadableMessage(&message, message.Info, inlineImages)
-	if (inlineImages) {
+	if inlineImages {
 		handler.presentMessage(MessageAggregate{text: "Contact sent a sticker: ", info: message.Info, data: data})
 	}
 }
@@ -366,12 +366,12 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 				// TODO: remove redundancy (treat this more like an ordinary image message) OR display via purple requests API
 				text := "Scan this QR code within 20 seconds to log in."
 				inlineImages := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_INLINE_IMAGES_OPTION, 1))
-				if (inlineImages) {
+				if inlineImages {
 					handler.presentMessage(MessageAggregate{
-						text: text, 
-						info: messageInfo, 
+						text:   text,
+						info:   messageInfo,
 						system: true,
-						data: png})
+						data:   png})
 				} else {
 					filename := generateFilepath(handler.downloadsDirectory, messageInfo)
 					handler.storeDownloadedData(filename, png)

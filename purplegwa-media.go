@@ -89,13 +89,13 @@ func (handler *waHandler) storeDownloadedData(filename string, data []byte) erro
 	file, err := os.Create(filename)
 	defer file.Close()
 	if err != nil {
-	    return fmt.Errorf("Data was downloaded, but file %s creation failed due to %v", filename, err)
+		return fmt.Errorf("Data was downloaded, but file %s creation failed due to %v", filename, err)
 	} else {
 		_, err := file.Write(data)
 		if err != nil {
-		    return fmt.Errorf("Data was downloaded, but could not be written to file %s due to %v", filename, err)
+			return fmt.Errorf("Data was downloaded, but could not be written to file %s due to %v", filename, err)
 		} else {
-		    return nil
+			return nil
 		}
 	}
 }
@@ -114,17 +114,17 @@ func (handler *waHandler) presentDownloadableMessage(message downloadable, info 
 					handler.presentMessage(makeConversationErrorMessage(info,
 						fmt.Sprintf("A media message (ID %s) was received, but the download failed: %v", info.Id, err)))
 				} else {
-					if (inline) {
+					if inline {
 						return data
 					} else {
-					    err := handler.storeDownloadedData(filename, data)
-						if (err != nil) {
-							handler.presentMessage(makeConversationErrorMessage(info,err.Error()))
+						err := handler.storeDownloadedData(filename, data)
+						if err != nil {
+							handler.presentMessage(makeConversationErrorMessage(info, err.Error()))
 						} else {
-						    handler.presentMessage(MessageAggregate{
-							text:   fmt.Sprintf("file://%s", filename),
-							info:   info,
-							system: true})
+							handler.presentMessage(MessageAggregate{
+								text:   fmt.Sprintf("file://%s", filename),
+								info:   info,
+								system: true})
 						}
 					}
 				}
