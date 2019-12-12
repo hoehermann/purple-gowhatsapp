@@ -374,7 +374,7 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 						data: png})
 				} else {
 					filename := generateFilepath(handler.downloadsDirectory, messageInfo)
-					handler.storeDownloadedData(messageInfo, filename, png)
+					handler.storeDownloadedData(filename, png)
 					handler.presentMessage(MessageAggregate{
 						text:   text,
 						info:   messageInfo,

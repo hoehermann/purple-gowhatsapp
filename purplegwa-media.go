@@ -84,22 +84,18 @@ func (handler *waHandler) wantToDownload(info whatsapp.MessageInfo) (filename st
 	return fp, os.IsNotExist(err)
 }
 
-func (handler *waHandler) storeDownloadedData(info whatsapp.MessageInfo, filename string, data []byte) (*MessageAggregate, error) {
+func (handler *waHandler) storeDownloadedData(filename string, data []byte) error {
 	os.MkdirAll(handler.downloadsDirectory, os.ModePerm)
 	file, err := os.Create(filename)
 	defer file.Close()
 	if err != nil {
-		return nil, fmt.Errorf("Data was downloaded, but file %s creation failed due to %v", filename, err)
+	    return fmt.Errorf("Data was downloaded, but file %s creation failed due to %v", filename, err)
 	} else {
 		_, err := file.Write(data)
 		if err != nil {
-			return nil, fmt.Errorf("Data was downloaded, but could not be written to file %s due to %v", filename, err)
+		    return fmt.Errorf("Data was downloaded, but could not be written to file %s due to %v", filename, err)
 		} else {
-			msg := MessageAggregate{
-				text:   fmt.Sprintf("file://%s", filename),
-				info:   info,
-				system: true}
-			return &msg, nil
+		    return nil
 		}
 	}
 }
@@ -121,12 +117,14 @@ func (handler *waHandler) presentDownloadableMessage(message downloadable, info 
 					if (inline) {
 						return data
 					} else {
-						msg, err := handler.storeDownloadedData(info, filename, data)
-						if (msg != nil) {
-							handler.presentMessage(*msg)
-						}
+					    err := handler.storeDownloadedData(filename, data)
 						if (err != nil) {
 							handler.presentMessage(makeConversationErrorMessage(info,err.Error()))
+						} else {
+						    handler.presentMessage(MessageAggregate{
+							text:   fmt.Sprintf("file://%s", filename),
+							info:   info,
+							system: true})
 						}
 					}
 				}
