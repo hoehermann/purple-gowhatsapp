@@ -414,6 +414,13 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
 
     option = purple_account_option_bool_new(
+                _("Try to download once only"),
+                GOWHATSAPP_DOWNLOAD_TRY_ONLY_ONCE_OPTION,
+                TRUE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
                 _("Display images in conversation window after download"),
                 GOWHATSAPP_INLINE_IMAGES_OPTION,
                 TRUE

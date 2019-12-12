@@ -89,11 +89,11 @@ func (handler *waHandler) storeDownloadedData(filename string, data []byte) erro
 	file, err := os.Create(filename)
 	defer file.Close()
 	if err != nil {
-		return fmt.Errorf("Data was downloaded, but file %s creation failed due to %v", filename, err)
+		return fmt.Errorf("File %s creation failed due to %v.", filename, err)
 	} else {
 		_, err := file.Write(data)
 		if err != nil {
-			return fmt.Errorf("Data was downloaded, but could not be written to file %s due to %v", filename, err)
+			return fmt.Errorf("Data could not be written to file %s due to %v.", filename, err)
 		} else {
 			return nil
 		}
@@ -104,15 +104,28 @@ type downloadable interface {
 	Download() ([]byte, error)
 }
 
-func (handler *waHandler) presentDownloadableMessage(message downloadable, info whatsapp.MessageInfo, downloadsEnabled bool, inline bool) []byte {
+func (handler *waHandler) presentDownloadableMessage(message downloadable, info whatsapp.MessageInfo, downloadsEnabled bool, storeFailedDownload bool, inline bool) []byte {
 	filename, wtd := handler.wantToDownload(info)
 	if wtd {
 		if downloadsEnabled {
 			if isSaneId(info.Id) {
 				data, err := message.Download()
 				if err != nil {
+					retryComment := ""
+					if storeFailedDownload {
+						errStore := handler.storeDownloadedData(filename, make([]byte, 0))
+						if errStore != nil {
+							retryComment = "Will not try to download again."
+						} else {
+							// for some odd reason, errStore is always set, even on success, yet empty
+							// TODO: find out how to handle this properly. os.Truncate does not create files
+							//retryComment = fmt.Sprintf("Unable to mark download as failed (%v). Will try to download again.", errStore)
+						}
+					} else {
+						retryComment = "Retrying on next occasion is enabled."
+					}
 					handler.presentMessage(makeConversationErrorMessage(info,
-						fmt.Sprintf("A media message (ID %s) was received, but the download failed: %v", info.Id, err)))
+						fmt.Sprintf("A media message (ID %s) was received, but the download failed: %v. %s", info.Id, err, retryComment)))
 				} else {
 					if inline {
 						return data
