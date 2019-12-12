@@ -157,6 +157,19 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
     }
 }
 
+PurpleConversation *gowhatsapp_find_conversation(char *username, PurpleAccount *account) {
+    PurpleIMConversation *imconv = purple_conversations_find_im_with_account(username, account);
+    if (imconv == NULL) {
+        imconv = purple_im_conversation_new(account, username);
+    }
+    PurpleConversation *conv = PURPLE_CONVERSATION(imconv);
+    if (conv == NULL) {
+        imconv = purple_conversations_find_im_with_account(username, account);
+        conv = PURPLE_CONVERSATION(imconv);
+    }
+    return conv;
+}
+
 void
 gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
@@ -179,11 +192,15 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
             content = g_strdup(gwamsg->text);
         }
         if (gwamsg->fromMe) {
-            flags |= PURPLE_MESSAGE_SEND | PURPLE_MESSAGE_REMOTE_SEND | PURPLE_MESSAGE_DELAYED; //
+            // special handling of messages sent by self incoming from remote, addressing issue #32
+            // copied from EionRobb/purple-discord/blob/master/libdiscord.c
+            flags |= PURPLE_MESSAGE_SEND | PURPLE_MESSAGE_REMOTE_SEND | PURPLE_MESSAGE_DELAYED;
+            PurpleConversation *conv = gowhatsapp_find_conversation(gwamsg->remoteJid, gwa->account);
+            purple_conversation_write(conv, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
         } else {
             flags |= PURPLE_MESSAGE_RECV;
+            purple_serv_got_im(pc, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
         }
-        purple_serv_got_im(pc, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
         g_free(content);
     }
 }
