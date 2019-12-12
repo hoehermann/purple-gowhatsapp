@@ -89,20 +89,17 @@ gowhatsapp_assume_all_buddies_online(GoWhatsappAccount *gwa)
  * Displays an image in the conversation window.
  * Copied from p2tgl_imgstore_add_with_id, tgp_msg_photo_display, tgp_format_img.
  */
-void gowhatsapp_display_image_message(PurpleConnection *pc, gchar *who, gchar *caption, void *data, size_t len, PurpleMessageFlags flags, time_t time) {
+char * gowhatsapp_prepare_image_message(gchar *caption, void *data, size_t len, PurpleMessageFlags *flags) {
     const gpointer data_copy = g_memdup(data, len); // create a copy so freeing is consistent in caller, but imgstore may free the copy it is given
     int id = purple_imgstore_add_with_id(data_copy, len, NULL);
     if (id <= 0) {
-        purple_debug_info("gowhatsapp", "Cannot display picture, adding to imgstore failed.\n");
-        return;
+        return g_strdup_printf("Cannot display picture with caption \"%s\", as adding to imgstore failed.", caption);
     }
-    flags |= PURPLE_MESSAGE_IMAGES;
+    *flags |= PURPLE_MESSAGE_IMAGES;
     if (caption == NULL) {
         caption = "";
     }
-    char *content = g_strdup_printf("%s<img id=\"%u\">", caption, id);
-    purple_serv_got_im(pc, who, content, flags, time);
-    g_free(content);
+    return g_strdup_printf("%s<img id=\"%u\">", caption, id);
 }
 
 /*
@@ -165,11 +162,6 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
     GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
     PurpleMessageFlags flags = 0;
-    if (gwamsg->fromMe) {
-        flags |= PURPLE_MESSAGE_SEND;
-    } else {
-        flags |= PURPLE_MESSAGE_RECV;
-    }
     if (gwamsg->system && !purple_account_get_bool(gwa->account, GOWHATSAPP_SYSTEM_MESSAGES_ARE_ORDINARY_MESSAGES_OPTION, FALSE)) {
         // spectrum2 swallows system messages – that is why these flags can be suppressed
         flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;
@@ -180,11 +172,19 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
             gowhatsapp_append_message_id_if_not_exists(gwa->account, gwamsg->id) &&
             (!check_message_date || gowhatsapp_message_newer_than_last_session(gwa, gwamsg->timestamp));
     if (message_is_new) {
+        char * content = NULL;
         if (gwamsg->blobsize) {
-            gowhatsapp_display_image_message(pc, gwamsg->remoteJid, gwamsg->text, gwamsg->blob, gwamsg->blobsize, flags, gwamsg->timestamp);
+            content = gowhatsapp_prepare_image_message(gwamsg->text, gwamsg->blob, gwamsg->blobsize, &flags);
         } else if (gwamsg->text) {
-            purple_serv_got_im(pc, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
+            content = g_strdup(gwamsg->text);
         }
+        if (gwamsg->fromMe) {
+            flags |= PURPLE_MESSAGE_SEND | PURPLE_MESSAGE_REMOTE_SEND | PURPLE_MESSAGE_DELAYED; //
+        } else {
+            flags |= PURPLE_MESSAGE_RECV;
+        }
+        purple_serv_got_im(pc, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
+        g_free(content);
     }
 }
 
