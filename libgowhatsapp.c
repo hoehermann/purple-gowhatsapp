@@ -206,7 +206,7 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 }
 
 /*
- * Interprets a message received from go-whatsapp. Handles login sucess and failures. Forwards errors.
+ * Interprets a message received from go-whatsapp. Handles login success and failure. Forwards errors.
  */
 void
 gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
@@ -230,15 +230,16 @@ gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     switch(gwamsg->msgtype) {
         case gowhatsapp_message_type_error:
             // purplegwa presents an error, handle it
-            if (strstr(gwamsg->text, "401")) {
-                // TODO: find a better way to discriminate errors
+            if (strstr(gwamsg->text, "401") || strstr(gwamsg->text, "419")) {
                 // received error mentioning 401 – assume login failed and try again without stored session
+                // TODO: find a better way to discriminate errors
+                // "restoring failed: admin login responded with 419"
                 purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
                 purple_connection_update_progress(gwa->pc, _("Connecting"), 0, 3);
                 char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
                 gowhatsapp_go_login((uintptr_t)pc, FALSE, download_directory);
                 g_free(download_directory);
-                // alternatively let the user handle the session reset and just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg->text);
+                // alternatively just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg->text); and let the user handle the session reset
             } else {
                 purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg->text);
             }
@@ -254,7 +255,7 @@ gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
             purple_account_set_string(account, GOWHATSAPP_SESSION_WID_KEY, gwamsg->wid);
             if (!PURPLE_CONNECTION_IS_CONNECTED(pc)) {
                     // connection has now been established, show it in UI
-                purple_connection_set_state(pc, PURPLE_CONNECTED);
+                purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
                 if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
                     gowhatsapp_assume_all_buddies_online(gwa);
                 }
@@ -572,7 +573,7 @@ PURPLE_INIT_PLUGIN(gowhatsapp, plugin_init, info);
 
 #else
 /* Purple 3 plugin load functions */
-#perror Purple 3 not supported.
+#error Purple 3 not supported.
 #endif
 
 /////////////////////////////////////////////////////////////////////
