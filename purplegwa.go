@@ -374,10 +374,14 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 						system: true,
 						data:   png})
 				} else {
+					handler.presentMessage(MessageAggregate{
+						text:   text,
+						info:   messageInfo,
+						system: true})
 					filename := generateFilepath(handler.downloadsDirectory, messageInfo)
 					handler.storeDownloadedData(filename, png)
 					handler.presentMessage(MessageAggregate{
-						text:   text,
+						text:   fmt.Sprintf("file://%s", filename),
 						info:   messageInfo,
 						system: true})
 				}
