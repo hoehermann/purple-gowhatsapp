@@ -32,7 +32,7 @@ Last seen working with [go-whatsapp d7754af](https://github.com/Rhymen/go-whatsa
   Using your phone's camera, scan the code within 20 seconds – just like you would do with the browser-based WhatsApp Web.
 * Note: Some settings only take effect after a re-connect.
 
-Please also notice the wiki page regarding [common problems](Common-Problems).
+Please also notice the wiki page regarding [common problems](https://github.com/hoehermann/purple-gowhatsapp/wiki/Common-Problems).
 
 #### spectrum2 specifics
 
@@ -58,8 +58,6 @@ From approximate most important to approximate least interesting.
 * Display login QR code via the [request API](https://github.com/EionRobb/pidgin-opensteamworks/blob/master/steam-mobile/libsteam.c#L378-L412).
 * Support [stickers](https://github.com/Rhymen/go-whatsapp/commit/d7754af4a6b7209d88132b5e498c98f12fb67f70).
 * Use a call-back for getting current preferences everywhere consistently.
-* If file download failed, do not try to download again (make user configurable).
-* If file download is disabled, mention file only once.
 * Have purple handle the message, then conditionally request download where appropriate.
 * Add option to ignore invalid message IDs silently.
 * Sanitize invalid message IDs (e.g. `I/fb36`).
@@ -75,5 +73,6 @@ From approximate most important to approximate least interesting.
 * Wait for server message received acknowledgement before displaying sent message locally.
 * Do not block while sending message.
 * Be compatible with the ["Autoreply"](https://github.com/EionRobb/purple-gowhatsapp/issues/3#issuecomment-555814663) plug-in by having an "Away" state.
+* Be compatible with the "Conversation Colors" plug-in.
 * Find spurious segfault.
 * Consistently use dashes in key names.
