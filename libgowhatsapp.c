@@ -209,8 +209,9 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
  * Interprets a message received from go-whatsapp. Handles login success and failure. Forwards errors.
  */
 void
-gowhatsapp_process_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
+gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
 {
+    PurpleConnection *pc = (PurpleConnection *)gwamsg->connection;
     GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
     PurpleAccount *account = purple_connection_get_account(pc);
     
@@ -620,9 +621,7 @@ const char * gowhatsapp_account_get_string(void *account, const char *name, cons
 gboolean
 gowhatsapp_process_message_bridge_mainthread(gpointer data)
 {
-    PurpleConnection *pc = g_dataset_get_data(data, "pc");
-    g_dataset_destroy(data);
-    gowhatsapp_process_message(pc, (gowhatsapp_message_t *)data);
+    gowhatsapp_process_message((gowhatsapp_message_t *)data);
     return FALSE;
 }
 
@@ -631,8 +630,7 @@ gowhatsapp_process_message_bridge_mainthread(gpointer data)
  * Called by go-whatsapp (outside of the GTK eventloop).
  */
 void
-gowhatsapp_process_message_bridge(uintptr_t pc, void *gwamsg)
+gowhatsapp_process_message_bridge(void *gwamsg)
 {
-    g_dataset_set_data(gwamsg, "pc", (gpointer) pc);
     purple_timeout_add(0, gowhatsapp_process_message_bridge_mainthread, gwamsg); // yes, this is indeed neccessary – we checked
 }

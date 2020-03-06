@@ -36,6 +36,7 @@ enum gowhatsapp_message_type {
 // C compatible representation of one received message.
 // NOTE: If the cgo and gcc compilers disagree on padding or alignment, chaos will ensue.
 struct gowhatsapp_message {
+    uintptr_t connection;
     int64_t msgtype;
     char *id;
     char *remoteJid;
@@ -58,7 +59,7 @@ struct gowhatsapp_message {
 struct gowhatsapp_session {
 };
 
-extern void gowhatsapp_process_message_bridge(uintptr_t pc, void * gwamsg);
+extern void gowhatsapp_process_message_bridge(void * gwamsg);
 extern void * gowhatsapp_get_account(uintptr_t pc);
 extern int gowhatsapp_account_get_bool(void *account, const char *name, int default_value);
 extern const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value);
@@ -170,23 +171,25 @@ func (handler *waHandler) presentMessage(message MessageAggregate) {
 	if message.err == nil && message.session == nil && !message.system {
 		handler.wac.Read(message.info.RemoteJid, message.info.Id) // mark message as "displayed"
 	}
-	cmessage := convertMessage(message)
-	C.gowhatsapp_process_message_bridge(handler.connID, unsafe.Pointer(&cmessage))
+	cmessage := convertMessage(handler.connID, message)
+	C.gowhatsapp_process_message_bridge(unsafe.Pointer(&cmessage))
 }
 
 /*
  * Converts a message from go structs to a unified C struct.
  */
-func convertMessage(message MessageAggregate) C.struct_gowhatsapp_message {
+func convertMessage(connID C.uintptr_t, message MessageAggregate) C.struct_gowhatsapp_message {
 	if message.err != nil {
 		// thanks to https://stackoverflow.com/questions/39023475/
 		return C.struct_gowhatsapp_message{
+		    connection: connID,
 			msgtype: C.int64_t(C.gowhatsapp_message_type_error),
 			text:    C.CString(message.err.Error()),
 		}
 	}
 	if message.session != nil {
 		return C.struct_gowhatsapp_message{
+		    connection: connID,
 			msgtype:     C.int64_t(C.gowhatsapp_message_type_session),
 			clientId:    C.CString(message.session.ClientId),
 			clientToken: C.CString(message.session.ClientToken),
@@ -201,6 +204,7 @@ func convertMessage(message MessageAggregate) C.struct_gowhatsapp_message {
 		info.Id = ""
 	}
 	return C.struct_gowhatsapp_message{
+	    connection: connID,
 		msgtype:   C.int64_t(C.gowhatsapp_message_type_text),
 		timestamp: C.time_t(info.Timestamp),
 		id:        C.CString(info.Id),

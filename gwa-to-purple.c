@@ -7,9 +7,8 @@
  * This module MUST NOT be linked with the main target libgowhatsapp.so.
  */
 
-void gowhatsapp_process_message_bridge(uintptr_t pc, void *gwamsg)
+void gowhatsapp_process_message_bridge(void *gwamsg)
 {
-	(void) pc;
 	(void) gwamsg;
 }
 
