@@ -211,12 +211,9 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 void
 gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
 {
-    PurpleConnection *pc = (PurpleConnection *)gwamsg->connection;
-    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
-    PurpleAccount *account = purple_connection_get_account(pc);
-    
     purple_debug_info(
-        "gowhatsapp", "Recieved message at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
+        "gowhatsapp", "%p recieved message at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
+        (void *)gwamsg->connection,
         gwamsg->timestamp,
         gwamsg->id,
         gwamsg->remoteJid,
@@ -225,6 +222,11 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
         gwamsg->system,
         gwamsg->text
     );
+
+    PurpleConnection *pc = (PurpleConnection *)gwamsg->connection;
+    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
+    PurpleAccount *account = purple_connection_get_account(pc);
+
     if (!gwamsg->timestamp) {
         gwamsg->timestamp = time(NULL);
     }
