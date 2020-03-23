@@ -205,6 +205,40 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     }
 }
 
+static void
+gowhatsapp_null_cb() {
+}
+
+static void
+gowhatsapp_display_qrcode(PurpleConnection *pc, const char * qr_code_raw, void * image_data, size_t image_data_len)
+{
+    PurpleRequestFields *fields;
+    PurpleRequestFieldGroup *group;
+
+    fields = purple_request_fields_new();
+    group = purple_request_field_group_new(NULL);
+    purple_request_fields_add_group(fields, group);
+
+    PurpleRequestField *string_field = purple_request_field_string_new("qr_string", _("QR Code Data"), g_strdup(qr_code_raw), FALSE);
+    purple_request_field_group_add_field(group, string_field);
+    PurpleRequestField *image_field = purple_request_field_image_new("qr_image", _("QR Code Image"), image_data, image_data_len);
+    purple_request_field_group_add_field(group, image_field);
+
+    purple_request_fields(
+        pc, /*handle*/
+        _("Logon QR Code"), /*title*/
+        _("Please scan this QR code with your phone"), /*primary*/
+        NULL, /*secondary*/
+        fields, /*fields*/
+        _("OK"), G_CALLBACK(gowhatsapp_null_cb), /*OK*/
+        _("Dismiss"), G_CALLBACK(gowhatsapp_null_cb), /*Cancel*/
+        NULL, /*account*/
+        NULL, /*username*/
+        NULL, /*conversation*/
+        NULL /*data*/
+    );
+}
+
 /*
  * Interprets a message received from go-whatsapp. Handles login success and failure. Forwards errors.
  */
@@ -212,8 +246,9 @@ void
 gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
 {
     purple_debug_info(
-        "gowhatsapp", "%p recieved message at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
+        "gowhatsapp", "%p recieved message type %ld at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
         (void *)gwamsg->connection,
+        gwamsg->msgtype,
         gwamsg->timestamp,
         gwamsg->id,
         gwamsg->remoteJid,
@@ -264,10 +299,27 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
                 }
             }
             break;
-        
+
+        case gowhatsapp_message_type_login:
+            gowhatsapp_display_qrcode(pc, gwamsg->text, gwamsg->blob, gwamsg->blobsize);
+            break;
+
         default:
             gowhatsapp_display_message(pc, gwamsg);
     }
+
+    g_free(gwamsg->id);
+    g_free(gwamsg->remoteJid);
+    g_free(gwamsg->senderJid);
+    g_free(gwamsg->text);
+    g_free(gwamsg->blob);
+    g_free(gwamsg->clientId);
+    g_free(gwamsg->clientToken);
+    g_free(gwamsg->serverToken);
+    g_free(gwamsg->encKey_b64);
+    g_free(gwamsg->macKey_b64);
+    g_free(gwamsg->wid);
+    //g_free(gwamsg); // TODO: find out why this fails
 }
 
 void

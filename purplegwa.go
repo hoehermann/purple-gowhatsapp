@@ -30,6 +30,7 @@ enum gowhatsapp_message_type {
     gowhatsapp_message_type_error = -1,
     gowhatsapp_message_type_none = 0,
     gowhatsapp_message_type_text,
+    gowhatsapp_message_type_login,
     gowhatsapp_message_type_session,
 };
 
@@ -42,7 +43,7 @@ struct gowhatsapp_message {
     char *remoteJid;
     char *senderJid;
     char *text;
-    void *blob; // arbitrary binary data (only for image data, currently unused)
+    void *blob;
     size_t blobsize;
     time_t timestamp;
     char fromMe;
@@ -199,13 +200,17 @@ func convertMessage(connID C.uintptr_t, message MessageAggregate) C.struct_gowha
 			wid:         C.CString(message.session.Wid),
 		}
 	}
+	C_message_type := C.gowhatsapp_message_type_text;
 	info := message.info
+	if info.Id == "login" { /* TODO: do not abuse Id to distinguish message type */
+	    C_message_type = C.gowhatsapp_message_type_login;
+	}
 	if message.system {
 		info.Id = ""
 	}
 	return C.struct_gowhatsapp_message{
 	    connection: connID,
-		msgtype:   C.int64_t(C.gowhatsapp_message_type_text),
+		msgtype:   C.int64_t(C_message_type),
 		timestamp: C.time_t(info.Timestamp),
 		id:        C.CString(info.Id),
 		remoteJid: C.CString(info.RemoteJid),
@@ -361,47 +366,27 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 		//no saved session -> login via qr code
 		qr := make(chan string)
 		go func() {
-			png, err := qrcode.Encode(<-qr, qrcode.Medium, 256) // TODO: make size user configurable
+		    qr_data := <-qr
+			png, err := qrcode.Encode(qr_data, qrcode.Medium, 256) // TODO: make size user configurable
 			if err != nil {
 				handler.presentMessage(MessageAggregate{err: fmt.Errorf("login qr code generation failed: %v\n", err)})
 			} else {
 				messageInfo := whatsapp.MessageInfo{
 					RemoteJid: "login@s.whatsapp.net",
 					Id:        "login"}
-				// TODO: remove redundancy (treat this more like an ordinary image message) OR display via purple requests API
-				text := "Scan this QR code within 20 seconds to log in."
-				inlineImages := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_INLINE_IMAGES_OPTION, 1))
-				if inlineImages {
-					handler.presentMessage(MessageAggregate{
-						text:   text,
+				handler.presentMessage(MessageAggregate{
+				        text:   qr_data,
 						info:   messageInfo,
 						system: true,
 						data:   png})
-				} else {
-					handler.presentMessage(MessageAggregate{
-						text:   text,
-						info:   messageInfo,
-						system: true})
-					filename := generateFilepath(handler.downloadsDirectory, messageInfo)
-					handler.storeDownloadedData(filename, png)
-					handler.presentMessage(MessageAggregate{
-						text:   fmt.Sprintf("file://%s", filename),
-						info:   messageInfo,
-						system: true})
-				}
 			}
 		}()
 		session, err := wac.Login(qr)
 		if err != nil {
 			return fmt.Errorf("error during login: %v\n", err)
 		}
+		// login successful. forward session data to front-end:
 		handler.presentMessage(MessageAggregate{session: &session})
-		messageInfo := whatsapp.MessageInfo{
-			RemoteJid: "login@s.whatsapp.net"}
-		handler.presentMessage(MessageAggregate{
-			text:   "You are now logged in. You may close this window.",
-			info:   messageInfo,
-			system: true})
 	}
 	return nil
 }
