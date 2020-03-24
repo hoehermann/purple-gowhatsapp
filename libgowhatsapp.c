@@ -179,7 +179,6 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
         // spectrum2 swallows system messages – that is why these flags can be suppressed
         flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;
     }
-    purple_connection_update_progress(gwa->pc, _("Waiting for QR code scan"), 1, 3);
     gboolean check_message_date = purple_account_get_bool(gwa->account, GOWHATSAPP_TIMESTAMP_FILTERING_OPTION, FALSE);
     int message_is_new =
             gowhatsapp_append_message_id_if_not_exists(gwa->account, gwamsg->id) &&
@@ -212,11 +211,10 @@ gowhatsapp_null_cb() {
 static void
 gowhatsapp_display_qrcode(PurpleConnection *pc, const char * qr_code_raw, void * image_data, size_t image_data_len)
 {
-    PurpleRequestFields *fields;
-    PurpleRequestFieldGroup *group;
+    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
 
-    fields = purple_request_fields_new();
-    group = purple_request_field_group_new(NULL);
+    PurpleRequestFields *fields = purple_request_fields_new();
+    PurpleRequestFieldGroup *group = purple_request_field_group_new(NULL);
     purple_request_fields_add_group(fields, group);
 
     PurpleRequestField *string_field = purple_request_field_string_new("qr_string", _("QR Code Data"), g_strdup(qr_code_raw), FALSE);
@@ -224,16 +222,19 @@ gowhatsapp_display_qrcode(PurpleConnection *pc, const char * qr_code_raw, void *
     PurpleRequestField *image_field = purple_request_field_image_new("qr_image", _("QR Code Image"), image_data, image_data_len);
     purple_request_field_group_add_field(group, image_field);
 
+    const char *username = g_strdup(purple_account_get_username(gwa->account));
+    const char *secondary = g_strdup_printf(_("WhatsApp account %s"), username);
+
     purple_request_fields(
-        pc, /*handle*/
+        gwa->pc, /*handle*/
         _("Logon QR Code"), /*title*/
         _("Please scan this QR code with your phone"), /*primary*/
-        NULL, /*secondary*/
+        secondary, /*secondary*/
         fields, /*fields*/
         _("OK"), G_CALLBACK(gowhatsapp_null_cb), /*OK*/
         _("Dismiss"), G_CALLBACK(gowhatsapp_null_cb), /*Cancel*/
         NULL, /*account*/
-        NULL, /*username*/
+        username, /*username*/
         NULL, /*conversation*/
         NULL /*data*/
     );
@@ -292,16 +293,31 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             purple_account_set_string(account, GOWHATSAPP_SESSION_MACKEY_KEY, gwamsg->macKey_b64);
             purple_account_set_string(account, GOWHATSAPP_SESSION_WID_KEY, gwamsg->wid);
             if (!PURPLE_CONNECTION_IS_CONNECTED(pc)) {
-                    // connection has now been established, show it in UI
+                // connection has now been established, show it in UI
+                purple_connection_update_progress(pc, _("Received session data."), 2, 3);
                 purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
                 if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
                     gowhatsapp_assume_all_buddies_online(gwa);
                 }
             }
+            if (purple_account_get_bool(account, GOWHATSAPP_PLAIN_TEXT_LOGIN, FALSE)) {
+                const char *username = purple_account_get_username(gwa->account);
+                gwamsg->text = g_strdup_printf(_("WhatsApp account %s logged in."), username);
+                gowhatsapp_display_message(pc, gwamsg);
+            }
             break;
 
         case gowhatsapp_message_type_login:
-            gowhatsapp_display_qrcode(pc, gwamsg->text, gwamsg->blob, gwamsg->blobsize);
+            purple_connection_update_progress(pc, _("Waiting for QR code scan"), 1, 3);
+            if (purple_account_get_bool(account, GOWHATSAPP_PLAIN_TEXT_LOGIN, FALSE)) {
+                char * text = gwamsg->text;
+                const char *username = purple_account_get_username(gwa->account);
+                gwamsg->text = g_strdup_printf(_("Login data for WhatsApp account %s: %s"), username, text);
+                g_free(text);
+                gowhatsapp_display_message(pc, gwamsg);
+            } else {
+                gowhatsapp_display_qrcode(pc, gwamsg->text, gwamsg->blob, gwamsg->blobsize);
+            }
             break;
 
         default:
@@ -438,6 +454,13 @@ gowhatsapp_add_account_options(GList *account_options)
                 _("Use stored credentials for login"),
                 GOWHATSAPP_RESTORE_SESSION_OPTION,
                 TRUE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
+                _("Plain text login"),
+                GOWHATSAPP_PLAIN_TEXT_LOGIN,
+                FALSE
                 );
     account_options = g_list_append(account_options, option);
 

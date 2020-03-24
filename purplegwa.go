@@ -183,14 +183,16 @@ func convertMessage(connID C.uintptr_t, message MessageAggregate) C.struct_gowha
 	if message.err != nil {
 		// thanks to https://stackoverflow.com/questions/39023475/
 		return C.struct_gowhatsapp_message{
-		    connection: connID,
-			msgtype: C.int64_t(C.gowhatsapp_message_type_error),
-			text:    C.CString(message.err.Error()),
+			connection: connID,
+			msgtype:    C.int64_t(C.gowhatsapp_message_type_error),
+			text:       C.CString(message.err.Error()),
 		}
 	}
 	if message.session != nil {
 		return C.struct_gowhatsapp_message{
-		    connection: connID,
+			connection:  connID,
+			remoteJid:   C.CString("login@s.whatsapp.net"),
+			system:      bool_to_Cchar(true),
 			msgtype:     C.int64_t(C.gowhatsapp_message_type_session),
 			clientId:    C.CString(message.session.ClientId),
 			clientToken: C.CString(message.session.ClientToken),
@@ -200,26 +202,26 @@ func convertMessage(connID C.uintptr_t, message MessageAggregate) C.struct_gowha
 			wid:         C.CString(message.session.Wid),
 		}
 	}
-	C_message_type := C.gowhatsapp_message_type_text;
+	C_message_type := C.gowhatsapp_message_type_text
 	info := message.info
 	if info.Id == "login" { /* TODO: do not abuse Id to distinguish message type */
-	    C_message_type = C.gowhatsapp_message_type_login;
+		C_message_type = C.gowhatsapp_message_type_login
 	}
 	if message.system {
 		info.Id = ""
 	}
 	return C.struct_gowhatsapp_message{
-	    connection: connID,
-		msgtype:   C.int64_t(C_message_type),
-		timestamp: C.time_t(info.Timestamp),
-		id:        C.CString(info.Id),
-		remoteJid: C.CString(info.RemoteJid),
-		senderJid: C.CString(info.SenderJid),
-		fromMe:    bool_to_Cchar(info.FromMe),
-		text:      C.CString(message.text),
-		system:    bool_to_Cchar(message.system),
-		blob:      C.CBytes(message.data),
-		blobsize:  C.size_t(len(message.data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
+		connection: connID,
+		msgtype:    C.int64_t(C_message_type),
+		timestamp:  C.time_t(info.Timestamp),
+		id:         C.CString(info.Id),
+		remoteJid:  C.CString(info.RemoteJid),
+		senderJid:  C.CString(info.SenderJid),
+		fromMe:     bool_to_Cchar(info.FromMe),
+		text:       C.CString(message.text),
+		system:     bool_to_Cchar(message.system),
+		blob:       C.CBytes(message.data),
+		blobsize:   C.size_t(len(message.data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
 	}
 }
 
@@ -366,7 +368,7 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 		//no saved session -> login via qr code
 		qr := make(chan string)
 		go func() {
-		    qr_data := <-qr
+			qr_data := <-qr
 			png, err := qrcode.Encode(qr_data, qrcode.Medium, 256) // TODO: make size user configurable
 			if err != nil {
 				handler.presentMessage(MessageAggregate{err: fmt.Errorf("login qr code generation failed: %v\n", err)})
@@ -375,10 +377,10 @@ func login(handler *waHandler, login_session *whatsapp.Session) error {
 					RemoteJid: "login@s.whatsapp.net",
 					Id:        "login"}
 				handler.presentMessage(MessageAggregate{
-				        text:   qr_data,
-						info:   messageInfo,
-						system: true,
-						data:   png})
+					text:   qr_data,
+					info:   messageInfo,
+					system: true,
+					data:   png})
 			}
 		}()
 		session, err := wac.Login(qr)
