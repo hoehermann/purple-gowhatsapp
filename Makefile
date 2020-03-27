@@ -1,18 +1,19 @@
 PROTOC_C ?= protoc-c
 PKG_CONFIG ?= pkg-config
 
-# Note: Use "-C .git" to avoid ascending to parent dirs if .git not present
-GIT_REVISION_ID = $(shell git -C .git rev-parse --short HEAD 2>/dev/null)
-PLUGIN_VERSION ?= $(shell cat VERSION)~git$(GIT_REVISION_ID)
-
-CFLAGS	?= -O2 -g -pipe -Wall
+CFLAGS	?= -O2 -g -ggdb -pipe -Wall
 LDFLAGS ?= -Wl,-z,relro
 
 CFLAGS  += -std=c99 -DGOWHATSAPP_PLUGIN_VERSION='"$(PLUGIN_VERSION)"' -DMARKDOWN_PIDGIN
 
+GIT ?= git
 CC ?= gcc
 GO ?= go
-GIT ?= git
+export GOPATH?=$(CURDIR)/go
+
+# Note: Use "-C .git" to avoid ascending to parent dirs if .git not present
+GIT_REVISION_ID = $(shell $(GIT) -C .git rev-parse --short HEAD 2>/dev/null)
+PLUGIN_VERSION ?= $(shell cat VERSION)~git$(GIT_REVISION_ID)
 
 ifeq ($(shell $(PKG_CONFIG) --exists purple 2>/dev/null && echo "true"),)
   TARGET = FAILNOPURPLE
@@ -49,10 +50,10 @@ purplegwa.a: purplegwa.go purplegwa-media.go $(GO_WHATSAPP_A) gwa-to-purple.o
 	$(GO) build -buildmode=c-archive -o purplegwa.a purplegwa.go purplegwa-media.go
 
 gwa-to-purple.o: gwa-to-purple.c constants.h
-	$(CC) -c -o $@ gwa-to-purple.c -g -ggdb
+	$(CC) $(CFLAGS) -c -o $@ gwa-to-purple.c
 
 $(TARGET): libgowhatsapp.c $(PURPLE_COMPAT_FILES) purplegwa.a constants.h
-	$(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -shared -o $@ libgowhatsapp.c purplegwa.a $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 --libs --cflags` $(INCLUDES) -Ipurple2compat -g -ggdb
+	$(CC) $(CFLAGS) -fPIC -shared -o $@ libgowhatsapp.c purplegwa.a $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 --libs --cflags` $(INCLUDES) -Ipurple2compat
 
 FAILNOPURPLE:
 	echo "You need libpurple development headers installed to be able to compile this plugin"
