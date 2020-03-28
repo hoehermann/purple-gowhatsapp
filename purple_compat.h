@@ -172,6 +172,8 @@ purple_message_destroy(PurpleMessage *message)
 	purple_notify_message((handle), PURPLE_NOTIFY_MSG_ERROR, (title), \
 						  (primary), (secondary), NULL, NULL)
 
+#define PURPLE_XFER_TYPE_SEND     PURPLE_XFER_SEND
+
 // Kinda gross, since we can technically use the glib mainloop from purple2
 #define g_timeout_add_seconds  purple_timeout_add_seconds
 #define g_timeout_add          purple_timeout_add

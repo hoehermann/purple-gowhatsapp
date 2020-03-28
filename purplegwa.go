@@ -139,16 +139,28 @@ func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) *C
 	info := whatsapp.MessageInfo{
 		RemoteJid: remoteJid,
 	}
-	gotext := C.GoString(text)
-	if strings.HasPrefix(gotext, "/sendmedia") {
-		return handler.sendMediaMessage(info, gotext)
-	} else {
-		message := whatsapp.TextMessage{
-			Info: info,
-			Text: gotext,
-		}
-		return handler.sendMessage(message, info)
+	message := whatsapp.TextMessage{
+		Info: info,
+		Text: C.GoString(text),
 	}
+	return handler.sendMessage(message, info)
+}
+
+/*
+ * Send a media message.
+ * Called by the front-end.
+ */
+//export gowhatsapp_go_sendMedia
+func gowhatsapp_go_sendMedia(connID C.uintptr_t, who *C.char, filename *C.char) *C.char {
+	remoteJid := C.GoString(who)
+	if remoteJid == "login@s.whatsapp.net" {
+		return nil
+	}
+	handler := waHandlers[connID]
+	info := whatsapp.MessageInfo{
+		RemoteJid: remoteJid,
+	}
+	return handler.sendMediaMessage(info, C.GoString(filename))
 }
 
 // TODO: find out how to enable C99's bool type in cgo

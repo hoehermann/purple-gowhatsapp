@@ -399,16 +399,8 @@ gowhatsapp_status_types(PurpleAccount *account)
 }
 
 static int
-gowhatsapp_send_im(PurpleConnection *pc,
-#if PURPLE_VERSION_CHECK(3, 0, 0)
-                PurpleMessage *msg)
+gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message, PurpleMessageFlags flags)
 {
-    const gchar *who = purple_message_get_recipient(msg);
-    const gchar *message = purple_message_get_contents(msg);
-#else
-                const gchar *who, const gchar *message, PurpleMessageFlags flags)
-{
-#endif
     char *w = g_strdup(who); // dumbly removing const qualifier (cgo does not know them)
     char *m = purple_markup_strip_html(message); // related: https://github.com/majn/telegram-purple/issues/12 and https://github.com/majn/telegram-purple/commit/fffe7519d7269cf4e5029a65086897c77f5283ac
     char *msgid = gowhatsapp_go_sendMessage((intptr_t)pc, w, m);
@@ -424,12 +416,70 @@ gowhatsapp_send_im(PurpleConnection *pc,
 }
 
 static void
+gowhatsapp_free_xfer(PurpleXfer *xfer)
+{
+}
+
+static void
+gowhatsapp_xfer_send_init(PurpleXfer *xfer)
+{
+    PurpleConnection *pc = purple_account_get_connection(purple_xfer_get_account(xfer));
+    const char *who = purple_xfer_get_remote_user(xfer);
+    const char *filename = purple_xfer_get_local_filename(xfer);
+    char *msgid = gowhatsapp_go_sendMedia((intptr_t)pc, (char *)who, (char *)filename);
+    if (msgid) {
+        purple_xfer_set_completed(xfer, TRUE);
+        //gowhatsapp_append_message_id_if_not_exists(pc->account, msgid);
+        g_free(msgid);
+    } else {
+        purple_xfer_error(purple_xfer_get_type(xfer), pc->account, who,
+            _("Sending file failed.")
+        ); // TODO: have better error handling: display error and remove xfer
+    }
+}
+
+PurpleXfer *
+gowhatsapp_new_xfer(PurpleConnection *pc, const char *who)
+{
+    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
+    PurpleXfer *xfer;
+    //SkypeWebFileTransfer *swft;
+    
+    xfer = purple_xfer_new(gwa->account, PURPLE_XFER_TYPE_SEND, who);
+    
+    /*
+    swft = g_new0(SkypeWebFileTransfer, 1);
+    swft->sa = sa;
+    swft->from = g_strdup(who);
+    swft->xfer = xfer;
+    purple_xfer_set_protocol_data(xfer, swft);
+    * */
+    
+    purple_xfer_set_init_fnc(xfer, gowhatsapp_xfer_send_init);
+    purple_xfer_set_request_denied_fnc(xfer, gowhatsapp_free_xfer);
+    purple_xfer_set_cancel_send_fnc(xfer, gowhatsapp_free_xfer);
+    
+    return xfer;
+}
+
+void
+gowhatsapp_send_file(PurpleConnection *pc, const gchar *who, const gchar *filename)
+{
+    PurpleXfer *xfer = gowhatsapp_new_xfer(pc, who);
+
+    if (filename && *filename) {
+        purple_xfer_request_accepted(xfer, filename);
+    } else {
+        purple_xfer_request(xfer);
+    }
+}
+
+static void
 gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group
 #if PURPLE_VERSION_CHECK(3, 0, 0)
-                  ,
-                  const char *message
+    , const char *message
 #endif
-                  )
+    )
 {
     // does not actually do anything. buddy is added to pidgin's local list and is usable from there.
     GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
@@ -563,14 +613,7 @@ plugin_init(PurplePlugin *plugin)
 
     info->name = "Whatsapp (HTTP)";
     info->extra_info = prpl_info;
-#if PURPLE_MINOR_VERSION >= 5
-    //
-#endif
-#if PURPLE_MINOR_VERSION >= 8
-    //
-#endif
-
-    prpl_info->options = OPT_PROTO_NO_PASSWORD; // OPT_PROTO_IM_IMAGE
+    prpl_info->options = OPT_PROTO_NO_PASSWORD; // add OPT_PROTO_IM_IMAGE?
     prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
 
     /*
@@ -614,6 +657,8 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->roomlist_get_list = discord_roomlist_get_list;
     prpl_info->roomlist_room_serialize = discord_roomlist_serialize;
     */
+    prpl_info->new_xfer = gowhatsapp_new_xfer;
+    prpl_info->send_file = gowhatsapp_send_file;
 }
 
 static PurplePluginInfo info = {

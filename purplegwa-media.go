@@ -23,38 +23,38 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/Rhymen/go-whatsapp"
+	"github.com/gabriel-vasile/mimetype"
 )
 
-func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, text string) *C.char {
-	data, err := os.Open(filepath.Join(handler.downloadsDirectory, "outgoing"))
+func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, filename string) *C.char {
+    data, err := os.Open(filename)
 	if err != nil {
 		handler.presentMessage(makeConversationErrorMessage(info,
 			fmt.Sprintf("Unable to read file which was going to be sent: %v", err)))
 		return nil
 	}
-	// TODO: guess mime type
-	if strings.Contains(text, "image") {
+	mime, err := mimetype.DetectReader(data)
+	data.Seek(0, 0) // mimetype read some bytes – reset read pointer to start of file
+	if mime.String() == "image/jpeg" {
 		message := whatsapp.ImageMessage{
 			Info:    info,
-			Type:    "image/jpeg",
+			Type:    mime.String(),
 			Content: data,
 		}
-		// TODO: inject system message "[File successfully sent.]"
 		// TODO: display own message now, else image will be received (out of order) on reconnect
 		return handler.sendMessage(message, info)
-	} else if strings.Contains(text, "audio") {
+	} else if mime.String() == "audio/ogg" {
 		message := whatsapp.AudioMessage{
 			Info:    info,
-			Type:    "audio/ogg",
+			Type:    mime.String(),
 			Content: data,
 		}
 		return handler.sendMessage(message, info)
 	} else {
 		handler.presentMessage(makeConversationErrorMessage(info,
-			"Please specify file type image or audio"))
+			"Document messages currently not supported."))
 		return nil
 	}
 }
