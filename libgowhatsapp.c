@@ -27,6 +27,7 @@
 #ifdef __GNUC__
 #include <unistd.h>
 #endif
+#include <inttypes.h>
 #include "purplegwa.h"
 
 #ifdef ENABLE_NLS
@@ -247,7 +248,7 @@ void
 gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
 {
     purple_debug_info(
-        "gowhatsapp", "%p recieved message type %ld at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
+        "gowhatsapp", "%p recieved message type %" PRId64 " at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
         (void *)gwamsg->connection,
         gwamsg->msgtype,
         gwamsg->timestamp,
