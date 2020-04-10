@@ -55,20 +55,19 @@ Please also notice the wiki page regarding [common problems](https://github.com/
 
 From approximate most important to approximate least interesting.
 
-* Display login QR code via the [request API](https://github.com/EionRobb/pidgin-opensteamworks/blob/master/steam-mobile/libsteam.c#L378-L412).
+* Add filename extension to downloaded files.
 * Support [stickers](https://github.com/Rhymen/go-whatsapp/commit/d7754af4a6b7209d88132b5e498c98f12fb67f70).
+* Add [proxy support](https://github.com/Rhymen/go-whatsapp/blob/master/examples/loginWithProxy/main.go).
 * Use a call-back for getting current preferences everywhere consistently.
 * Have purple handle the message, then conditionally request download where appropriate.
 * Add option to ignore invalid message IDs silently.
 * Sanitize invalid message IDs (e.g. `I/fb36`).
 * Support group conversations properly.
-* Pin go dependency version.
 * Sort old messages by date.
 * Improve spectrum support:
   * Make online status work.
   * Handle incoming files the way purple-skypeweb does.
-* Detect media file mime type for sending files.
-* Support sending image, audio, media, and document messages by drag-and-drop.
+* Support sending document messages.
 * Find out how whatsapp represents newlines.
 * Wait for server message received acknowledgement before displaying sent message locally.
 * Do not block while sending message.

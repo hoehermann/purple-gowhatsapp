@@ -39,6 +39,7 @@ GO_WHATSAPP_GIT = $(shell $(GO) env GOPATH)/src/github.com/Rhymen/go-whatsapp/.g
 GO_WHATSAPP_DATE =$(shell $(GIT) --git-dir="$(GO_WHATSAPP_GIT)" log -1 --date=rfc --format=%cd)
 
 update-dep:
+	$(GO) get -u github.com/skip2/go-qrcode
 	$(GO) get -u github.com/gabriel-vasile/mimetype
 	$(GO) get -u github.com/Rhymen/go-whatsapp
 	touch -d "$(GO_WHATSAPP_DATE)" $(GO_WHATSAPP_A)
@@ -49,6 +50,7 @@ $(GO_WHATSAPP_A):
 
 purplegwa.a: purplegwa.go purplegwa-media.go $(GO_WHATSAPP_A) gwa-to-purple.o
 	$(GO) get github.com/skip2/go-qrcode
+	$(GO) get github.com/gabriel-vasile/mimetype
 	$(GO) build -buildmode=c-archive -o purplegwa.a purplegwa.go purplegwa-media.go
 
 gwa-to-purple.o: gwa-to-purple.c constants.h
