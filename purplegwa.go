@@ -260,7 +260,7 @@ func makeConversationErrorMessage(originalInfo whatsapp.MessageInfo, errorMessag
 	return MessageAggregate{system: true, info: originalInfo, text: errorMessage}
 }
 
-func (handler *waHandler) handleDownloadableMessage(message downloadable, info whatsapp.MessageInfo, inline bool) []byte {
+func (handler *waHandler) handleDownloadableMessage(message DownloadableMessage, info whatsapp.MessageInfo, inline bool) []byte {
 	downloadsEnabled := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_ATTACHMENTS_OPTION, 0))
 	storeFailedDownload := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_DOWNLOAD_TRY_ONLY_ONCE_OPTION, 1))
 	return handler.presentDownloadableMessage(message, info, downloadsEnabled, storeFailedDownload, inline)
@@ -272,13 +272,13 @@ func (handler *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 
 func (handler *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 	inlineImages := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_INLINE_IMAGES_OPTION, 1))
-	data := handler.handleDownloadableMessage(&message, message.Info, inlineImages)
+	data := handler.handleDownloadableMessage(DownloadableMessage{Message: &message, Type: message.Type}, message.Info, inlineImages)
 	handler.presentMessage(MessageAggregate{text: message.Caption, info: message.Info, data: data})
 }
 
 func (handler *waHandler) HandleStickerMessage(message whatsapp.StickerMessage) {
 	inlineImages := Cint_to_bool(C.gowhatsapp_account_get_bool(C.gowhatsapp_get_account(handler.connID), C.GOWHATSAPP_INLINE_IMAGES_OPTION, 0))
-	data := handler.handleDownloadableMessage(&message, message.Info, inlineImages)
+	data := handler.handleDownloadableMessage(DownloadableMessage{Message: &message, Type: message.Type}, message.Info, inlineImages)
 	if inlineImages {
 		handler.presentMessage(MessageAggregate{text: "Contact sent a sticker: ", info: message.Info, data: data})
 	}
@@ -286,15 +286,15 @@ func (handler *waHandler) HandleStickerMessage(message whatsapp.StickerMessage) 
 
 func (handler *waHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
 	handler.presentMessage(MessageAggregate{text: message.Caption, info: message.Info})
-	handler.handleDownloadableMessage(&message, message.Info, false)
+	handler.handleDownloadableMessage(DownloadableMessage{Message: &message, Type: message.Type}, message.Info, false)
 }
 
 func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
-	handler.handleDownloadableMessage(&message, message.Info, false)
+	handler.handleDownloadableMessage(DownloadableMessage{Message: &message, Type: message.Type}, message.Info, false)
 }
 
 func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
-	handler.handleDownloadableMessage(&message, message.Info, false)
+	handler.handleDownloadableMessage(DownloadableMessage{Message: &message, Type: message.Type}, message.Info, false)
 }
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {

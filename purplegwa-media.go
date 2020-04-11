@@ -23,10 +23,21 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/gabriel-vasile/mimetype"
 )
+
+
+type downloadable interface {
+Download() ([]byte, error)
+}
+
+type DownloadableMessage struct {
+	Message downloadable;
+	Type string
+}
 
 func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, filename string) *C.char {
     data, err := os.Open(filename)
@@ -37,7 +48,7 @@ func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, filename s
 	}
 	mime, err := mimetype.DetectReader(data)
 	data.Seek(0, 0) // mimetype read some bytes – reset read pointer to start of file
-	if mime.String() == "image/jpeg" {
+	if mime.Is("image/jpeg") {
 		message := whatsapp.ImageMessage{
 			Info:    info,
 			Type:    mime.String(),
@@ -45,7 +56,7 @@ func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, filename s
 		}
 		// TODO: display own message now, else image will be received (out of order) on reconnect
 		return handler.sendMessage(message, info)
-	} else if mime.String() == "audio/ogg" {
+	} else if mime.Is("audio/ogg") {
 		message := whatsapp.AudioMessage{
 			Info:    info,
 			Type:    mime.String(),
@@ -73,15 +84,11 @@ func isSaneId(s string) bool {
 	return true
 }
 
-func generateFilepath(downloadsDirectory string, info whatsapp.MessageInfo) string {
-	fp, _ := filepath.Abs(filepath.Join(downloadsDirectory, info.Id))
+func generateFilepath(downloadsDirectory string, info whatsapp.MessageInfo, mimeType string) string {
+	// TODO: query mimetype database for usual extension in favour of this hackery
+	extension := "."+strings.Split(filepath.Base(mimeType),";")[0]
+	fp, _ := filepath.Abs(filepath.Join(downloadsDirectory, info.Id)+extension)
 	return fp
-}
-
-func (handler *waHandler) wantToDownload(info whatsapp.MessageInfo) (filename string, want bool) {
-	fp := generateFilepath(handler.downloadsDirectory, info)
-	_, err := os.Stat(fp)
-	return fp, os.IsNotExist(err)
 }
 
 func (handler *waHandler) storeDownloadedData(filename string, data []byte) error {
@@ -100,16 +107,14 @@ func (handler *waHandler) storeDownloadedData(filename string, data []byte) erro
 	}
 }
 
-type downloadable interface {
-	Download() ([]byte, error)
-}
-
-func (handler *waHandler) presentDownloadableMessage(message downloadable, info whatsapp.MessageInfo, downloadsEnabled bool, storeFailedDownload bool, inline bool) []byte {
-	filename, wtd := handler.wantToDownload(info)
-	if wtd {
+func (handler *waHandler) presentDownloadableMessage(message DownloadableMessage, info whatsapp.MessageInfo, downloadsEnabled bool, storeFailedDownload bool, inline bool) []byte {
+	filename := generateFilepath(handler.downloadsDirectory, info, message.Type)
+	_, err := os.Stat(filename)
+	notYetDownloaded := os.IsNotExist(err)
+	if notYetDownloaded {
 		if downloadsEnabled {
 			if isSaneId(info.Id) {
-				data, err := message.Download()
+				data, err := message.Message.Download()
 				if err != nil {
 					retryComment := ""
 					if storeFailedDownload {
