@@ -21,26 +21,25 @@ package main
 import (
 	"C"
 	"fmt"
+	"mime"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/gabriel-vasile/mimetype"
 )
 
-
 type downloadable interface {
-Download() ([]byte, error)
+	Download() ([]byte, error)
 }
 
 type DownloadableMessage struct {
-	Message downloadable;
-	Type string
+	Message downloadable
+	Type    string
 }
 
 func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, filename string) *C.char {
-    data, err := os.Open(filename)
+	data, err := os.Open(filename)
 	if err != nil {
 		handler.presentMessage(makeConversationErrorMessage(info,
 			fmt.Sprintf("Unable to read file which was going to be sent: %v", err)))
@@ -85,9 +84,12 @@ func isSaneId(s string) bool {
 }
 
 func generateFilepath(downloadsDirectory string, info whatsapp.MessageInfo, mimeType string) string {
-	// TODO: query mimetype database for usual extension in favour of this hackery
-	extension := "."+strings.Split(filepath.Base(mimeType),";")[0]
-	fp, _ := filepath.Abs(filepath.Join(downloadsDirectory, info.Id)+extension)
+	extension := ".bin"
+	extensions, _ := mime.ExtensionsByType(mimeType)
+	if extensions != nil {
+		extension = extensions[0]
+	}
+	fp, _ := filepath.Abs(filepath.Join(downloadsDirectory, info.Id) + extension)
 	return fp
 }
 
