@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   gowhatsapp plugin for libpurple
  *   Copyright (C) 2019 Hermann Höhne
  *
