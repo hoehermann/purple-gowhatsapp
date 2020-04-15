@@ -32,6 +32,7 @@ enum gowhatsapp_message_type {
     gowhatsapp_message_type_text,
     gowhatsapp_message_type_login,
     gowhatsapp_message_type_session,
+    gowhatsapp_message_type_contactlist_refresh,
 };
 
 // C compatible representation of one received message.
@@ -295,6 +296,32 @@ func (handler *waHandler) HandleAudioMessage(message whatsapp.AudioMessage) {
 
 func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage) {
 	handler.handleDownloadableMessage(DownloadableMessage{Message: &message, Type: message.Type}, message.Info, false)
+}
+
+func (handler *waHandler) HandleContactList(contacts []whatsapp.Contact) {
+	for _, contact := range contacts {
+		C_message_type := C.gowhatsapp_message_type_contactlist_refresh
+
+		cmessage := C.struct_gowhatsapp_message{
+			connection: handler.connID,
+			msgtype:    C.int64_t(C_message_type),
+			timestamp:  C.time_t(0),
+			id:         C.CString(""),
+			remoteJid:  C.CString(contact.Jid),
+			senderJid:  C.CString(contact.Notify),
+			fromMe:     bool_to_Cchar(false),
+			text:       C.CString(contact.Name),
+			system:     bool_to_Cchar(true),
+			blob:       C.CBytes(nil),
+			blobsize:   C.size_t(0), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
+		}
+		C.gowhatsapp_process_message_bridge(unsafe.Pointer(&cmessage))
+	}
+}
+
+//TBD
+func (handler *waHandler) HandleContactMessage(message whatsapp.ContactMessage) {
+	//fmt.Fprintf(os.Stderr, "HandleContactMessageMessage(%v)\n", message)
 }
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {
