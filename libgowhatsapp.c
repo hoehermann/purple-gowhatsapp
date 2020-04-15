@@ -72,8 +72,10 @@ gowhatsapp_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
 void
 gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
 {
-    purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_ONLINE, NULL);
-    purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_MOBILE, NULL);
+    if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
+        purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_ONLINE, NULL);
+        purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_MOBILE, NULL);
+    }
 }
 
 void
@@ -173,40 +175,32 @@ PurpleConversation *gowhatsapp_find_conversation(char *username, PurpleAccount *
 
 static void gowhatsapp_refresh_contactlist(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
-	PurpleGroup *group = NULL;
-	PurpleBuddy *buddy = NULL;
-	char *display_name = NULL;
-	GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
+    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
 
-	if(!strcmp(gwamsg->remoteJid, "status@broadcast")){
-		return;
-	}
+    if (!purple_account_get_bool(gwa->account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE)) {
+        return;
+    }
 
-	if (strlen(gwamsg->text)){
-		display_name = g_strdup(gwamsg->text);
-	} else {
-		display_name = g_strdup(gwamsg->remoteJid);
-	}
+    if(!strcmp(gwamsg->remoteJid, "status@broadcast")){
+        return;
+    }
 
-	buddy = purple_blist_find_buddy(gwa->account, gwamsg->remoteJid);
-	if (!buddy)
-	{
-		if (!group)
-		{
-			group = purple_blist_find_group("Whatsapp");
-			if (!group)
-			{
-				group = purple_group_new("Whatsapp");
-				purple_blist_add_group(group, NULL);
-			}
-		}
-		buddy = purple_buddy_new(gwa->account, gwamsg->remoteJid, display_name);
-		purple_blist_add_buddy(buddy, NULL, group, NULL);
-	}
+    char *display_name = gwamsg->remoteJid;
+    if (strlen(gwamsg->text)) {
+        display_name = gwamsg->text;
+    }
 
-	if (display_name != NULL){
-		g_free(display_name );
-	}
+    PurpleBuddy *buddy = purple_blist_find_buddy(gwa->account, gwamsg->remoteJid);
+    if (!buddy) {
+        PurpleGroup *group = purple_blist_find_group("Whatsapp");
+        if (!group) {
+            group = purple_group_new("Whatsapp");
+            purple_blist_add_group(group, NULL);
+        }
+        buddy = purple_buddy_new(gwa->account, gwamsg->remoteJid, display_name);
+        purple_blist_add_buddy(buddy, NULL, group, NULL);
+        gowhatsapp_assume_buddy_online(gwa->account, buddy);
+    }
 }
 
 void
@@ -359,8 +353,8 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             }
             break;
         case gowhatsapp_message_type_contactlist_refresh:
-	    gowhatsapp_refresh_contactlist(pc, gwamsg);
-	    break;
+            gowhatsapp_refresh_contactlist(pc, gwamsg);
+            break;
         default:
             gowhatsapp_display_message(pc, gwamsg);
     }
@@ -524,9 +518,7 @@ gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *grou
 {
     // does not actually do anything. buddy is added to pidgin's local list and is usable from there.
     GoWhatsappAccount *sa = purple_connection_get_protocol_data(pc);
-    if (purple_account_get_bool(sa->account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
-        gowhatsapp_assume_buddy_online(sa->account, buddy);
-    }
+    gowhatsapp_assume_buddy_online(sa->account, buddy);
 }
 
 static GList *
@@ -537,6 +529,13 @@ gowhatsapp_add_account_options(GList *account_options)
     option = purple_account_option_bool_new(
                 _("Display all contacts as online"),
                 GOWHATSAPP_FAKE_ONLINE_OPTION,
+                TRUE
+                );
+    account_options = g_list_append(account_options, option);
+    
+    option = purple_account_option_bool_new(
+                _("Fetch contact list from phone"),
+                GOWHATSAPP_FETCH_CONTACTS_OPTION,
                 TRUE
                 );
     account_options = g_list_append(account_options, option);

@@ -44,6 +44,8 @@ Please also notice the wiki page regarding [common problems](https://github.com/
 * Sending text messages.
 * Download files from image, audio, media, and document messages.  
   Files are downloaded to `~/.pidgin/gowhatsapp`.
+* Fetch contacts from Phone courtesy of [Markus Gothe](https://github.com/nihilus).
+* Under the hood: Reasonable callback mechanism thanks to [Eiron Robb](https://github.com/EionRobb).
 
 ![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")  
 
@@ -55,10 +57,10 @@ Please also notice the wiki page regarding [common problems](https://github.com/
 
 From approximate most important to approximate least interesting.
 
-* Add filename extension to downloaded files.
+* Find memory leak.
 * Support [stickers](https://github.com/Rhymen/go-whatsapp/commit/d7754af4a6b7209d88132b5e498c98f12fb67f70).
 * Add [proxy support](https://github.com/Rhymen/go-whatsapp/blob/master/examples/loginWithProxy/main.go).
-* Use a call-back for getting current preferences everywhere consistently.
+* Use a callback for getting current preferences everywhere consistently.
 * Have purple handle the message, then conditionally request download where appropriate.
 * Add option to ignore invalid message IDs silently.
 * Sanitize invalid message IDs (e.g. `I/fb36`).
