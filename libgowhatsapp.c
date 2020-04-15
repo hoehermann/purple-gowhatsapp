@@ -171,6 +171,44 @@ PurpleConversation *gowhatsapp_find_conversation(char *username, PurpleAccount *
     return conv;
 }
 
+static void gowhatsapp_refresh_contactlist(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
+{
+	PurpleGroup *group = NULL;
+	PurpleBuddy *buddy = NULL;
+	char *display_name = NULL;
+	GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
+
+	if(!strcmp(gwamsg->remoteJid, "status@broadcast")){
+		return;
+	}
+
+	if (strlen(gwamsg->text)){
+		display_name = g_strdup(gwamsg->text);
+	} else {
+		display_name = g_strdup(gwamsg->remoteJid);
+	}
+
+	buddy = purple_blist_find_buddy(gwa->account, gwamsg->remoteJid);
+	if (!buddy)
+	{
+		if (!group)
+		{
+			group = purple_blist_find_group("Whatsapp");
+			if (!group)
+			{
+				group = purple_group_new("Whatsapp");
+				purple_blist_add_group(group, NULL);
+			}
+		}
+		buddy = purple_buddy_new(gwa->account, gwamsg->remoteJid, display_name);
+		purple_blist_add_buddy(buddy, NULL, group, NULL);
+	}
+
+	if (display_name != NULL){
+		g_free(display_name );
+	}
+}
+
 void
 gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
@@ -320,7 +358,9 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
                 gowhatsapp_display_qrcode(pc, gwamsg->text, gwamsg->blob, gwamsg->blobsize);
             }
             break;
-
+        case gowhatsapp_message_type_contactlist_refresh:
+	    gowhatsapp_refresh_contactlist(pc, gwamsg);
+	    break;
         default:
             gowhatsapp_display_message(pc, gwamsg);
     }
