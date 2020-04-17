@@ -203,6 +203,21 @@ static void gowhatsapp_refresh_contactlist(PurpleConnection *pc, gowhatsapp_mess
     }
 }
 
+
+static void gowhatsapp_refresh_presence(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
+{
+    GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
+    PurpleBuddy *buddy = purple_blist_find_buddy(gwa->account, gwamsg->remoteJid);
+
+    if (buddy){
+    	if (!gwamsg->fromMe){
+    	    time_t lastseen = (time_t)gwamsg->timestamp;
+	    purple_blist_node_set_int(&buddy->node, "last_seen", lastseen);
+	}
+    }
+}
+
+
 void
 gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
@@ -354,6 +369,9 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             break;
         case gowhatsapp_message_type_contactlist_refresh:
             gowhatsapp_refresh_contactlist(pc, gwamsg);
+            break;
+        case gowhatsapp_message_type_presence:
+            gowhatsapp_refresh_presence(pc, gwamsg);
             break;
         default:
             gowhatsapp_display_message(pc, gwamsg);

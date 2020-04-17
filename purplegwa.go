@@ -33,6 +33,7 @@ enum gowhatsapp_message_type {
     gowhatsapp_message_type_login,
     gowhatsapp_message_type_session,
     gowhatsapp_message_type_contactlist_refresh,
+    gowhatsapp_message_type_presence,
 };
 
 // C compatible representation of one received message.
@@ -74,7 +75,9 @@ import "C"
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 	"unsafe"
@@ -316,12 +319,93 @@ func (handler *waHandler) HandleContactList(contacts []whatsapp.Contact) {
 			blobsize:   C.size_t(0), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
 		}
 		C.gowhatsapp_process_message_bridge(unsafe.Pointer(&cmessage))
+		handler.wac.SubscribePresence(contact.Jid);
+	}
+}
+
+type JSONMessage []json.RawMessage
+type JSONMessageType string
+
+const (
+	MessageMsgInfo		JSONMessageType = "MsgInfo"
+	MessageMsg		JSONMessageType = "Msg"
+	MessagePresence		JSONMessageType = "Presence"
+	MessageStream		JSONMessageType = "Stream"
+	MessageConn		JSONMessageType = "Conn"
+	MessageProps		JSONMessageType = "Props"
+	MessageCmd		JSONMessageType = "Cmd"
+	MessageChat		JSONMessageType = "Chat"
+	MessageCall		JSONMessageType = "Call"
+	MessageBlocklist	JSONMessageType = "Blocklist"
+)
+
+type Presence struct {
+	JID       string            `json:"id"`
+	Status    string	    `json:"type"`
+	Timestamp int64             `json:"t"`
+	Deny      bool              `json:"deny"`
+}
+
+const (
+	OldUserSuffix = "@c.us"
+	NewUserSuffix = "@s.whatsapp.net"
+)
+
+func (handler *waHandler) handleMessagePresence(message []byte) {
+	var event Presence
+	err := json.Unmarshal(message, &event)
+	if err != nil {
+		return
+	}
+	event.JID = strings.Replace(event.JID, OldUserSuffix, NewUserSuffix, 1)
+
+	C_message_type := C.gowhatsapp_message_type_presence
+
+	cmessage := C.struct_gowhatsapp_message{
+		connection: handler.connID,
+		msgtype:    C.int64_t(C_message_type),
+		timestamp:  C.time_t(event.Timestamp),
+		id:         C.CString(""),
+		remoteJid:  C.CString(event.JID),
+		senderJid:  C.CString(""),
+		fromMe:     bool_to_Cchar(event.Deny),
+		text:       C.CString(event.Status),
+		system:     bool_to_Cchar(true),
+		blob:       C.CBytes(nil),
+		blobsize:   C.size_t(0), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
+	}
+	C.gowhatsapp_process_message_bridge(unsafe.Pointer(&cmessage))
+}
+
+func (handler *waHandler) HandleJsonMessage(message string) {
+	msg := JSONMessage{}
+	err := json.Unmarshal([]byte(message), &msg)
+	if err != nil || len(msg) < 2 {
+		return
+	}
+
+	var msgType JSONMessageType
+	json.Unmarshal(msg[0], &msgType)
+
+	switch msgType {
+	case MessagePresence:
+		handler.handleMessagePresence(msg[1])
+	case MessageStream:
+	case MessageConn:
+	case MessageProps:
+	case MessageMsgInfo, MessageMsg:
+	case MessageCmd:
+	case MessageChat:
+	case MessageCall:
+	case MessageBlocklist:
+	default:
+		fmt.Fprintf(os.Stderr, "Unhandled JsonMessage(%s)\n", message)
 	}
 }
 
 //TBD
 func (handler *waHandler) HandleContactMessage(message whatsapp.ContactMessage) {
-	//fmt.Fprintf(os.Stderr, "HandleContactMessageMessage(%v)\n", message)
+	//fmt.Fprintf(os.Stderr, "HandleContactMessage(%v)\n", message)
 }
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {
