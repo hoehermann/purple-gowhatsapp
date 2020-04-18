@@ -552,7 +552,7 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
     
     option = purple_account_option_bool_new(
-                _("Fetch contact list from phone"),
+                _("Fetch contact list from phone on connect"),
                 GOWHATSAPP_FETCH_CONTACTS_OPTION,
                 TRUE
                 );

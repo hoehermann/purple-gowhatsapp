@@ -39,17 +39,17 @@ enum gowhatsapp_message_type {
 // C compatible representation of one received message.
 // NOTE: If the cgo and gcc compilers disagree on padding or alignment, chaos will ensue.
 struct gowhatsapp_message {
-    uintptr_t connection;
-    int64_t msgtype;
-    char *id;
-    char *remoteJid;
-    char *senderJid;
-    char *text;
-    void *blob;
-    size_t blobsize;
-    time_t timestamp;
-    char fromMe;
-    char system;
+    uintptr_t connection; /// an int representation of the purple connection pointer 
+    int64_t msgtype; /// message type – see above
+    char *id; /// message id
+    char *remoteJid; /// conversation identifier (may be a singel contact or a group)
+    char *senderJid; /// message author's identifier (useful in group chats)
+    char *text; /// the message payload (interpretation depends on type)
+    void *blob; /// binary payload (used for inlining images)
+    size_t blobsize; /// size of binary payload in bytes
+    time_t timestamp; /// timestamp the message was sent(?)
+    char fromMe; /// this is (a copy of) an outgoing message
+    char system; /// this is a system-message, not user-generated
     // these are only used for transporting session data
     char *clientId;
     char *clientToken;
