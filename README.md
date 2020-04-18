@@ -44,7 +44,7 @@ Please also notice the wiki page regarding [common problems](https://github.com/
 * Sending text messages.
 * Download files from image, audio, media, and document messages.  
   Files are downloaded to `~/.pidgin/gowhatsapp`.
-* Fetch contacts from Phone courtesy of [Markus Gothe](https://github.com/nihilus).
+* Fetch contacts from phone, keep track of time last seen courtesy of [Markus Gothe](https://github.com/nihilus).
 * Under the hood: Reasonable callback mechanism thanks to [Eiron Robb](https://github.com/EionRobb).
 
 ![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")  
@@ -73,6 +73,8 @@ From approximate most important to approximate least interesting.
 * Find out how whatsapp represents newlines.
 * Wait for server message received acknowledgement before displaying sent message locally.
 * Do not block while sending message.
+* Defer logging debug messages from go-whatsapp to `purple_debug_info()`.
+* Refactor the file-handling code as it is really ugly.
 * Be compatible with the ["Autoreply"](https://github.com/EionRobb/purple-gowhatsapp/issues/3#issuecomment-555814663) plug-in by having an "Away" state.
 * Be compatible with the "Conversation Colors" plug-in.
 * Find spurious segfault.
