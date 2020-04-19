@@ -388,7 +388,7 @@ func (handler *waHandler) HandleJsonMessage(message string) {
 	case MessageCall:
 	case MessageBlocklist:
 	default:
-		//fmt.Fprintf(os.Stderr, "gowhatsapp: Unhandled JsonMessage(%s)\n", message)
+		//fmt.Fprintf(os.Stderr, "gowhatsapp: Unhandled JsonMessage(%v)\n", message)
 	}
 }
 
@@ -396,6 +396,38 @@ func (handler *waHandler) HandleJsonMessage(message string) {
 func (handler *waHandler) HandleContactMessage(message whatsapp.ContactMessage) {
 	//fmt.Fprintf(os.Stderr, "HandleContactMessage(%v)\n", message)
 }
+
+
+type ProfilePicInfo struct {
+	URL string `json:"eurl"`
+	Tag string `json:"tag"`
+
+	Status int16 `json:"status"`
+}
+
+
+//export gowhatsapp_get_icon_url
+func gowhatsapp_get_icon_url(connID C.uintptr_t, who *C.char) *C.char {
+	handler, ok := waHandlers[connID]
+	if ok {
+		jid := C.GoString(who)
+		data, err := handler.wac.GetProfilePicThumb(jid)
+		if err != nil {
+			return nil
+		}
+		content := <-data
+		info := &ProfilePicInfo{}
+		err = json.Unmarshal([]byte(content), info)
+		if err != nil {
+			return nil
+		}
+		if info.Status == 0 {
+			return C.CString(info.URL)
+		}
+	}
+	return nil
+}
+
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {
 	//create new WhatsApp connection

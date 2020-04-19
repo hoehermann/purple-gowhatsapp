@@ -39,6 +39,7 @@
 #endif
 
 #include "purple_compat.h"
+#include "http.h"
 
 #define GOWHATSAPP_PLUGIN_ID "prpl-hehoe-gowhatsapp"
 #ifndef GOWHATSAPP_PLUGIN_VERSION
@@ -63,11 +64,76 @@ typedef struct {
 } GoWhatsappAccount;
 typedef struct gowhatsapp_message gowhatsapp_message_t;
 
+static guint active_icon_downloads = 0;
+
 static const char *
 gowhatsapp_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
 {
     return "whatsapp";
 }
+
+
+static void
+gowhatsapp_get_icon_cb(PurpleHttpConnection *http_conn, PurpleHttpResponse *response, gpointer user_data)
+{
+	PurpleHttpRequest *request = purple_http_conn_get_request(http_conn);
+	PurpleBuddy *buddy = user_data;
+	const gchar *url = purple_http_request_get_url(request);
+	const gchar *data;
+	gsize len;
+	
+	active_icon_downloads--;
+	
+	if (!buddy || !purple_http_response_is_successful(response)) {
+		return;
+	}
+	
+	data = purple_http_response_get_data(response, &len);
+	
+	if (!len || !*data) {
+		return;
+	}
+	
+	purple_buddy_icons_set_for_user(purple_buddy_get_account(buddy), purple_buddy_get_name(buddy), g_memdup(data, len), len, url);
+	
+}
+
+static void
+gowhatsapp_get_icon_now(PurpleBuddy *buddy)
+{
+	PurpleConnection *pc = purple_account_get_connection(purple_buddy_get_account(buddy));
+	if (pc != NULL){
+		gchar *url = g_strdup(gowhatsapp_get_icon_url((uintptr_t)pc, (char *)purple_buddy_get_name(buddy)));
+		if (url != NULL){
+			if(strcmp(url, "") != 0){
+				purple_http_get(pc, gowhatsapp_get_icon_cb, buddy, url);
+				active_icon_downloads++;
+			}
+			g_free(url);
+		}
+	}
+}
+
+static gboolean
+gowhatsapp_get_icon_queuepop(gpointer data)
+{
+	PurpleBuddy *buddy = data;
+	
+	// Only allow 4 simultaneous downloads
+	if (active_icon_downloads > 4)
+		return TRUE;
+	
+	gowhatsapp_get_icon_now(buddy);
+	return FALSE;
+}
+
+void
+gowhatsapp_get_icon(PurpleBuddy *buddy)
+{
+	if (!buddy) return;
+	g_timeout_add(100, gowhatsapp_get_icon_queuepop, (gpointer)buddy);
+}
+
 
 void
 gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
@@ -76,6 +142,7 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_ONLINE, NULL);
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_MOBILE, NULL);
     }
+    gowhatsapp_get_icon(buddy);
 }
 
 void
@@ -199,10 +266,9 @@ static void gowhatsapp_refresh_contactlist(PurpleConnection *pc, gowhatsapp_mess
         }
         buddy = purple_buddy_new(gwa->account, gwamsg->remoteJid, display_name);
         purple_blist_add_buddy(buddy, NULL, group, NULL);
-        gowhatsapp_assume_buddy_online(gwa->account, buddy);
+	gowhatsapp_assume_buddy_online(gwa->account, buddy);
     }
 }
-
 
 static void gowhatsapp_refresh_presence(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
@@ -216,7 +282,6 @@ static void gowhatsapp_refresh_presence(PurpleConnection *pc, gowhatsapp_message
 	}
     }
 }
-
 
 void
 gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
@@ -633,12 +698,20 @@ gowhatsapp_actions(
 static gboolean
 plugin_load(PurplePlugin *plugin, GError **error)
 {
+#if !PURPLE_VERSION_CHECK(3, 0, 0)
+    purple_http_init();
+#endif
+
     return TRUE;
 }
 
 static gboolean
 plugin_unload(PurplePlugin *plugin, GError **error)
 {
+#if !PURPLE_VERSION_CHECK(3, 0, 0)
+    purple_http_uninit();
+#endif
+
     purple_signals_disconnect_by_handle(plugin);
     return TRUE;
 }
