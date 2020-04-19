@@ -26,7 +26,7 @@ endif
 
 CFLAGS += -DLOCALEDIR=\"$(LOCALEDIR)\"
 
-PURPLE_COMPAT_FILES :=
+PURPLE_COMPAT_FILES := purple2compat/http.c purple2compat/purple-socket.c
 
 .PHONY:	all FAILNOPURPLE clean update-dep gdb install
 
@@ -56,7 +56,7 @@ gwa-to-purple.o: gwa-to-purple.c constants.h
 	$(CC) $(CFLAGS) -c -o $@ gwa-to-purple.c
 
 $(TARGET): libgowhatsapp.c $(PURPLE_COMPAT_FILES) purplegwa.a constants.h
-	$(CC) $(CFLAGS) -fPIC -shared -o $@ libgowhatsapp.c purplegwa.a $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 --libs --cflags` $(INCLUDES) -Ipurple2compat
+	$(CC) $(CFLAGS) -fPIC -shared -o $@ libgowhatsapp.c purplegwa.a $(PURPLE_COMPAT_FILES) $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 --libs --cflags` $(INCLUDES) -Ipurple2compat
 
 FAILNOPURPLE:
 	echo "You need libpurple development headers installed to be able to compile this plugin"

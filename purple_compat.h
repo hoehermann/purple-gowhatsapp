@@ -34,12 +34,16 @@
 
 #define purple_connection_error purple_connection_error_reason
 #define purple_connection_get_protocol purple_connection_get_prpl
+#define purple_proxy_info_get_proxy_type purple_proxy_info_get_type
 #define PURPLE_CONNECTION_CONNECTING PURPLE_CONNECTING
 #define PURPLE_CONNECTION_CONNECTED PURPLE_CONNECTED
+#define PURPLE_CONNECTION_DISCONNECTED PURPLE_DISCONNECTED
+#define PURPLE_CONNECTION_DISCONNECTING 4
 #define PURPLE_CONNECTION_FLAG_HTML PURPLE_CONNECTION_HTML
 #define PURPLE_CONNECTION_FLAG_NO_BGCOLOR PURPLE_CONNECTION_NO_BGCOLOR
 #define PURPLE_CONNECTION_FLAG_NO_FONTSIZE PURPLE_CONNECTION_NO_FONTSIZE
 #define PURPLE_CONNECTION_FLAG_NO_IMAGES PURPLE_CONNECTION_NO_IMAGES
+#define purple_connection_is_disconnecting(c)   (purple_connection_get_state(c) == PURPLE_DISCONNECTED || purple_connection_get_state(c) == PURPLE_CONNECTION_DISCONNECTING)
 #define purple_connection_set_flags(pc, f) ((pc)->flags = (f))
 #define purple_connection_get_flags(pc) ((pc)->flags)
 #define purple_blist_find_group purple_find_group
@@ -160,7 +164,6 @@ purple_message_destroy(PurpleMessage *message)
 
 #define purple_account_privacy_deny_add purple_privacy_deny_add
 #define purple_account_privacy_deny_remove purple_privacy_deny_remove
-#define PurpleHttpConnection PurpleUtilFetchUrlData
 #define purple_buddy_set_name purple_blist_rename_buddy
 #define purple_request_cpar_from_connection(a) purple_connection_get_account(a), NULL, NULL
 #define purple_notify_user_info_add_pair_html purple_notify_user_info_add_pair
