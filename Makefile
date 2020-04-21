@@ -34,15 +34,14 @@ LOCALES = $(patsubst %.po, %.mo, $(wildcard po/*.po))
 
 all: $(TARGET)
 
-GO_WHATSAPP_A = $(shell $(GO) env GOPATH)/pkg/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)/github.com/Rhymen/go-whatsapp.a
-GO_WHATSAPP_GIT = $(shell $(GO) env GOPATH)/src/github.com/Rhymen/go-whatsapp/.git
-GO_WHATSAPP_DATE =$(shell $(GIT) --git-dir="$(GO_WHATSAPP_GIT)" log -1 --date=rfc --format=%cd)
+GO_WHATSAPP_A = $(GOPATH)/pkg/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)/github.com/Rhymen/go-whatsapp.a
+GO_WHATSAPP_GIT = $(GOPATH)/src/github.com/Rhymen/go-whatsapp/.git
 
 update-dep:
 	$(GO) get -u github.com/skip2/go-qrcode
 	$(GO) get -u github.com/gabriel-vasile/mimetype
 	$(GO) get -u github.com/Rhymen/go-whatsapp
-	touch -d "$(GO_WHATSAPP_DATE)" $(GO_WHATSAPP_A)
+	touch -d "$(shell $(GIT) --git-dir="$(GO_WHATSAPP_GIT)" log -1 --date=rfc --format=%cd)" $(GO_WHATSAPP_A)
 
 # TODO: add targets for all go dependencies
 $(GO_WHATSAPP_A):
