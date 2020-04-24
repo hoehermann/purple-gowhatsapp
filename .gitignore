@@ -1,4 +1,6 @@
 *.so
 *.o
+*.dll
 purplegwa.a
 purplegwa.h
+go
