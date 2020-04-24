@@ -34,16 +34,21 @@ LDFLAGS += $(WIN32_LDFLAGS) -L$(LIBPURPLE_LIBDIR) $(WIN32_LDFLAGS)
 
 PURPLE_COMPAT_FILES :=
 
-.PHONY:	all FAILNOPURPLE clean gdb install
+.PHONY:	all FAILNOPURPLE clean gdb install update-dep
 
 LOCALES = $(patsubst %.po, %.mo, $(wildcard po/*.po))
 
 all: $(TARGET)
 
+update-dep:
+	$(GO) get -u github.com/gabriel-vasile/mimetype
+	$(GO) get -u github.com/skip2/go-qrcode
+	$(GO) get -u github.com/Rhymen/go-whatsapp
+
 purplegwa.a: purplegwa.go purplegwa-media.go gwa-to-purple.o
 	$(GO) get github.com/gabriel-vasile/mimetype
 	$(GO) get github.com/skip2/go-qrcode
-	$(GO) get -u github.com/Rhymen/go-whatsapp
+	$(GO) get github.com/Rhymen/go-whatsapp
 	$(GO) build -buildmode=c-archive -o purplegwa.a purplegwa.go purplegwa-media.go
 
 gwa-to-purple.o: gwa-to-purple.c constants.h
