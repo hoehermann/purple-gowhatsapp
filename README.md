@@ -14,8 +14,8 @@ Last seen working with [go-whatsapp d7754af](https://github.com/Rhymen/go-whatsa
 
 ### Pre-Built Binaries
 
-* Download a [nightly build](https://buildbot.hehoe.de/purple-gowhatsapp/builds/) (Ubuntu 18.04).
-* [Windows binaries](https://github.com/hoehermann/purple-gowhatsapp/wiki/Windows-Build) are kindly provided by [EionRobb](https://github.com/EionRobb) on occasion.
+* Download a [nightly build](https://buildbot.hehoe.de/purple-gowhatsapp/builds/) (Ubuntu 18.04 and Windows &ast;**new**&ast;).
+* Tested [Windows binaries](https://github.com/hoehermann/purple-gowhatsapp/wiki/Windows-Build) are kindly provided by [EionRobb](https://github.com/EionRobb) on occasion.
 
 ### Installation
 
