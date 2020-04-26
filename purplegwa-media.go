@@ -153,7 +153,10 @@ func (handler *waHandler) presentDownloadableMessage(message DownloadableMessage
 					fmt.Sprintf("A media message (ID %s) was received, but ID looks not sane – downloading skipped.", info.Id)))
 			}
 		} else {
-			handler.presentMessage(MessageAggregate{text: "[File download disabled in settings.]", system: true})
+			handler.presentMessage(MessageAggregate{
+				text:   "[File download disabled in settings.]",
+				system: true,
+				info:   info})
 		}
 	}
 	return nil
