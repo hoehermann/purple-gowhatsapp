@@ -44,8 +44,10 @@ Please also notice the wiki page regarding [common problems](https://github.com/
 * Sending text messages.
 * Download files from image, audio, media, and document messages.  
   Files are downloaded to `~/.pidgin/gowhatsapp`.
-* Fetch contacts from phone, keep track of time last seen courtesy of [Markus Gothe](https://github.com/nihilus).
 * Under the hood: Reasonable callback mechanism thanks to [Eiron Robb](https://github.com/EionRobb).
+* Fetch contacts from phone, keep track of time last seen, download of user profile pictures courtesy of [Markus Gothe](https://github.com/nihilus).
+
+*Note:* You may need to force the TLS version to 1.2 using the NSS plug-in for download of user profile pictures to work on some systems.
 
 ![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")  
 
