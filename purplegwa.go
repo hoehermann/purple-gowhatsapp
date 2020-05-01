@@ -39,7 +39,7 @@ enum gowhatsapp_message_type {
 // C compatible representation of one received message.
 // NOTE: If the cgo and gcc compilers disagree on padding or alignment, chaos will ensue.
 struct gowhatsapp_message {
-    uintptr_t connection; /// an int representation of the purple connection pointer 
+    uintptr_t connection; /// an int representation of the purple connection pointer
     int64_t msgtype; /// message type – see above
     char *id; /// message id
     char *remoteJid; /// conversation identifier (may be a singel contact or a group)
@@ -397,14 +397,12 @@ func (handler *waHandler) HandleContactMessage(message whatsapp.ContactMessage) 
 	//fmt.Fprintf(os.Stderr, "HandleContactMessage(%v)\n", message)
 }
 
-
 type ProfilePicInfo struct {
 	URL string `json:"eurl"`
 	Tag string `json:"tag"`
 
 	Status int16 `json:"status"`
 }
-
 
 //export gowhatsapp_get_icon_url
 func gowhatsapp_get_icon_url(connID C.uintptr_t, who *C.char) *C.char {
@@ -427,7 +425,6 @@ func gowhatsapp_get_icon_url(connID C.uintptr_t, who *C.char) *C.char {
 	}
 	return nil
 }
-
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {
 	//create new WhatsApp connection

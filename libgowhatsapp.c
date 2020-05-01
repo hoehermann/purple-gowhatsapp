@@ -76,62 +76,65 @@ gowhatsapp_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
 static void
 gowhatsapp_get_icon_cb(PurpleHttpConnection *http_conn, PurpleHttpResponse *response, gpointer user_data)
 {
-	PurpleHttpRequest *request = purple_http_conn_get_request(http_conn);
-	PurpleBuddy *buddy = user_data;
-	const gchar *url = purple_http_request_get_url(request);
-	const gchar *data;
-	gsize len;
-	
-	active_icon_downloads--;
-	
-	if (!buddy || !purple_http_response_is_successful(response)) {
-		return;
-	}
-	
-	data = purple_http_response_get_data(response, &len);
-	
-	if (!len || !*data) {
-		return;
-	}
-	
-	purple_buddy_icons_set_for_user(purple_buddy_get_account(buddy), purple_buddy_get_name(buddy), g_memdup(data, len), len, url);
-	
+    PurpleHttpRequest *request = purple_http_conn_get_request(http_conn);
+    PurpleBuddy *buddy = user_data;
+    const gchar *url = purple_http_request_get_url(request);
+    const gchar *data;
+    gsize len;
+    
+    active_icon_downloads--;
+    
+    if (!buddy || !purple_http_response_is_successful(response)) {
+        return;
+    }
+    
+    data = purple_http_response_get_data(response, &len);
+    
+    if (!len || !*data) {
+        return;
+    }
+    
+    purple_buddy_icons_set_for_user(purple_buddy_get_account(buddy), purple_buddy_get_name(buddy), g_memdup(data, len), len, url);
+    // TODO: investigate possible memory leak – is data freed with response somewhere?
 }
 
 static void
 gowhatsapp_get_icon_now(PurpleBuddy *buddy)
 {
-	PurpleConnection *pc = purple_account_get_connection(purple_buddy_get_account(buddy));
-	if (pc != NULL){
-		gchar *url = g_strdup(gowhatsapp_get_icon_url((uintptr_t)pc, (char *)purple_buddy_get_name(buddy)));
-		if (url != NULL){
-			if(strcmp(url, "") != 0){
-				purple_http_get(pc, gowhatsapp_get_icon_cb, buddy, url);
-				active_icon_downloads++;
-			}
-			g_free(url);
-		}
-	}
+    PurpleConnection *pc = purple_account_get_connection(purple_buddy_get_account(buddy));
+    if (pc != NULL){
+        gchar *url = g_strdup(gowhatsapp_get_icon_url((uintptr_t)pc, (char *)purple_buddy_get_name(buddy)));
+        if (url != NULL){
+            if(strcmp(url, "") != 0){
+                purple_http_get(pc, gowhatsapp_get_icon_cb, buddy, url);
+                active_icon_downloads++;
+            }
+            g_free(url);
+        }
+    }
 }
 
 static gboolean
 gowhatsapp_get_icon_queuepop(gpointer data)
 {
-	PurpleBuddy *buddy = data;
-	
-	// Only allow 4 simultaneous downloads
-	if (active_icon_downloads > 4)
-		return TRUE;
-	
-	gowhatsapp_get_icon_now(buddy);
-	return FALSE;
+    PurpleBuddy *buddy = data;
+    
+    // Only allow 4 simultaneous downloads
+    if (active_icon_downloads > 4) {
+        return TRUE;
+    }
+    
+    gowhatsapp_get_icon_now(buddy);
+    return FALSE;
 }
 
 void
 gowhatsapp_get_icon(PurpleBuddy *buddy)
 {
-	if (!buddy) return;
-	g_timeout_add(100, gowhatsapp_get_icon_queuepop, (gpointer)buddy);
+    if (buddy) {
+        g_timeout_add(100, gowhatsapp_get_icon_queuepop, (gpointer)buddy);
+    };
+    
 }
 
 
@@ -266,7 +269,7 @@ static void gowhatsapp_refresh_contactlist(PurpleConnection *pc, gowhatsapp_mess
         }
         buddy = purple_buddy_new(gwa->account, gwamsg->remoteJid, display_name);
         purple_blist_add_buddy(buddy, NULL, group, NULL);
-	gowhatsapp_assume_buddy_online(gwa->account, buddy);
+        gowhatsapp_assume_buddy_online(gwa->account, buddy);
     }
 }
 
@@ -276,10 +279,10 @@ static void gowhatsapp_refresh_presence(PurpleConnection *pc, gowhatsapp_message
     PurpleBuddy *buddy = purple_blist_find_buddy(gwa->account, gwamsg->remoteJid);
 
     if (buddy){
-    	if (!gwamsg->fromMe){
-    	    time_t lastseen = (time_t)gwamsg->timestamp;
-	    purple_blist_node_set_int(&buddy->node, "last_seen", lastseen);
-	}
+        if (!gwamsg->fromMe){
+            time_t lastseen = (time_t)gwamsg->timestamp;
+            purple_blist_node_set_int(&buddy->node, "last_seen", lastseen);
+        }
     }
 }
 
