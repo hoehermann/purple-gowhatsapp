@@ -84,7 +84,16 @@ gowhatsapp_get_icon_cb(PurpleHttpConnection *http_conn, PurpleHttpResponse *resp
     
     active_icon_downloads--;
     
-    if (!buddy || !purple_http_response_is_successful(response)) {
+    if (!buddy) {
+        return;
+    }
+    if (!purple_http_response_is_successful(response)) {
+        purple_debug_info(
+            "gowhatsapp", 
+            "Response not successful for icon for %s. Url is %s. Code is %d. Error is %s.\n", 
+            buddy->name, url, 
+            purple_http_response_get_code(response), purple_http_response_get_error(response)
+        );
         return;
     }
     
@@ -94,7 +103,11 @@ gowhatsapp_get_icon_cb(PurpleHttpConnection *http_conn, PurpleHttpResponse *resp
         return;
     }
     
-    purple_buddy_icons_set_for_user(purple_buddy_get_account(buddy), purple_buddy_get_name(buddy), g_memdup(data, len), len, url);
+    purple_buddy_icons_set_for_user(
+        purple_buddy_get_account(buddy), 
+        purple_buddy_get_name(buddy), 
+        g_memdup(data, len), len, url
+    );
     // TODO: investigate possible memory leak – is data freed with response somewhere?
 }
 
@@ -132,11 +145,21 @@ void
 gowhatsapp_get_icon(PurpleBuddy *buddy)
 {
     if (buddy) {
-        g_timeout_add(100, gowhatsapp_get_icon_queuepop, (gpointer)buddy);
-    };
-    
+        if (purple_account_get_bool(purple_buddy_get_account(buddy), GOWHATSAPP_GET_ICONS_OPTION, FALSE)) {
+            g_timeout_add(100, gowhatsapp_get_icon_queuepop, (gpointer)buddy);
+        }
+    }
 }
 
+void
+gowhatsapp_get_all_icons(GoWhatsappAccount *gwa)
+{
+    GSList *buddies = purple_find_buddies(gwa->account, NULL);
+    while (buddies != NULL) {
+        gowhatsapp_get_icon(buddies->data);
+        buddies = g_slist_delete_link(buddies, buddies);
+    }
+}
 
 void
 gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
@@ -145,7 +168,6 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_ONLINE, NULL);
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_MOBILE, NULL);
     }
-    gowhatsapp_get_icon(buddy);
 }
 
 void
@@ -415,6 +437,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
                 if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
                     gowhatsapp_assume_all_buddies_online(gwa);
                 }
+                gowhatsapp_get_all_icons(gwa);
             }
             if (purple_account_get_bool(account, GOWHATSAPP_PLAIN_TEXT_LOGIN, FALSE)) {
                 const char *username = purple_account_get_username(gwa->account);
@@ -623,6 +646,13 @@ gowhatsapp_add_account_options(GList *account_options)
                 _("Fetch contact list from phone on connect"),
                 GOWHATSAPP_FETCH_CONTACTS_OPTION,
                 TRUE
+                );
+    account_options = g_list_append(account_options, option);
+    
+    option = purple_account_option_bool_new(
+                _("Download user profile pictures (may cause GUI hiccups after connecting)"),
+                GOWHATSAPP_GET_ICONS_OPTION,
+                FALSE
                 );
     account_options = g_list_append(account_options, option);
 
