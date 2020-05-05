@@ -21,6 +21,7 @@ ifeq ($(shell $(PKG_CONFIG) --exists purple 2>/dev/null && echo "true"),)
 else
   TARGET = libgowhatsapp.so
   DEST = $(DESTDIR)`$(PKG_CONFIG) --variable=plugindir purple`
+  ICONS_DEST = $(DESTDIR)`$(PKG_CONFIG) --variable=datadir purple`/pixmaps/pidgin/protocols
   LOCALEDIR = $(DESTDIR)$(shell $(PKG_CONFIG) --variable=datadir purple)/locale
 endif
 
@@ -64,9 +65,17 @@ FAILNOPURPLE:
 clean:
 	rm -f $(TARGET) purplegwa.a gwa-to-purple.o
 
-install: $(TARGET)
+install: $(TARGET) install-icons
 	mkdir -m 0755 -p $(DEST)
 	install -m 0755 -p $(TARGET) $(DEST)
-	
+
+install-icons: icons/16/whatsapp.png icons/22/whatsapp.png icons/48/whatsapp.png
+	mkdir -m 0755 -p $(ICONS_DEST)/16
+	mkdir -m 0755 -p $(ICONS_DEST)/22
+	mkdir -m 0755 -p $(ICONS_DEST)/48
+	install -m 0644 -p icons/16/whatsapp.png $(ICONS_DEST)/16/whatsapp.png
+	install -m 0644 -p icons/22/whatsapp.png $(ICONS_DEST)/22/whatsapp.png
+	install -m 0644 -p icons/48/whatsapp.png $(ICONS_DEST)/48/whatsapp.png
+
 gdb:
 	gdb --args pidgin -d -c .pidgin
