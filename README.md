@@ -5,7 +5,7 @@ A libpurple/Pidgin plugin for WhatsApp **Web**.
 Powered by [go-whatsapp](https://github.com/Rhymen/go-whatsapp), which is written by Lucas Engelke.
 
 Being developed on Ubuntu 18.04.  
-Last seen working with [go-whatsapp d7754af](https://github.com/Rhymen/go-whatsapp/commit/d7754af).
+Last seen working with [go-whatsapp 5e33cb4](https://github.com/Rhymen/go-whatsapp/commit/5e33cb4).
 
 ### Building
 
