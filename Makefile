@@ -67,11 +67,11 @@ gwa-to-purple.o: gwa-to-purple.c constants.h
 
 libgowhatsapp.so:  $(PURPLE_COMPAT_FILES) purplegwa.a constants.h
 
-	$(CC) -fPIC $(CFLAGS)  -shared -o $@ libgowhatsapp purplegwa.a $(PURPLE_COMPAT_FILES) $(LDFLAGS) `shell $(PKG_CONFIG) purple glib-2.0 json-glib-1.0 --libs --cflags`  $(INCLUDES) -Ipurple2compat -g -ggdb
+	$(CC) -fPIC $(CFLAGS)  -shared -o $@ libgowhatsapp purplegwa.a $(PURPLE_COMPAT_FILES) $(LDFLAGS) $(shell $(PKG_CONFIG) purple glib-2.0 json-glib-1.0 --libs --cflags)  $(INCLUDES) -Ipurple2compat -g -ggdb
 
 libgowhatsapp3.so:  purplegwa.a constants.h
 
-	$(CC) -fPIC $(CFLAGS)  -shared -o $@ libgowhatsapp.c purplegwa.a  $(LDFLAGS) `shell $(PKG_CONFIG) purple-3 glib-2.0 json-glib-1.0 --libs --cflags` $(INCLUDES)  -g -ggdb
+	$(CC) -fPIC $(CFLAGS)  -shared -o $@ libgowhatsapp.c purplegwa.a  $(LDFLAGS) $(shell $(PKG_CONFIG) purple-3 glib-2.0 json-glib-1.0 --libs --cflags) $(INCLUDES)  -g -ggdb
 
 FAILNOPURPLE:
 	echo "You need libpurple development headers installed to be able to compile this plugin"
