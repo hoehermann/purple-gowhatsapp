@@ -35,7 +35,7 @@ endif
 
 CFLAGS += -DLOCALEDIR=\"$(LOCALEDIR)\"
 
-C_FILES := markdown.c
+C_FILES :=
 PURPLE_COMPAT_FILES := purple2compat/http.c purple2compat/purple-socket.c
 PURPLE_C_FILES := libgowhatsapp $(C_FILES)
 .PHONY:	all FAILNOPURPLE clean update-dep gdb install
@@ -65,13 +65,13 @@ purplegwa.a: purplegwa.go purplegwa-media.go $(GO_WHATSAPP_A) gwa-to-purple.o
 gwa-to-purple.o: gwa-to-purple.c constants.h
 	$(CC) $(CFLAGS) -c -o $@ gwa-to-purple.c
 
-libgowhatsapp.so: $(PURPLE_C_FILES) $(PURPLE_COMPAT_FILES) purplegwa.a constants.h
+libgowhatsapp.so:  $(PURPLE_COMPAT_FILES) purplegwa.a constants.h
 
-	$(CC) -fPIC $(CFLAGS)  -shared -o $@ libgowhatsapp purplegwa.a $(PURPLE_COMPAT_FILES) $(LDFLAGS) `$(PKG_CONFIG) purple glib-2.0 json-glib-1.0 --libs --cflags`  $(INCLUDES) -Ipurple2compat -g -ggdb
+	$(CC) -fPIC $(CFLAGS)  -shared -o $@ libgowhatsapp purplegwa.a $(PURPLE_COMPAT_FILES) $(LDFLAGS) `shell $(PKG_CONFIG) purple glib-2.0 json-glib-1.0 --libs --cflags`  $(INCLUDES) -Ipurple2compat -g -ggdb
 
-libgowhatsapp3.so: $(PURPLE_C_FILES) purplegwa.a constants.h
+libgowhatsapp3.so:  purplegwa.a constants.h
 
-	$(CC) -fPIC $(CFLAGS)  -shared -o $@ libgowhatsapp.c purplegwa.a  $(LDFLAGS) `$(PKG_CONFIG) purple-3 glib-2.0 json-glib-1.0 --libs --cflags` $(INCLUDES)  -g -ggdb
+	$(CC) -fPIC $(CFLAGS)  -shared -o $@ libgowhatsapp.c purplegwa.a  $(LDFLAGS) `shell $(PKG_CONFIG) purple-3 glib-2.0 json-glib-1.0 --libs --cflags` $(INCLUDES)  -g -ggdb
 
 FAILNOPURPLE:
 	echo "You need libpurple development headers installed to be able to compile this plugin"
