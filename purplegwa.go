@@ -59,16 +59,14 @@ struct gowhatsapp_message {
     char *wid;
 };
 
-struct gowhatsapp_session {
-};
-
 extern void gowhatsapp_process_message_bridge(void * gwamsg);
 extern void * gowhatsapp_get_account(uintptr_t pc);
 extern int gowhatsapp_account_get_bool(void *account, const char *name, int default_value);
 extern const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value);
-#cgo LDFLAGS: gwa-to-purple.o
 
+#cgo LDFLAGS: gwa-to-purple.o
 #cgo CFLAGS: -DCGO
+
 #include "constants.h"
 */
 import "C"
