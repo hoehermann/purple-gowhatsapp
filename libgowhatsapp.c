@@ -28,7 +28,6 @@
 #include <unistd.h>
 #endif
 #include <inttypes.h>
-#include "purplegwa.h"
 
 #ifdef ENABLE_NLS
 // TODO: implement localisation
@@ -40,6 +39,7 @@
 
 #include "purple_compat.h"
 #include "http.h"
+#include "purplegwa.h"
 
 #define GOWHATSAPP_PLUGIN_ID "prpl-hehoe-gowhatsapp"
 #ifndef GOWHATSAPP_PLUGIN_VERSION
@@ -896,6 +896,23 @@ gowhatsapp_account_get_bool(void *account, const char *name, int default_value)
 const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value)
 {
     return purple_account_get_string((const PurpleAccount *)account, name, default_value);
+}
+
+/*
+ * This allows cgo to get a string from the current account settings.
+ * The PurpleAccount pointer is untyped.
+ */
+const PurpleProxyInfo * gowhatsapp_account_get_proxy(void *account)
+{
+    PurpleProxyInfo *proxyInfo = purple_account_get_proxy_info((const PurpleAccount *)account);
+    if (!proxyInfo) {
+        purple_debug_info("gowhatsapp", "Account has no proxy info.\n");
+    }
+    if (proxyInfo && proxyInfo->type == PURPLE_PROXY_USE_GLOBAL) {
+        purple_debug_info("gowhatsapp", "Getting global proxy info…\n");
+        proxyInfo = purple_global_proxy_get_info();
+    }
+    return proxyInfo;
 }
 
 /*

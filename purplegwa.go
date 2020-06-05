@@ -22,9 +22,15 @@
 package main
 
 /*
+#cgo LDFLAGS: gwa-to-purple.o
+#cgo CFLAGS: -DCGO
+
 #include <stdint.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "constants.h"
+#include "proxy.h"
 
 enum gowhatsapp_message_type {
     gowhatsapp_message_type_error = -1,
@@ -63,11 +69,7 @@ extern void gowhatsapp_process_message_bridge(void * gwamsg);
 extern void * gowhatsapp_get_account(uintptr_t pc);
 extern int gowhatsapp_account_get_bool(void *account, const char *name, int default_value);
 extern const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value);
-
-#cgo LDFLAGS: gwa-to-purple.o
-#cgo CFLAGS: -DCGO
-
-#include "constants.h"
+extern const PurpleProxyInfo * gowhatsapp_account_get_proxy(void *account);
 */
 import "C"
 
@@ -75,9 +77,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 	"unsafe"
+	"os"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/pkg/errors"
@@ -426,10 +431,37 @@ func gowhatsapp_get_icon_url(connID C.uintptr_t, who *C.char) *C.char {
 
 func connect_and_login(handler *waHandler, session *whatsapp.Session) {
 	//create new WhatsApp connection
-	wac, err := whatsapp.NewConn(
-		10 * time.Second, // TODO: make timeout user configurable
-	//"github.com/kaxap/go-whatsapp", "Pidgin via go-whatsapp"
-	)
+	timeout := 10 * time.Second // TODO: make timeout user configurable
+	proxyInfo := C.gowhatsapp_account_get_proxy(C.gowhatsapp_get_account(handler.connID))
+	var err error
+	var wac *whatsapp.Conn
+	if proxyInfo != nil && proxyInfo._type > 0 {
+		scheme := ""
+		switch proxyInfo._type {
+		case C.PURPLE_PROXY_HTTP:
+			scheme = "http" // no idea what to do for https proxies
+		case C.PURPLE_PROXY_SOCKS4:
+			scheme = "socks"
+		case C.PURPLE_PROXY_SOCKS5:
+			scheme = "socks5"
+		case C.PURPLE_PROXY_USE_ENVVAR:
+			// TODO
+			//func ProxyFromEnvironment(req *Request) (*url.URL, error)
+			fmt.Fprintf(os.Stderr, "gowhatsapp: Proxy settings according to environment not implemented.\n")
+		case C.PURPLE_PROXY_TOR:
+			scheme = "socks5" // no idea if this is correct
+		}
+		proxyUrl := url.URL{
+			Scheme: scheme,
+			Host:   fmt.Sprintf("%s:%d", C.GoString(proxyInfo.host), proxyInfo.port),
+			User:   url.UserPassword(C.GoString(proxyInfo.username), C.GoString(proxyInfo.password)),
+		}
+		fmt.Fprintf(os.Stderr, "gowhatsapp: Using proxy URL: %v.\n", proxyUrl)
+		proxy := http.ProxyURL(&proxyUrl)
+		wac, err = whatsapp.NewConnWithProxy(timeout, proxy)
+	} else {
+		wac, err = whatsapp.NewConn(timeout)
+	}
 	handler.wac = wac
 	if err != nil {
 		wac = nil

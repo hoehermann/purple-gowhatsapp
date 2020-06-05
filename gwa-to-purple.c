@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "constants.h"
+#include "proxy.h"
 
 /*
  * This module implements dummy bodies for C functions to be called by cgo.
@@ -9,7 +10,7 @@
 
 void gowhatsapp_process_message_bridge(void *gwamsg)
 {
-	(void) gwamsg;
+    (void) gwamsg;
 }
 
 void *
@@ -36,3 +37,8 @@ gowhatsapp_account_get_bool(void *account, const char *name, int default_value)
     (void) default_value;
     return 0;
 }
+
+const PurpleProxyInfo * gowhatsapp_account_get_proxy(void *account) {
+    (void) account;
+    return (void *)0xDEADBEEF;
+};
