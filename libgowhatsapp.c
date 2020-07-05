@@ -905,6 +905,7 @@ const char * gowhatsapp_account_get_string(void *account, const char *name, cons
 const PurpleProxyInfo * gowhatsapp_account_get_proxy(void *account)
 {
     PurpleProxyInfo *proxyInfo = purple_account_get_proxy_info((const PurpleAccount *)account);
+    // TODO: find out whether proxyInfo == null means "use global" or "use none"
     if (!proxyInfo) {
         purple_debug_info("gowhatsapp", "Account has no proxy info.\n");
     }
@@ -924,7 +925,31 @@ const PurpleProxyInfo * gowhatsapp_account_get_proxy(void *account)
 gboolean
 gowhatsapp_process_message_bridge_mainthread(gpointer data)
 {
-    gowhatsapp_process_message((gowhatsapp_message_t *)data);
+    // query Pidgin for a list of all connections. bail if it does not exist
+    gowhatsapp_message_t * gwamsg = (gowhatsapp_message_t *)data;
+    PurpleConnection *pc = (PurpleConnection *)gwamsg->connection;
+    int connection_exists = 0;
+    {
+        GList * connection = purple_connections_get_connecting();
+        while (connection != NULL && connection_exists == 0) {
+            connection_exists = connection->data == pc;
+            connection = connection->next;
+        }
+    }
+    {
+        GList * connection = purple_connections_get_all();
+        while (connection != NULL && connection_exists == 0) {
+            connection_exists = connection->data == pc;
+            connection = connection->next;
+        }
+    }
+    if (connection_exists != 0) {
+        gowhatsapp_process_message(gwamsg);
+    } else {
+        purple_debug_info(
+            "gowhatsapp", "Avoiding crash by not handling message for not-existant connection %p.\n", pc
+        );
+    }
     return FALSE;
 }
 
