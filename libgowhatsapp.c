@@ -332,10 +332,20 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
             // special handling of messages sent by self incoming from remote, addressing issue #32
             // copied from EionRobb/purple-discord/blob/master/libdiscord.c
             flags |= PURPLE_MESSAGE_SEND | PURPLE_MESSAGE_REMOTE_SEND | PURPLE_MESSAGE_DELAYED;
-            PurpleConversation *conv = gowhatsapp_find_conversation(gwamsg->remoteJid, gwa->account);
-            purple_conversation_write(conv, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
         } else {
             flags |= PURPLE_MESSAGE_RECV;
+        }
+        if (gwamsg->fromMe || (gwamsg->senderJid && *gwamsg->senderJid)) {
+            PurpleConversation *conv = gowhatsapp_find_conversation(gwamsg->remoteJid, gwa->account);
+            if (gwamsg->senderJid && *gwamsg->senderJid) {
+                // participants in group chats have their senderJid supplied
+                purple_conversation_write(conv, gwamsg->senderJid, content, flags, gwamsg->timestamp);
+            } else if (gwamsg->fromMe) {
+                // display message sent from own account (but other device) here
+                purple_conversation_write(conv, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
+            }
+        } else {
+            // normal mode: direct incoming message
             purple_serv_got_im(pc, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
         }
         g_free(content);

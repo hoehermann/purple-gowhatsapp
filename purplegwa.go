@@ -228,13 +228,16 @@ func convertMessage(connID C.uintptr_t, message MessageAggregate) C.struct_gowha
 	if message.system {
 		info.Id = ""
 	}
+	if (info.Source != nil && info.Source.Participant != nil) {
+		info.SenderJid = *info.Source.Participant
+	}
 	return C.struct_gowhatsapp_message{
 		connection: connID,
 		msgtype:    C.int64_t(C_message_type),
 		timestamp:  C.time_t(info.Timestamp),
 		id:         C.CString(info.Id),
 		remoteJid:  C.CString(info.RemoteJid),
-		senderJid:  C.CString(info.SenderJid),
+		senderJid:  C.CString(info.SenderJid), /* Note: info.SenderJid seems to be nil or empty most of the time */
 		fromMe:     bool_to_Cchar(info.FromMe),
 		text:       C.CString(message.text),
 		system:     bool_to_Cchar(message.system),
