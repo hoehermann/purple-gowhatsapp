@@ -421,8 +421,8 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
                 // received error mentioning 401 – assume login failed and try again without stored session
                 // TODO: find a better way to discriminate errors
                 // "restoring failed: admin login responded with 419"
+                //purple_connection_update_progress(gwa->pc, _("Connecting"), 0, 3);
                 purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
-                purple_connection_update_progress(gwa->pc, _("Connecting"), 0, 3);
                 char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
                 gowhatsapp_go_login((uintptr_t)pc, FALSE, download_directory);
                 g_free(download_directory);
@@ -442,7 +442,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             purple_account_set_string(account, GOWHATSAPP_SESSION_WID_KEY, gwamsg->wid);
             if (!PURPLE_CONNECTION_IS_CONNECTED(pc)) {
                 // connection has now been established, show it in UI
-                purple_connection_update_progress(pc, _("Received session data."), 2, 3);
+                //purple_connection_update_progress(pc, _("Received session data."), 2, 3);
                 purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
                 if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
                     gowhatsapp_assume_all_buddies_online(gwa);
@@ -457,7 +457,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             break;
 
         case gowhatsapp_message_type_login:
-            purple_connection_update_progress(pc, _("Waiting for QR code scan"), 1, 3);
+            //purple_connection_update_progress(pc, _("Waiting for QR code scan"), 1, 3);
             if (purple_account_get_bool(account, GOWHATSAPP_PLAIN_TEXT_LOGIN, FALSE)) {
                 char * text = gwamsg->text;
                 const char *username = purple_account_get_username(gwa->account);
