@@ -239,7 +239,7 @@ func convertMessage(connID C.uintptr_t, message MessageAggregate) C.struct_gowha
 		remoteJid:  C.CString(info.RemoteJid),
 		senderJid:  C.CString(info.SenderJid), /* Note: info.SenderJid seems to be nil or empty most of the time */
 		fromMe:     bool_to_Cchar(info.FromMe),
-		text:       C.CString(message.text),
+		text:       C.CString(strings.Replace(message.text,"\n"," \n", -1)),
 		system:     bool_to_Cchar(message.system),
 		blob:       C.CBytes(message.data),
 		blobsize:   C.size_t(len(message.data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
