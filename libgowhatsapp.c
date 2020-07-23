@@ -488,7 +488,6 @@ gowhatsapp_login(PurpleAccount *account)
     pc_flags = purple_connection_get_flags(pc);
     pc_flags |= PURPLE_CONNECTION_NO_IMAGES;
     pc_flags |= PURPLE_CONNECTION_NO_FONTSIZE;
-    pc_flags |= PURPLE_CONNECTION_NO_NEWLINES; // TODO: find out how whatsapp represents newlines, use them
     pc_flags |= PURPLE_CONNECTION_NO_BGCOLOR;
     purple_connection_set_flags(pc, pc_flags);
 
