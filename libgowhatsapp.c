@@ -62,7 +62,6 @@ typedef struct {
 
     time_t previous_sessions_last_messages_timestamp; // keeping track of last received message's date
 } GoWhatsappAccount;
-typedef struct gowhatsapp_message gowhatsapp_message_t;
 
 static guint active_icon_downloads = 0;
 
@@ -477,19 +476,6 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
         default:
             gowhatsapp_display_message(pc, gwamsg);
     }
-
-    g_free(gwamsg->id);
-    g_free(gwamsg->remoteJid);
-    g_free(gwamsg->senderJid);
-    g_free(gwamsg->text);
-    g_free(gwamsg->blob);
-    g_free(gwamsg->clientId);
-    g_free(gwamsg->clientToken);
-    g_free(gwamsg->serverToken);
-    g_free(gwamsg->encKey_b64);
-    g_free(gwamsg->macKey_b64);
-    g_free(gwamsg->wid);
-    //g_free(gwamsg); // TODO: find out why this fails
 }
 
 void
@@ -953,22 +939,43 @@ gowhatsapp_process_message_bridge_mainthread(gpointer data)
             connection = connection->next;
         }
     }
-    if (connection_exists != 0) {
-        gowhatsapp_process_message(gwamsg);
-    } else {
+    if (connection_exists == 0) {
         purple_debug_info(
             "gowhatsapp", "Avoiding crash by not handling message for not-existant connection %p.\n", pc
         );
+    } else {
+        gowhatsapp_process_message(gwamsg);
     }
+    g_free(gwamsg->id);
+    g_free(gwamsg->remoteJid);
+    g_free(gwamsg->senderJid);
+    g_free(gwamsg->text);
+    g_free(gwamsg->blob);
+    g_free(gwamsg->clientId);
+    g_free(gwamsg->clientToken);
+    g_free(gwamsg->serverToken);
+    g_free(gwamsg->encKey_b64);
+    g_free(gwamsg->macKey_b64);
+    g_free(gwamsg->wid);
+    g_free(gwamsg);
     return FALSE;
 }
 
 /*
  * Handler for a message received by go-whatsapp.
  * Called by go-whatsapp (outside of the GTK eventloop).
+ * 
+ * Yes, this is indeed neccessary – we checked.
  */
 void
-gowhatsapp_process_message_bridge(void *gwamsg)
+gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg_go)
 {
-    purple_timeout_add(0, gowhatsapp_process_message_bridge_mainthread, gwamsg); // yes, this is indeed neccessary – we checked
+    // copying Go-managed struct into heap
+    // the strings inside the struct already reside in the heap, according to https://golang.org/cmd/cgo/#hdr-C_references_to_Go
+    gowhatsapp_message_t *gwamsg_heap = g_memdup(&gwamsg_go, sizeof gwamsg_go);
+    purple_timeout_add(
+        0, // schedule for immediate execution
+        gowhatsapp_process_message_bridge_mainthread, // handle message in main thread
+        gwamsg_heap // data to handle in main thread
+    );
 }

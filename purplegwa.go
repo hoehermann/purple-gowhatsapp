@@ -64,8 +64,9 @@ struct gowhatsapp_message {
     char *macKey_b64;
     char *wid;
 };
+typedef struct gowhatsapp_message gowhatsapp_message_t;
 
-extern void gowhatsapp_process_message_bridge(void * gwamsg);
+extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
 extern void * gowhatsapp_get_account(uintptr_t pc);
 extern int gowhatsapp_account_get_bool(void *account, const char *name, int default_value);
 extern const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value);
@@ -81,7 +82,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-	"unsafe"
 	"os"
 
 	"github.com/Rhymen/go-whatsapp"
@@ -191,7 +191,7 @@ func (handler *waHandler) presentMessage(message MessageAggregate) {
 		handler.wac.Read(message.info.RemoteJid, message.info.Id) // mark message as "displayed"
 	}
 	cmessage := convertMessage(handler.connID, message)
-	C.gowhatsapp_process_message_bridge(unsafe.Pointer(&cmessage))
+	C.gowhatsapp_process_message_bridge(cmessage)
 }
 
 /*
@@ -239,7 +239,7 @@ func convertMessage(connID C.uintptr_t, message MessageAggregate) C.struct_gowha
 		remoteJid:  C.CString(info.RemoteJid),
 		senderJid:  C.CString(info.SenderJid), /* Note: info.SenderJid seems to be nil or empty most of the time */
 		fromMe:     bool_to_Cchar(info.FromMe),
-		text:       C.CString(strings.Replace(message.text,"\n"," \n", -1)),
+		text:       C.CString(strings.Replace(message.text,"\n"," \n", -1)), // TODO: check – prepending space to newline might actually not be necessary
 		system:     bool_to_Cchar(message.system),
 		blob:       C.CBytes(message.data),
 		blobsize:   C.size_t(len(message.data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
@@ -308,16 +308,14 @@ func (handler *waHandler) HandleDocumentMessage(message whatsapp.DocumentMessage
 
 func (handler *waHandler) HandleContactList(contacts []whatsapp.Contact) {
 	for _, contact := range contacts {
-		C_message_type := C.gowhatsapp_message_type_contactlist_refresh
-
 		cmessage := C.struct_gowhatsapp_message{
 			connection: handler.connID,
-			msgtype:    C.int64_t(C_message_type),
+			msgtype:    C.int64_t(C.gowhatsapp_message_type_contactlist_refresh),
 			remoteJid:  C.CString(contact.Jid),
 			senderJid:  C.CString(contact.Notify),
 			text:       C.CString(contact.Name),
 		}
-		C.gowhatsapp_process_message_bridge(unsafe.Pointer(&cmessage))
+		C.gowhatsapp_process_message_bridge(cmessage)
 		handler.wac.SubscribePresence(contact.Jid)
 	}
 }
@@ -357,19 +355,16 @@ func (handler *waHandler) handleMessagePresence(message []byte) {
 		return
 	}
 	event.JID = strings.Replace(event.JID, OldUserSuffix, NewUserSuffix, 1)
-
-	C_message_type := C.gowhatsapp_message_type_presence
-
 	cmessage := C.struct_gowhatsapp_message{
 		connection: handler.connID,
-		msgtype:    C.int64_t(C_message_type),
+		msgtype:    C.int64_t(C.gowhatsapp_message_type_presence),
 		timestamp:  C.time_t(event.Timestamp),
 		remoteJid:  C.CString(event.JID),
 		fromMe:     bool_to_Cchar(event.Deny),
 		text:       C.CString(event.Status),
 		system:     bool_to_Cchar(true),
 	}
-	C.gowhatsapp_process_message_bridge(unsafe.Pointer(&cmessage))
+	C.gowhatsapp_process_message_bridge(cmessage)
 }
 
 func (handler *waHandler) HandleJsonMessage(message string) {
