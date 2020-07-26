@@ -26,7 +26,7 @@ DEST = "$(PROGFILES32)/Pidgin/plugins"
 ICONS_DEST = "$(PROGFILES32)/Pidgin/pixmaps/pidgin/protocols"
 LOCALEDIR = "$(PROGFILES32)/Pidgin/locale"
 
-WIN32_CFLAGS = -std=c99 -I$(GLIB_DIR)/include -I$(GLIB_DIR)/include/glib-2.0 -I$(GLIB_DIR)/lib/glib-2.0/include -I$(JSON_GLIB_DIR)/include/json-glib-1.0 -DENABLE_NLS -Wall -Wextra -Werror -Wno-deprecated-declarations -Wno-unused-parameter -fno-strict-aliasing -Wformat 
+WIN32_CFLAGS = -std=c99 -I$(GLIB_DIR)/include -I$(GLIB_DIR)/include/glib-2.0 -I$(GLIB_DIR)/lib/glib-2.0/include -I$(JSON_GLIB_DIR)/include/json-glib-1.0 -Wall -Wextra -Werror -Wno-deprecated-declarations -Wno-unused-parameter -fno-strict-aliasing -Wformat 
 WIN32_LDFLAGS = -L$(GLIB_DIR)/lib -L$(JSON_GLIB_DIR)/lib -lpurple -lintl -lglib-2.0 -lgobject-2.0 -ljson-glib-1.0 -g -ggdb -static-libgcc -lz -lws2_32 -lwinmm
 
 CFLAGS += $(WIN32_CFLAGS) -I$(PIDGIN_TREE_TOP)/libpurple -I$(PIDGIN_TREE_TOP)
