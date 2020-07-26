@@ -38,7 +38,6 @@
 #endif
 
 #include "purple_compat.h"
-#include "http.h"
 #include "purplegwa.h"
 
 #define GOWHATSAPP_PLUGIN_ID "prpl-hehoe-gowhatsapp"
@@ -63,7 +62,6 @@ typedef struct {
     time_t previous_sessions_last_messages_timestamp; // keeping track of last received message's date
 } GoWhatsappAccount;
 
-static guint active_icon_downloads = 0;
 
 static const char *
 gowhatsapp_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
@@ -71,6 +69,10 @@ gowhatsapp_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
     return "whatsapp";
 }
 
+#ifndef DISABLE_HTTP
+#include "http.h"
+
+static guint active_icon_downloads = 0;
 
 static void
 gowhatsapp_get_icon_cb(PurpleHttpConnection *http_conn, PurpleHttpResponse *response, gpointer user_data)
@@ -159,6 +161,7 @@ gowhatsapp_get_all_icons(GoWhatsappAccount *gwa)
         buddies = g_slist_delete_link(buddies, buddies);
     }
 }
+#endif
 
 void
 gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
@@ -446,7 +449,9 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
                 if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
                     gowhatsapp_assume_all_buddies_online(gwa);
                 }
+                #ifndef DISABLE_HTTP
                 gowhatsapp_get_all_icons(gwa);
+                #endif
             }
             if (purple_account_get_bool(account, GOWHATSAPP_PLAIN_TEXT_LOGIN, FALSE)) {
                 const char *username = purple_account_get_username(gwa->account);
@@ -644,12 +649,14 @@ gowhatsapp_add_account_options(GList *account_options)
                 );
     account_options = g_list_append(account_options, option);
     
+    #ifndef DISABLE_HTTP
     option = purple_account_option_bool_new(
                 _("Download user profile pictures (may cause GUI hiccups after connecting)"),
                 GOWHATSAPP_GET_ICONS_OPTION,
                 FALSE
                 );
     account_options = g_list_append(account_options, option);
+    #endif
 
     option = purple_account_option_bool_new(
                 _("Use stored credentials for login"),
@@ -727,7 +734,9 @@ static gboolean
 plugin_load(PurplePlugin *plugin, GError **error)
 {
 #if !PURPLE_VERSION_CHECK(3, 0, 0)
+    #ifndef DISABLE_HTTP
     purple_http_init();
+    #endif
 #endif
 
     return TRUE;
@@ -737,9 +746,10 @@ static gboolean
 plugin_unload(PurplePlugin *plugin, GError **error)
 {
 #if !PURPLE_VERSION_CHECK(3, 0, 0)
+    #ifndef DISABLE_HTTP
     purple_http_uninit();
+    #endif
 #endif
-
     purple_signals_disconnect_by_handle(plugin);
     return TRUE;
 }

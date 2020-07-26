@@ -14,7 +14,7 @@ TARGET = libgowhatsapp.dll
 GIT_REVISION_ID = $(shell git -C .git rev-parse --short HEAD 2>/dev/null)
 PLUGIN_VERSION ?= $(shell cmd /c type VERSION)~git$(GIT_REVISION_ID)
 
-CFLAGS ?= -O2 -g -pipe -Wall
+CFLAGS ?= -O2 -g -ggdb -pipe
 CFLAGS += -std=c99 -DGOWHATSAPP_PLUGIN_VERSION='"$(PLUGIN_VERSION)"' -DMARKDOWN_PIDGIN
 
 #only defined on 64-bit windows
@@ -26,13 +26,13 @@ DEST = "$(PROGFILES32)/Pidgin/plugins"
 ICONS_DEST = "$(PROGFILES32)/Pidgin/pixmaps/pidgin/protocols"
 LOCALEDIR = "$(PROGFILES32)/Pidgin/locale"
 
-WIN32_CFLAGS = -std=c99 -I$(GLIB_DIR)/include -I$(GLIB_DIR)/include/glib-2.0 -I$(GLIB_DIR)/lib/glib-2.0/include -I$(JSON_GLIB_DIR)/include/json-glib-1.0 -Wall -Wextra -Werror -Wno-deprecated-declarations -Wno-unused-parameter -fno-strict-aliasing -Wformat 
+WIN32_CFLAGS += -I$(GLIB_DIR)/include -I$(GLIB_DIR)/include/glib-2.0 -I$(GLIB_DIR)/lib/glib-2.0/include -I$(JSON_GLIB_DIR)/include/json-glib-1.0 -Ipurple2compat -Wall -Wextra -Werror -Wno-deprecated-declarations -Wno-unused-parameter -fno-strict-aliasing -Wformat 
 WIN32_LDFLAGS = -L$(GLIB_DIR)/lib -L$(JSON_GLIB_DIR)/lib -lpurple -lintl -lglib-2.0 -lgobject-2.0 -ljson-glib-1.0 -g -ggdb -static-libgcc -lz -lws2_32 -lwinmm
 
-CFLAGS += $(WIN32_CFLAGS) -I$(PIDGIN_TREE_TOP)/libpurple -I$(PIDGIN_TREE_TOP)
+CFLAGS += $(WIN32_CFLAGS) -I$(PIDGIN_TREE_TOP)/libpurple -I$(PIDGIN_TREE_TOP) $(EXTRA_CFLAGS)
 LDFLAGS += $(WIN32_LDFLAGS) -L$(LIBPURPLE_LIBDIR) $(WIN32_LDFLAGS)
 
-PURPLE_COMPAT_FILES := purple2compat/http.c purple2compat/purple-socket.c
+PURPLE_COMPAT_FILES ?= purple2compat/http.c purple2compat/purple-socket.c
 
 .PHONY:	all FAILNOPURPLE clean gdb install update-dep
 
@@ -55,7 +55,7 @@ gwa-to-purple.o: gwa-to-purple.c constants.h
 	$(WIN32_CC) -c -o $@ gwa-to-purple.c -g -ggdb
 
 $(TARGET): libgowhatsapp.c $(PURPLE_COMPAT_FILES) purplegwa.a constants.h
-	$(WIN32_CC) $(CFLAGS) $(CPPFLAGS) -shared -o $@ libgowhatsapp.c purplegwa.a $(PURPLE_COMPAT_FILES) $(LDFLAGS)  $(INCLUDES) -Ipurple2compat -g -ggdb
+	$(WIN32_CC) $(CFLAGS) $(CPPFLAGS) -shared -o $@ libgowhatsapp.c purplegwa.a $(PURPLE_COMPAT_FILES) $(LDFLAGS)  $(INCLUDES)
 
 FAILNOPURPLE:
 	echo "You need libpurple development headers installed to be able to compile this plugin"
