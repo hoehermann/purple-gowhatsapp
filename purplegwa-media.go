@@ -64,7 +64,7 @@ func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, filename s
 		return handler.sendMessage(message, info)
 	} else {
 		handler.presentMessage(makeConversationErrorMessage(info,
-			"Document messages currently not supported."))
+			fmt.Sprintf("Document messages currently not supported (file type is %v).", mime)))
 		return nil
 	}
 }
