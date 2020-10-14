@@ -419,17 +419,17 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
     switch(gwamsg->msgtype) {
         case gowhatsapp_message_type_error:
             // purplegwa presents an error, handle it
-            // TODO: use PURPLE_CONNECTION_ERROR_NETWORK_ERROR for auto-reconnect
+            // TODO: find a better way to discriminate errors
             if (strstr(gwamsg->text, "401") || strstr(gwamsg->text, "419")) {
-                // received error mentioning 401 – assume login failed and try again without stored session
-                // TODO: find a better way to discriminate errors
-                // "restoring failed: admin login responded with 419"
+                // received error mentioning 401 or 419 – assume login failed and try again without stored session
                 //purple_connection_update_progress(gwa->pc, _("Connecting"), 0, 3);
                 purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
                 char *download_directory = g_strdup_printf("%s/gowhatsapp", purple_user_dir());
                 gowhatsapp_go_login((uintptr_t)pc, FALSE, download_directory);
                 g_free(download_directory);
                 // alternatively just display purple_connection_error(pc, PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED, gwamsg->text); and let the user handle the session reset
+            } else if (strstr(gwamsg->text, "timed out") || strstr(gwamsg->text, "abnormal closure")){
+                purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg->text);
             } else {
                 purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg->text);
             }
