@@ -419,6 +419,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
     switch(gwamsg->msgtype) {
         case gowhatsapp_message_type_error:
             // purplegwa presents an error, handle it
+            // TODO: use PURPLE_CONNECTION_ERROR_NETWORK_ERROR for auto-reconnect
             if (strstr(gwamsg->text, "401") || strstr(gwamsg->text, "419")) {
                 // received error mentioning 401 – assume login failed and try again without stored session
                 // TODO: find a better way to discriminate errors
@@ -657,6 +658,13 @@ gowhatsapp_add_account_options(GList *account_options)
                 );
     account_options = g_list_append(account_options, option);
     #endif
+
+    option = purple_account_option_bool_new(
+                _("Mark displayed messages as read."),
+                GOWHATSAPP_MARK_READ_OPTION,
+                TRUE
+                );
+    account_options = g_list_append(account_options, option);
 
     option = purple_account_option_bool_new(
                 _("Use stored credentials for login"),
