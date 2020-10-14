@@ -121,11 +121,11 @@ var waHandlers = make(map[C.uintptr_t]*waHandler)
  * Send a gereric message.
  * Forward error message to front-end.
  */
-func (handler *waHandler) sendMessage(message interface{}, info whatsapp.MessageInfo) *C.char {
+func (handler *waHandler) sendMessage(message interface{}, info whatsapp.MessageInfo, messageText string) *C.char {
 	msgId, err := handler.wac.Send(message)
 	if err != nil {
 		handler.presentMessage(makeConversationErrorMessage(info,
-			fmt.Sprintf("Unable to send message: %v", err)))
+			fmt.Sprintf("Allegedly, message \"%s\" was not sent: %v", messageText, err)))
 		return nil
 	}
 	return C.CString(msgId)
@@ -141,15 +141,19 @@ func gowhatsapp_go_sendMessage(connID C.uintptr_t, who *C.char, text *C.char) *C
 	if remoteJid == "login@s.whatsapp.net" {
 		return nil
 	}
-	handler := waHandlers[connID]
+	handler, ok := waHandlers[connID]
+	if !ok {
+		return nil
+	}
 	info := whatsapp.MessageInfo{
 		RemoteJid: remoteJid,
 	}
+	messageText := C.GoString(text)
 	message := whatsapp.TextMessage{
 		Info: info,
-		Text: C.GoString(text),
+		Text: messageText,
 	}
-	return handler.sendMessage(message, info)
+	return handler.sendMessage(message, info, messageText)
 }
 
 /*
@@ -162,7 +166,10 @@ func gowhatsapp_go_sendMedia(connID C.uintptr_t, who *C.char, filename *C.char) 
 	if remoteJid == "login@s.whatsapp.net" {
 		return nil
 	}
-	handler := waHandlers[connID]
+	handler, ok := waHandlers[connID]
+	if !ok {
+		return nil
+	}
 	info := whatsapp.MessageInfo{
 		RemoteJid: remoteJid,
 	}

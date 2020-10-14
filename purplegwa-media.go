@@ -54,14 +54,14 @@ func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, filename s
 			Content: data,
 		}
 		// TODO: display own message now, else image will be received (out of order) on reconnect
-		return handler.sendMessage(message, info)
+		return handler.sendMessage(message, info, filename)
 	} else if mime.Is("audio/ogg") {
 		message := whatsapp.AudioMessage{
 			Info:    info,
 			Type:    mime.String(),
 			Content: data,
 		}
-		return handler.sendMessage(message, info)
+		return handler.sendMessage(message, info, filename)
 	} else {
 		handler.presentMessage(makeConversationErrorMessage(info,
 			fmt.Sprintf("Document messages currently not supported (file type is %v).", mime)))
