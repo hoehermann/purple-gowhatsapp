@@ -261,14 +261,22 @@ func convertMessage(connID C.uintptr_t, message MessageAggregate) C.struct_gowha
  * Errors will likely cause the front-end to destroy the connection.
  */
 func (handler *waHandler) HandleError(err error) {
-	cause := errors.Cause(err)
-	if cause == whatsapp.ErrInvalidWsData ||
-		cause == whatsapp.ErrInvalidWsState ||
-		strings.Contains(err.Error(), "invalid string with tag 174") { // TODO: less ugly error comparison
-		// these errors are not actually errors, rather than warnings
+	cause := errors.Cause(err) 
+	switch {
+	// these errors are more like warnings and should not lead to a disconnect
+	case cause == whatsapp.ErrMessageTypeNotImplemented: // would be nice having meta-data (i.e. who sent the message)
+	case cause == whatsapp.ErrInvalidWsData:
+	case cause == whatsapp.ErrInvalidWsState:
+	case strings.Contains(err.Error(), "invalid string with tag 174"): // TODO: less ugly error comparison
+		{
+		// TODO: do not swallow message silently
 		//fmt.Fprintf(os.Stderr, "gowhatsapp: %v ignored.\n", err)
-	} else {
+		} 
+		break;
+	default: 
+		// this is a hard error – request disconnect
 		handler.presentMessage(MessageAggregate{err: err})
+		break;
 	}
 }
 
