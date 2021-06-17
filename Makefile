@@ -10,6 +10,7 @@ GIT ?= git
 CC ?= gcc
 GO ?= go
 export GOPATH?=$(CURDIR)/go
+export GO111MODULE?=auto
 
 # Note: Use "-C .git" to avoid ascending to parent dirs if .git not present
 GIT_REVISION_ID = $(shell $(GIT) -C .git rev-parse --short HEAD 2>/dev/null)
