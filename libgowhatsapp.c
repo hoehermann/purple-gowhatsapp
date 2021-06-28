@@ -282,6 +282,57 @@ PurpleConversation *gowhatsapp_find_conversation(char *username, PurpleAccount *
     return conv;
 }
 
+static PurpleGroup * gowhatsapp_get_purple_group() {
+    PurpleGroup *group = purple_blist_find_group("Whatsapp");
+    if (!group) {
+        group = purple_group_new("Whatsapp");
+        purple_blist_add_group(group, NULL);
+    }
+    return group;
+}
+
+/*
+ * Ensure buddy in the buddy list. Updates existing entry if there is
+ * one. In both cases only if fetch contacts is enabled.
+ *
+ * Does not add login@s.whatsapp.net!
+ */
+static void gowhatsapp_ensure_buddy_in_blist(
+    PurpleAccount *account, char *remoteJid, char *display_name
+) {
+    if (!strcmp(remoteJid, "login@s.whatsapp.net")) {
+        return;
+    }
+
+    gboolean fetch_contacts = purple_account_get_bool(
+        account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE
+    );
+
+    PurpleBuddy *buddy = purple_blist_find_buddy(account, remoteJid);
+
+    if (!buddy && fetch_contacts) {
+        PurpleGroup *group = gowhatsapp_get_purple_group();
+        buddy = purple_buddy_new(account, remoteJid, display_name);
+        purple_blist_add_buddy(buddy, NULL, group, NULL);
+        gowhatsapp_assume_buddy_online(account, buddy);
+    }
+
+    if (buddy && fetch_contacts) {
+        purple_blist_alias_buddy(buddy, display_name);
+    }
+}
+
+static void gowhatsapp_refresh_buddy(
+    PurpleAccount *account, gowhatsapp_message_t *gwamsg
+) {
+    char *display_name = gwamsg->remoteJid;
+    if (strlen(gwamsg->text)) {
+        display_name = gwamsg->text;
+    }
+
+    gowhatsapp_ensure_buddy_in_blist(account, gwamsg->remoteJid, display_name);
+}
+
 static void gowhatsapp_refresh_contactlist(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
     GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
@@ -294,22 +345,7 @@ static void gowhatsapp_refresh_contactlist(PurpleConnection *pc, gowhatsapp_mess
         return;
     }
 
-    char *display_name = gwamsg->remoteJid;
-    if (strlen(gwamsg->text)) {
-        display_name = gwamsg->text;
-    }
-
-    PurpleBuddy *buddy = purple_blist_find_buddy(gwa->account, gwamsg->remoteJid);
-    if (!buddy) {
-        PurpleGroup *group = purple_blist_find_group("Whatsapp");
-        if (!group) {
-            group = purple_group_new("Whatsapp");
-            purple_blist_add_group(group, NULL);
-        }
-        buddy = purple_buddy_new(gwa->account, gwamsg->remoteJid, display_name);
-        purple_blist_add_buddy(buddy, NULL, group, NULL);
-        gowhatsapp_assume_buddy_online(gwa->account, buddy);
-    }
+    gowhatsapp_refresh_buddy(gwa->account, gwamsg);
 }
 
 static void gowhatsapp_refresh_presence(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
@@ -362,6 +398,10 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
                 purple_conversation_write(conv, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
             }
         } else {
+            // messages sometimes arrive before buddy has been
+            // created... this method will be missing a display
+            // name, but i don't think i ever saw one of them anyway
+            gowhatsapp_ensure_buddy_in_blist(gwa->account, gwamsg->remoteJid, gwamsg->remoteJid);
             // normal mode: direct incoming message
             purple_serv_got_im(pc, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
         }
