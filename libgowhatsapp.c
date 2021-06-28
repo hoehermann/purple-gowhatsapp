@@ -391,6 +391,79 @@ gowhatsapp_display_qrcode(PurpleConnection *pc, const char * qr_code_raw, void *
 }
 
 /*
+ * Encode session into one password string
+ *
+ * Result must be freed by caller
+ *
+ * Would be better with it's partner function in purplegwa.go, but i
+ * could not get the plugin to load with it there. Presumably i did the
+ * c/go bridge thing wrong
+ */
+char * gowhatsapp_encode_session_as_password(
+    const char *clientId,
+    const char *clientToken,
+    const char *serverToken,
+    const char *encKey_b64,
+    const char *macKey_b64,
+    const char *wid
+) {
+    return g_strdup_printf(
+        "%s %s %s %s %s %s",
+        clientId,
+        clientToken,
+        serverToken,
+        encKey_b64,
+        macKey_b64,
+        wid
+    );
+}
+
+/**
+ * Stores the session both in the password field and in Purple account
+ * variables. The password field is used to support BitlBee, which does
+ * not store Purple account variables.
+ */
+static void gowhatsapp_store_session(
+    PurpleAccount *account,
+    char *clientId,
+    char *clientToken,
+    char *serverToken,
+    char *encKey_b64,
+    char *macKey_b64,
+    char *wid
+) {
+    // for pidgin
+    purple_account_set_string(
+        account, GOWHATSAPP_SESSION_CLIENDID_KEY, clientId
+    );
+    purple_account_set_string(
+        account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, clientToken
+    );
+    purple_account_set_string(
+        account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, serverToken
+    );
+    purple_account_set_string(
+        account, GOWHATSAPP_SESSION_ENCKEY_KEY, encKey_b64
+    );
+    purple_account_set_string(
+        account, GOWHATSAPP_SESSION_MACKEY_KEY, macKey_b64
+    );
+    purple_account_set_string(account, GOWHATSAPP_SESSION_WID_KEY, wid);
+
+    // for bitlbee
+    char *password = gowhatsapp_encode_session_as_password(
+        clientId, clientToken, serverToken, encKey_b64, macKey_b64, wid
+    );
+    purple_signal_emit(
+        purple_accounts_get_handle(),
+        "bitlbee-set-account-password",
+        account,
+        password
+    );
+    g_free(password);
+}
+
+/*
  * Interprets a message received from go-whatsapp. Handles login success and failure. Forwards errors.
  */
 void
@@ -434,15 +507,19 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
                 purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg->text);
             }
             break;
-        
+
         case gowhatsapp_message_type_session:
             // purplegwa presents session data, store it
-            purple_account_set_string(account, GOWHATSAPP_SESSION_CLIENDID_KEY, gwamsg->clientId);
-            purple_account_set_string(account, GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, gwamsg->clientToken);
-            purple_account_set_string(account, GOWHATSAPP_SESSION_SERVERTOKEN_KEY, gwamsg->serverToken);
-            purple_account_set_string(account, GOWHATSAPP_SESSION_ENCKEY_KEY, gwamsg->encKey_b64);
-            purple_account_set_string(account, GOWHATSAPP_SESSION_MACKEY_KEY, gwamsg->macKey_b64);
-            purple_account_set_string(account, GOWHATSAPP_SESSION_WID_KEY, gwamsg->wid);
+            gowhatsapp_store_session(
+                account,
+                gwamsg->clientId,
+                gwamsg->clientToken,
+                gwamsg->serverToken,
+                gwamsg->encKey_b64,
+                gwamsg->macKey_b64,
+                gwamsg->wid
+            );
+
             if (!PURPLE_CONNECTION_IS_CONNECTED(pc)) {
                 // connection has now been established, show it in UI
                 //purple_connection_update_progress(pc, _("Received session data."), 2, 3);
@@ -909,6 +986,14 @@ gowhatsapp_account_get_bool(void *account, const char *name, int default_value)
 const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value)
 {
     return purple_account_get_string((const PurpleAccount *)account, name, default_value);
+}
+
+/*
+ * Session data is stored in the password and can be retrieved via this
+ */
+const char * gowhatsapp_account_get_password(void *account)
+{
+    return purple_account_get_password((const PurpleAccount *)account);
 }
 
 /*
