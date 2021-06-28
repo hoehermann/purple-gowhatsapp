@@ -70,6 +70,7 @@ extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
 extern void * gowhatsapp_get_account(uintptr_t pc);
 extern int gowhatsapp_account_get_bool(void *account, const char *name, int default_value);
 extern const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value);
+extern const char * gowhatsapp_account_get_password(void *account);
 extern const PurpleProxyInfo * gowhatsapp_account_get_proxy(void *account);
 */
 import "C"
@@ -492,6 +493,93 @@ func connect_and_login(handler *waHandler, session *whatsapp.Session) {
 	}
 }
 
+func gowhatsapp_go_decode_session_from_password(
+	password *C.char,
+) *whatsapp.Session {
+	if password == nil {
+		return nil
+	}
+
+	fields := strings.Split(C.GoString(password), " ")
+
+	if len(fields) < 6 {
+		return nil
+	}
+
+	clientId := fields[0]
+	clientToken := fields[1]
+	serverToken := fields[2]
+	encKey_b64 := fields[3]
+	macKey_b64 := fields[4]
+	wid := fields[5]
+
+	encKey, encKeyErr := base64.StdEncoding.DecodeString(encKey_b64)
+	macKey, macKeyErr := base64.StdEncoding.DecodeString(macKey_b64)
+
+	if encKeyErr != nil || macKeyErr != nil {
+		return nil
+	}
+
+	return &whatsapp.Session{
+		ClientId:    clientId,
+		ClientToken: clientToken,
+		ServerToken: serverToken,
+		EncKey:      encKey,
+		MacKey:      macKey,
+		Wid:         wid,
+	}
+}
+
+/*
+ * Before session data was moved to password field, it was stored in
+ * account settings
+ */
+func gowhatsapp_go_get_stored_session_purple_account(
+	connID C.uintptr_t,
+) *whatsapp.Session {
+	clientId := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENDID_KEY, nil)
+	clientToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, nil)
+	serverToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_SERVERTOKEN_KEY, nil)
+	encKey_b64 := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_ENCKEY_KEY, nil)
+	macKey_b64 := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_MACKEY_KEY, nil)
+	wid := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_WID_KEY, nil)
+
+	if clientId != nil && clientToken != nil && serverToken != nil && encKey_b64 != nil && macKey_b64 != nil && wid != nil {
+		encKey, encKeyErr := base64.StdEncoding.DecodeString(C.GoString(encKey_b64))
+		macKey, macKeyErr := base64.StdEncoding.DecodeString(C.GoString(macKey_b64))
+
+		if encKeyErr == nil && macKeyErr == nil {
+			return &whatsapp.Session{
+				ClientId:    C.GoString(clientId),
+				ClientToken: C.GoString(clientToken),
+				ServerToken: C.GoString(serverToken),
+				EncKey:      encKey,
+				MacKey:      macKey,
+				Wid:         C.GoString(wid)}
+		}
+	}
+
+	return nil
+}
+
+/*
+ * Try to decode session from account variables, if failed try decoding
+ * from password (used by bitlbee)
+ */
+func gowhatsapp_go_get_stored_session(
+	connID C.uintptr_t,
+) *whatsapp.Session {
+	session := gowhatsapp_go_get_stored_session_purple_account(connID)
+	if session != nil {
+		return session
+	} else {
+		password := C.gowhatsapp_account_get_password(
+			C.gowhatsapp_get_account(connID),
+		)
+		return gowhatsapp_go_decode_session_from_password(password)
+	}
+}
+
 //export gowhatsapp_go_login
 func gowhatsapp_go_login(
 	connID C.uintptr_t,
@@ -507,25 +595,7 @@ func gowhatsapp_go_login(
 	waHandlers[connID] = &handler
 	var session *whatsapp.Session
 	if Cint_to_bool(restoreSession) {
-		clientId := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENDID_KEY, nil)
-		clientToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_CLIENTTOKEN_KEY, nil)
-		serverToken := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_SERVERTOKEN_KEY, nil)
-		encKey_b64 := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_ENCKEY_KEY, nil)
-		macKey_b64 := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_MACKEY_KEY, nil)
-		wid := C.gowhatsapp_account_get_string(C.gowhatsapp_get_account(connID), C.GOWHATSAPP_SESSION_WID_KEY, nil)
-		if clientId != nil && clientToken != nil && serverToken != nil && encKey_b64 != nil && macKey_b64 != nil && wid != nil {
-			encKey, encKeyErr := base64.StdEncoding.DecodeString(C.GoString(encKey_b64))
-			macKey, macKeyErr := base64.StdEncoding.DecodeString(C.GoString(macKey_b64))
-			if encKeyErr == nil && macKeyErr == nil {
-				session = &whatsapp.Session{
-					ClientId:    C.GoString(clientId),
-					ClientToken: C.GoString(clientToken),
-					ServerToken: C.GoString(serverToken),
-					EncKey:      encKey,
-					MacKey:      macKey,
-					Wid:         C.GoString(wid)}
-			}
-		}
+		session = gowhatsapp_go_get_stored_session(connID)
 	}
 	go connect_and_login(&handler, session)
 }
