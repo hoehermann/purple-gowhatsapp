@@ -29,6 +29,13 @@ gowhatsapp_account_get_string(void *account, const char *name, const char *defau
     return 0;
 }
 
+const char *
+gowhatsapp_account_get_password(void *account)
+{
+    (void) account;
+    return 0;
+}
+
 int 
 gowhatsapp_account_get_bool(void *account, const char *name, int default_value)
 {
