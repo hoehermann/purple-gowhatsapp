@@ -200,15 +200,30 @@ char * gowhatsapp_prepare_image_message(gchar *caption, void *data, size_t len, 
 }
 
 /*
- * Checks whether message is old.
+ * Checks whether message is old. Compares with previous session's last
+ * timestamp and account option for age. Updates last session timestamp
+ * in account.
  */
 gboolean
-gowhatsapp_message_newer_than_last_session (GoWhatsappAccount *gwa, const time_t ts) {
+gowhatsapp_message_is_new_enough(GoWhatsappAccount *gwa, const time_t ts) {
+    int max_history_seconds = purple_account_get_int(
+        gwa->account, GOWHATSAPP_MAX_HISTORY_SECONDS_OPTION, 0
+    );
+
+    time_t cur_raw_time;
+    time(&cur_raw_time);
+
+    time_t message_age = cur_raw_time - ts;
+
+    gboolean new_by_config = (
+        max_history_seconds == 0 || message_age <= max_history_seconds
+    );
+
     if (ts < gwa->previous_sessions_last_messages_timestamp) {
         return FALSE;
     } else {
         purple_account_set_int(gwa->account, GOWHATSAPP_PREVIOUS_SESSION_TIMESTAMP_KEY, ts); // TODO: find out if this narrowing of time_t aka. long int to int imposes a problem
-        return TRUE;
+        return new_by_config;
     }
 }
 
@@ -322,7 +337,7 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     gboolean check_message_date = purple_account_get_bool(gwa->account, GOWHATSAPP_TIMESTAMP_FILTERING_OPTION, FALSE);
     int message_is_new =
             gowhatsapp_append_message_id_if_not_exists(gwa->account, gwamsg->id) &&
-            (!check_message_date || gowhatsapp_message_newer_than_last_session(gwa, gwamsg->timestamp));
+            (!check_message_date || gowhatsapp_message_is_new_enough(gwa, gwamsg->timestamp));
     if (message_is_new) {
         char * content = NULL;
         if (gwamsg->blobsize) {
@@ -796,6 +811,13 @@ gowhatsapp_add_account_options(GList *account_options)
                 _("Display images in conversation window after download"),
                 GOWHATSAPP_INLINE_IMAGES_OPTION,
                 TRUE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_int_new(
+                _("Max age in seconds for a historical message to be shown (requires message timestamp filtering enabled)"),
+                GOWHATSAPP_MAX_HISTORY_SECONDS_OPTION,
+                0
                 );
     account_options = g_list_append(account_options, option);
 
