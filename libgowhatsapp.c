@@ -269,17 +269,91 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
     }
 }
 
-PurpleConversation *gowhatsapp_find_conversation(char *username, PurpleAccount *account) {
-    PurpleIMConversation *imconv = purple_conversations_find_im_with_account(username, account);
-    if (imconv == NULL) {
-        imconv = purple_im_conversation_new(account, username);
+/*
+ * Borrowed from
+ * https://github.com/hoehermann/libpurple-signald/blob/master/groups.c
+ */
+static GList * gowhatsapp_chat_info(PurpleConnection *pc)
+{
+    GList *infos = NULL;
+
+    struct proto_chat_entry *pce;
+
+    pce = g_new0(struct proto_chat_entry, 1);
+    pce->label = _("_Group Jid:");
+    pce->identifier = "remoteJid";
+    pce->required = TRUE;
+    infos = g_list_append(infos, pce);
+
+    pce = g_new0(struct proto_chat_entry, 1);
+    pce->label = _("Topic");
+    pce->identifier = "topic";
+    pce->required = TRUE;
+    infos = g_list_append(infos, pce);
+
+    return infos;
+}
+
+static gchar *
+gowhatsapp_roomlist_serialize(PurpleRoomlistRoom *room) {
+    GList *fields = purple_roomlist_room_get_fields(room);
+    const gchar *remoteJid = g_list_nth_data(fields, 0);
+    return g_strdup(remoteJid);
+}
+
+static GHashTable * gowhatsapp_chat_info_defaults(
+    PurpleConnection *pc, const char *remoteJid
+) {
+    GHashTable *defaults = g_hash_table_new_full(
+        g_str_hash, g_str_equal, NULL, g_free
+    );
+
+    if (remoteJid != NULL) {
+        // don't really understand this chat name, assume it's just
+        // the remoteJid
+        g_hash_table_insert(defaults, "remoteJid", g_strdup(remoteJid));
+
+        g_hash_table_insert(defaults, "topic", g_strdup(""));
+
+        PurpleAccount *account = purple_connection_get_account(pc);
+        PurpleChat *chat = purple_blist_find_chat(account, remoteJid);
+        if (chat != NULL) {
+            GHashTable *components = purple_chat_get_components(chat);
+            const gchar *topic = g_hash_table_lookup(
+                components, "topic"
+            );
+            if (topic != NULL) {
+                g_hash_table_insert(defaults, "topic", g_strdup(topic));
+            }
+        }
     }
-    PurpleConversation *conv = PURPLE_CONVERSATION(imconv);
-    if (conv == NULL) {
-        imconv = purple_conversations_find_im_with_account(username, account);
-        conv = PURPLE_CONVERSATION(imconv);
-    }
-    return conv;
+
+    return defaults;
+}
+
+/*
+ * Borrowed from
+ * https://github.com/hoehermann/libpurple-signald/blob/master/groups.c
+ */
+static void
+gowhatsapp_set_chat_topic(PurpleConnection *pc, int id, const char *topic)
+{
+    // Nothing to do here. For some reason this callback has to be
+    // registered if Pidgin is going to enable the "Alias..." menu
+    // option in the conversation.
+}
+
+/*
+ * Borrowed from:
+ * https://github.com/matrix-org/purple-matrix/blob/master/libmatrix.c
+ *
+ * Get the name of a chat (as passed to serv_got_joined_chat) given the
+ * chat_info entries. For us this is the room id so this is easy
+ */
+static char *gowhatsapp_get_chat_name(GHashTable *components)
+{
+    const char *jid = g_hash_table_lookup(components, "remoteJid");
+    return g_strdup(jid);
 }
 
 static PurpleGroup * gowhatsapp_get_purple_group() {
@@ -289,6 +363,42 @@ static PurpleGroup * gowhatsapp_get_purple_group() {
         purple_blist_add_group(group, NULL);
     }
     return group;
+}
+
+/*
+ * Add group chat to blist. Updates existing group chat if found. Only
+ * changes blist if fetch contacts is set.
+ */
+static PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
+    PurpleAccount *account, const char *remoteJid, const char *topic
+) {
+    gboolean fetch_contacts = purple_account_get_bool(
+        account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE
+    );
+
+    PurpleChat *chat = purple_blist_find_chat(account, remoteJid);
+
+    if (chat == NULL && fetch_contacts) {
+        GHashTable *comp = g_hash_table_new_full(
+            g_str_hash, g_str_equal, NULL, g_free
+        );
+
+        g_hash_table_insert(comp, "remoteJid", g_strdup(remoteJid));
+        chat = purple_chat_new(account, remoteJid, comp);
+
+        PurpleGroup *group = gowhatsapp_get_purple_group();
+        purple_blist_add_chat(chat, group, NULL);
+    }
+
+    if (topic != NULL && fetch_contacts) {
+        // components uses free on key (unlike above)
+        g_hash_table_insert(
+            purple_chat_get_components(chat), g_strdup("topic"), g_strdup(topic)
+        );
+        purple_blist_alias_chat(chat, topic);
+    }
+
+    return chat;
 }
 
 /*
@@ -333,6 +443,13 @@ static void gowhatsapp_refresh_buddy(
     gowhatsapp_ensure_buddy_in_blist(account, gwamsg->remoteJid, display_name);
 }
 
+static int gowhatsapp_remotejid_is_group_chat(char *remoteJid) {
+    char *suffix = strrchr(remoteJid, '@');
+    if (suffix != NULL)
+        return strcmp(suffix, "@g.us") == 0;
+    return FALSE;
+}
+
 static void gowhatsapp_refresh_contactlist(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
     GoWhatsappAccount *gwa = purple_connection_get_protocol_data(pc);
@@ -345,7 +462,13 @@ static void gowhatsapp_refresh_contactlist(PurpleConnection *pc, gowhatsapp_mess
         return;
     }
 
-    gowhatsapp_refresh_buddy(gwa->account, gwamsg);
+    if (gowhatsapp_remotejid_is_group_chat(gwamsg->remoteJid)) {
+        gowhatsapp_ensure_group_chat_in_blist(
+            gwa->account, gwamsg->remoteJid, gwamsg->text
+        );
+    } else {
+        gowhatsapp_refresh_buddy(gwa->account, gwamsg);
+    }
 }
 
 static void gowhatsapp_refresh_presence(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
@@ -359,6 +482,172 @@ static void gowhatsapp_refresh_presence(PurpleConnection *pc, gowhatsapp_message
             purple_blist_node_set_int(&buddy->node, "last_seen", lastseen);
         }
     }
+}
+
+PurpleConversation *gowhatsapp_find_conversation(char *username, PurpleAccount *account) {
+    gowhatsapp_ensure_buddy_in_blist(account, username, NULL);
+
+    PurpleIMConversation *imconv = purple_conversations_find_im_with_account(username, account);
+    if (imconv == NULL) {
+        imconv = purple_im_conversation_new(account, username);
+    }
+    PurpleConversation *conv = PURPLE_CONVERSATION(imconv);
+    if (conv == NULL) {
+        imconv = purple_conversations_find_im_with_account(username, account);
+        conv = PURPLE_CONVERSATION(imconv);
+    }
+    return conv;
+}
+
+static int gowhatsapp_user_in_conv_chat(
+    PurpleConvChat *conv_chat, const char *userJid
+) {
+    GList *users = purple_conv_chat_get_users(conv_chat);
+
+    while (users != NULL) {
+        PurpleConvChatBuddy *buddy = (PurpleConvChatBuddy *) users->data;
+        if (!strcmp(buddy->name, userJid)) {
+            return TRUE;
+        }
+        users = users->next;
+    }
+
+    return FALSE;
+}
+
+/*
+ * Topic is the topic of the chat if not already known (may be null),
+ * senderJid may be null, but else is used to add users sending messages
+ * to the chats.
+ */
+PurpleConvChat *gowhatsapp_find_group_chat(
+    const char *remoteJid,
+    const char *senderJid,
+    const char *topic,
+    PurpleConnection *pc
+) {
+    PurpleAccount *account = purple_connection_get_account(pc);
+    PurpleConvChat *conv_chat =
+        purple_conversations_find_chat_with_account(remoteJid, account);
+
+    if (conv_chat == NULL) {
+        gowhatsapp_ensure_group_chat_in_blist(account, remoteJid, topic);
+
+        // use hash of jid for chat id number
+        PurpleConversation *conv = serv_got_joined_chat(
+            pc, g_str_hash(remoteJid), remoteJid
+        );
+
+        if (conv != NULL) {
+            purple_conversation_set_data(conv, "remoteJid", g_strdup(remoteJid));
+        }
+
+        conv_chat = PURPLE_CONV_CHAT(conv);
+    }
+
+    if (conv_chat != NULL && senderJid != NULL) {
+        if (!gowhatsapp_user_in_conv_chat(conv_chat, senderJid)) {
+            purple_chat_conversation_add_user(
+                conv_chat, senderJid, NULL, PURPLE_CBFLAGS_NONE, FALSE
+            );
+        }
+    }
+
+    return conv_chat;
+}
+
+/*
+ * Largely borrowed from:
+ * https://github.com/EionRobb/purple-discord/blob/master/libdiscord.c
+ */
+PurpleChat * gowhatsapp_find_blist_chat(
+    PurpleAccount *account, const char *jid
+) {
+    PurpleBlistNode *node;
+
+    for (node = purple_blist_get_root();
+         node != NULL;
+         node = purple_blist_node_next(node, TRUE)) {
+        if (PURPLE_IS_CHAT(node)) {
+            PurpleChat *chat = PURPLE_CHAT(node);
+
+            if (purple_chat_get_account(chat) != account) {
+                continue;
+            }
+
+            GHashTable *components = purple_chat_get_components(chat);
+            const gchar *chat_jid = g_hash_table_lookup(
+                components, "remoteJid"
+            );
+
+            if (purple_strequal(chat_jid, jid)) {
+                return chat;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+static void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data) {
+    const char *remoteJid = g_hash_table_lookup(data, "remoteJid");
+    const char *topic = g_hash_table_lookup(data, "topic");
+    if (remoteJid != NULL) {
+        gowhatsapp_find_group_chat(remoteJid, NULL, topic, pc);
+    }
+}
+
+static PurpleRoomlist *
+gowhatsapp_roomlist_get_list(PurpleConnection *pc) {
+    PurpleAccount *account = purple_connection_get_account(pc);
+    PurpleRoomlist *roomlist = purple_roomlist_new(account);
+
+    // TODO: free list?
+    GList *fields = NULL;
+    fields = g_list_append(fields, purple_roomlist_field_new(
+        PURPLE_ROOMLIST_FIELD_STRING, "Remote JID", "remoteJid", FALSE
+    ));
+    fields = g_list_append(fields, purple_roomlist_field_new(
+        PURPLE_ROOMLIST_FIELD_STRING, "Topic", "topic", FALSE
+    ));
+
+    purple_roomlist_set_fields(roomlist, fields);
+
+    PurpleBuddyList *bl = purple_get_blist();
+    PurpleBlistNode *group;
+
+    // loop outline borrowed from
+    // https://github.com/hoehermann/libpurple-signald/blob/master/groups.c
+    for (group = bl->root; group != NULL; group = group->next) {
+        PurpleBlistNode *node;
+        for (node = group->child; node != NULL; node = node->next) {
+            if (PURPLE_BLIST_NODE_IS_CHAT(node)) {
+                PurpleChat *chat = (PurpleChat *)node;
+
+                if (account != purple_chat_get_account(chat)) {
+                    continue;
+                }
+
+                char *jid = g_hash_table_lookup(chat->components, "remoteJid");
+                char *topic = g_hash_table_lookup(chat->components, "topic");
+
+                PurpleRoomlistRoom *room = purple_roomlist_room_new(
+                    PURPLE_ROOMLIST_ROOMTYPE_ROOM,
+                    jid,
+                    NULL
+                );
+
+                purple_roomlist_room_add_field(roomlist, room, jid);
+                purple_roomlist_room_add_field(roomlist, room, topic);
+
+                purple_roomlist_room_add(roomlist, room);
+            }
+        }
+    }
+
+    purple_roomlist_set_in_progress(roomlist, FALSE);
+
+    return roomlist;
 }
 
 void
@@ -388,22 +677,50 @@ gowhatsapp_display_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
         } else {
             flags |= PURPLE_MESSAGE_RECV;
         }
-        if (gwamsg->fromMe || (gwamsg->senderJid && *gwamsg->senderJid)) {
-            PurpleConversation *conv = gowhatsapp_find_conversation(gwamsg->remoteJid, gwa->account);
-            if (gwamsg->senderJid && *gwamsg->senderJid) {
-                // participants in group chats have their senderJid supplied
-                purple_conversation_write(conv, gwamsg->senderJid, content, flags, gwamsg->timestamp);
-            } else if (gwamsg->fromMe) {
-                // display message sent from own account (but other device) here
-                purple_conversation_write(conv, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
+        if (gowhatsapp_remotejid_is_group_chat(gwamsg->remoteJid)) {
+            if (gwamsg->fromMe) {
+                PurpleConvChat *chat = gowhatsapp_find_group_chat(
+                    gwamsg->remoteJid, NULL, NULL, pc
+                );
+                if (chat != NULL) {
+                    // display message sent from own account (but other device) here
+                    purple_conv_chat_write(
+                        chat,
+                        gwamsg->remoteJid,
+                        content,
+                        flags,
+                        gwamsg->timestamp
+                    );
+                }
+            } else {
+                // don't create chat if not joined
+                PurpleConvChat *chat = gowhatsapp_find_group_chat(
+                    gwamsg->remoteJid, gwamsg->senderJid, NULL, pc
+                );
+                if (chat != NULL) {
+                    // participants in group chats have their senderJid supplied
+                    purple_conv_chat_write(
+                        chat,
+                        gwamsg->senderJid,
+                        content,
+                        flags,
+                        gwamsg->timestamp
+                    );
+                }
             }
         } else {
-            // messages sometimes arrive before buddy has been
-            // created... this method will be missing a display
-            // name, but i don't think i ever saw one of them anyway
-            gowhatsapp_ensure_buddy_in_blist(gwa->account, gwamsg->remoteJid, gwamsg->remoteJid);
-            // normal mode: direct incoming message
-            purple_serv_got_im(pc, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
+            if (gwamsg->fromMe) {
+                PurpleConversation *conv = gowhatsapp_find_conversation(gwamsg->remoteJid, gwa->account);
+                // display message sent from own account (but other device) here
+                purple_conversation_write(conv, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
+            } else {
+                // messages sometimes arrive before buddy has been
+                // created... this method will be missing a display
+                // name, but i don't think i ever saw one of them anyway
+                gowhatsapp_ensure_buddy_in_blist(gwa->account, gwamsg->remoteJid, gwamsg->remoteJid);
+                // normal mode: direct incoming message
+                purple_serv_got_im(pc, gwamsg->remoteJid, content, flags, gwamsg->timestamp);
+            }
         }
         g_free(content);
     }
@@ -692,6 +1009,27 @@ gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message,
     }
 }
 
+static int
+gowhatsapp_send_chat(
+    PurpleConnection *pc, int id, const gchar *message, PurpleMessageFlags flags
+) {
+    PurpleConversation *conv = purple_find_chat(pc, id);
+    if (conv != NULL) {
+        gchar *who = (gchar *)purple_conversation_get_data(conv, "remoteJid");
+        if (who != NULL) {
+            // same as sending an IM in whatsapp
+            int result = gowhatsapp_send_im(pc, who, message, flags);
+            if (result > 0) {
+                purple_conv_chat_write(
+                    PURPLE_CONV_CHAT(conv), who, message, flags, time(NULL)
+                );
+            }
+            return result;
+        }
+    }
+    return -70; // TODO: what should this really be?
+}
+
 static void
 gowhatsapp_free_xfer(PurpleXfer *xfer)
 {
@@ -944,21 +1282,23 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->set_idle = discord_set_idle;
     */
     prpl_info->status_types = gowhatsapp_status_types; // this actually needs to exist, else the protocol cannot be set to "online"
-    /*
-    prpl_info->chat_info = discord_chat_info;
-    prpl_info->chat_info_defaults = discord_chat_info_defaults;
-    */
+    prpl_info->chat_info = gowhatsapp_chat_info;
+    prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
     prpl_info->login = gowhatsapp_login;
     prpl_info->close = gowhatsapp_close;
     prpl_info->send_im = gowhatsapp_send_im;
     /*
     prpl_info->send_typing = discord_send_typing;
-    prpl_info->join_chat = discord_join_chat;
-    prpl_info->get_chat_name = discord_get_chat_name;
-    prpl_info->find_blist_chat = discord_find_chat;
+    */
+    prpl_info->join_chat = gowhatsapp_join_chat;
+    prpl_info->get_chat_name = gowhatsapp_get_chat_name;
+    prpl_info->find_blist_chat = gowhatsapp_find_blist_chat;
+    /*
     prpl_info->chat_invite = discord_chat_invite;
-    prpl_info->chat_send = discord_chat_send;
-    prpl_info->set_chat_topic = discord_chat_set_topic;
+    */
+    prpl_info->chat_send = gowhatsapp_send_chat;
+    prpl_info->set_chat_topic = gowhatsapp_set_chat_topic;
+    /*
     prpl_info->get_cb_real_name = discord_get_real_name;
     */
     prpl_info->add_buddy = gowhatsapp_add_buddy;
@@ -969,10 +1309,11 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->get_info = discord_get_info;
     prpl_info->add_deny = discord_block_user;
     prpl_info->rem_deny = discord_unblock_user;
-
-    prpl_info->roomlist_get_list = discord_roomlist_get_list;
-    prpl_info->roomlist_room_serialize = discord_roomlist_serialize;
     */
+
+    prpl_info->roomlist_get_list = gowhatsapp_roomlist_get_list;
+    prpl_info->roomlist_room_serialize = gowhatsapp_roomlist_serialize;
+
     prpl_info->new_xfer = gowhatsapp_new_xfer;
     prpl_info->send_file = gowhatsapp_send_file;
 }
