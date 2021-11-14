@@ -126,7 +126,7 @@ func (handler *waHandler) sendMessage(message interface{}, info whatsapp.Message
 	msgId, err := handler.wac.Send(message)
 	if err != nil {
 		handler.presentMessage(makeConversationErrorMessage(info,
-			fmt.Sprintf("Allegedly, message \"%s\" was not sent: %v", messageText, err)))
+			fmt.Sprintf("Message \"%s\" might not have been sent: %v", messageText, err)))
 		return nil
 	}
 	return C.CString(msgId)
@@ -262,7 +262,7 @@ func convertMessage(connID C.uintptr_t, message MessageAggregate) C.struct_gowha
  * Errors will likely cause the front-end to destroy the connection.
  */
 func (handler *waHandler) HandleError(err error) {
-	cause := errors.Cause(err) 
+	cause := errors.Cause(err)
 	switch {
 	// these errors are more like warnings and should not lead to a disconnect
 	case cause == whatsapp.ErrMessageTypeNotImplemented: // would be nice having meta-data (i.e. who sent the message)
@@ -270,14 +270,14 @@ func (handler *waHandler) HandleError(err error) {
 	case cause == whatsapp.ErrInvalidWsState:
 	case strings.Contains(err.Error(), "invalid string with tag 174"): // TODO: less ugly error comparison
 		{
-		// TODO: do not swallow message silently
-		//fmt.Fprintf(os.Stderr, "gowhatsapp: %v ignored.\n", err)
-		} 
-		break;
-	default: 
+			// TODO: do not swallow message silently
+			//fmt.Fprintf(os.Stderr, "gowhatsapp: %v ignored.\n", err)
+		}
+		break
+	default:
 		// this is a hard error – request disconnect
 		handler.presentMessage(MessageAggregate{err: err})
-		break;
+		break
 	}
 }
 
