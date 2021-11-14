@@ -53,20 +53,30 @@ func (handler *waHandler) sendMediaMessage(info whatsapp.MessageInfo, filename s
 			Type:    mime.String(),
 			Content: data,
 		}
-		// TODO: display own message now, else image will be received (out of order) on reconnect
 		return handler.sendMessage(message, info, filename)
 	} else if mime.Is("audio/ogg") {
+		// TODO: check codec
 		message := whatsapp.AudioMessage{
 			Info:    info,
 			Type:    mime.String(),
 			Content: data,
 		}
 		return handler.sendMessage(message, info, filename)
+	} else if mime.Is("video/mp4") {
+		// TODO: check codec
+		message := whatsapp.VideoMessage{
+			Info:    info,
+			Type:    mime.String(),
+			Content: data,
+		}
+		return handler.sendMessage(message, info, filename)
 	} else {
+		// TODO: have this call "purple_xfer_error" and "purple_xfer_cancel_local"
 		handler.presentMessage(makeConversationErrorMessage(info,
 			fmt.Sprintf("Document messages currently not supported (file type is %v).", mime)))
 		return nil
 	}
+	// TODO: display own message immediately after sending, else image will be received (out of order) on reconnect
 }
 
 /*
