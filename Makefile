@@ -43,7 +43,7 @@ update-dep:
 	$(GO) get -u github.com/skip2/go-qrcode
 	$(GO) get -u github.com/gabriel-vasile/mimetype
 	$(GO) get -u github.com/Rhymen/go-whatsapp
-	touch -d "$(shell $(GIT) --git-dir="$(GO_WHATSAPP_GIT)" log -1 --date=rfc --format=%cd)" $(GO_WHATSAPP_A)
+	test -f $(GO_WHATSAPP_A) && touch -d "$(shell $(GIT) --git-dir="$(GO_WHATSAPP_GIT)" log -1 --date=rfc --format=%cd)" $(GO_WHATSAPP_A)
 
 # TODO: add targets for all go dependencies
 $(GO_WHATSAPP_A):
