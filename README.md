@@ -4,7 +4,7 @@ A libpurple/Pidgin plugin for WhatsApp **Web**.
 
 Powered by [go-whatsapp](https://github.com/Rhymen/go-whatsapp), which is written by Lucas Engelke.
 
-Being developed on Ubuntu 18.04.  
+Being developed on Ubuntu 20.04.  
 Last seen working with [go-whatsapp 9b4bc38](https://github.com/Rhymen/go-whatsapp/commit/9b4bc38).
 
 ### Building
@@ -47,6 +47,7 @@ Please also notice the wiki page regarding [common problems](https://github.com/
   Files are downloaded to `~/.pidgin/gowhatsapp`.
 * Under the hood: Reasonable callback mechanism thanks to [Eiron Robb](https://github.com/EionRobb).
 * Fetch contacts from phone, keep track of time last seen, download of user profile pictures courtesy of [Markus Gothe](https://github.com/nihilus).
+* Reasonable support for group chats and bitlbee-compatible password handling by [yourealwaysbe](https://github.com/yourealwaysbe).
 
 *Note:* You may need to force the TLS version to 1.2 using the NSS plug-in for download of user profile pictures to work on some systems.
 
@@ -65,7 +66,6 @@ From approximate most important to approximate least interesting.
 * Improve [proxy support](https://github.com/Rhymen/go-whatsapp/blob/master/examples/loginWithProxy/main.go): Get proxy configuration from environment variables, if requested.
 * Use a callback for getting current preferences everywhere consistently.
 * Have purple handle the message, then conditionally request download where appropriate.
-* Support group conversations properly.
 * Sort old messages by date.
 * Improve spectrum support:
   * Make online status work.
@@ -76,6 +76,7 @@ From approximate most important to approximate least interesting.
 * Mark messages as "read" only after the user interacted with the conversation #47.
 * Defer logging debug messages from go-whatsapp to `purple_debug_info()`.
 * Refactor the file-handling code as it is really ugly.
+* Ability to update contact details on existing buddies #75.
 * Be compatible with the ["Autoreply"](https://github.com/EionRobb/purple-gowhatsapp/issues/3#issuecomment-555814663) plug-in by having an "Away" state.
 * Be compatible with the "Conversation Colors" plug-in.
 * Consistently use dashes in key names.
