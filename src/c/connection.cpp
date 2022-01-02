@@ -1,5 +1,5 @@
 #include "gowhatsapp.hpp"
-#include "libpurple-go-whatsapp.h"
+#include "purple-go-whatsapp.h"
 
 void
 gowhatsapp::close(PurpleConnection *pc)
