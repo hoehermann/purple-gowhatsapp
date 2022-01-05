@@ -1,11 +1,24 @@
-Trying to use CMake to build Pidgin/libpurple protocol plug-ins in a way that does not suck.
-Because having one Makefile for each toolchain is annoying.
+This project is in alpha state.  
+It intends to replace https://github.com/hoehermann/purple-gowhatsapp/.
 
-This may or may not become the basis for a re-write of purple-gowhatsapp.
+## Configuration
+
+Environment Variables:
+
+These are read when the plug-in loads (before a connection is established):
+
+* `PURPLE_GOWHATSAPP_DATABASE_DIALECT`  
+  default: `sqlite`  
+
+* `PURPLE_GOWHATSAPP_DATABASE_ADDRESS`  
+  default: `file:purple_user_dir/whatsmeow/store.db?_foreign_keys=on`  
+  Folder must exist, `store.db` is created automatically.
+  The file-system must support file locking and be responsive, else the database driver will not work.
 
 ## Windows specific
 
-This will automatically setup a development environment geared towards MS Visual Studio 2022.
+CMake will try to set-up a development environment automatically. 
+The project can be opened using Microsoft Visual Studio 2022.
 
 Additional dependencies:
 

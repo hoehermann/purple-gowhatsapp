@@ -22,7 +22,6 @@
   */
 
 #include "gowhatsapp.h"
-#include "purple-go-whatsapp.h"
 
 #ifndef PLUGIN_VERSION
 #error Must set PLUGIN_VERSION in build system
@@ -30,6 +29,28 @@
 // https://github.com/LLNL/lbann/issues/117#issuecomment-334333286
 #define MAKE_STR(x) _MAKE_STR(x)
 #define _MAKE_STR(x) #x
+
+#define GOWHATSAPP_STATUS_STR_ONLINE   "online"
+#define GOWHATSAPP_STATUS_STR_OFFLINE  "offline"
+#define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
+
+static GList *
+status_types(PurpleAccount *account)
+{
+    GList *types = NULL;
+    PurpleStatusType *status;
+
+    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE, GOWHATSAPP_STATUS_STR_ONLINE, "Online", TRUE, TRUE, FALSE);
+    types = g_list_append(types, status);
+
+    status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, GOWHATSAPP_STATUS_STR_OFFLINE, "Offline", TRUE, TRUE, FALSE);
+    types = g_list_append(types, status);
+
+    status = purple_status_type_new_full(PURPLE_STATUS_MOBILE, GOWHATSAPP_STATUS_STR_MOBILE, NULL, FALSE, FALSE, TRUE);
+    types = g_list_prepend(types, status);
+
+    return types;
+}
 
 static const char *
 list_icon(PurpleAccount *account, PurpleBuddy *buddy)
@@ -76,7 +97,7 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->options = OPT_PROTO_NO_PASSWORD; // add OPT_PROTO_IM_IMAGE?
     //prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
     prpl_info->list_icon = list_icon;
-    //prpl_info->status_types = gowhatsapp_status_types; // this actually needs to exist, else the protocol cannot be set to "online"
+    prpl_info->status_types = status_types; // this actually needs to exist, else the protocol cannot be set to "online"
     //prpl_info->chat_info = gowhatsapp_chat_info;
     //prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
     prpl_info->login = gowhatsapp_login;

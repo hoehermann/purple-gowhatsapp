@@ -6,9 +6,10 @@ set(TARGET_NAME gowhatsapp)
 add_library(${TARGET_NAME} SHARED 
     "gowhatsapp.h"
     "init.c"
-    "connection.c"
-    "bridge_message.c"
-    "bridge_getters.c"
+    "login.c"
+    "qrcode.c"
+    "bridge.c"
+    "process_message.c"
     "msc_adjustments.c"
 )
 add_dependencies(${TARGET_NAME} purple-go-whatsapp)

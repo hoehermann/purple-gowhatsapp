@@ -5,9 +5,10 @@ add_custom_command(
   COMMAND gcc -m32 -o "${CMAKE_CURRENT_BINARY_DIR}/purple-dummy.o" -c "${CMAKE_CURRENT_SOURCE_DIR}/purple-dummy.c"
 )
 add_custom_target(purple-dummy DEPENDS purple-dummy.o)
-set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/purple-dummy.o") # on linux, this remains empty
+set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/purple-dummy.o")
 else()
 add_library(purple-dummy OBJECT purple-dummy.c)
+set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/purple-dummy.dir/purple-dummy.c.o") # TODO: get this properly
 endif()
 
 # partly taken from https://github.com/mutse/go-cmake

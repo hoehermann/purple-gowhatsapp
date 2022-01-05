@@ -1,5 +1,4 @@
 #include "gowhatsapp.h"
-#include "purple-go-whatsapp.h"
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -17,30 +16,23 @@
 static gboolean
 process_message_bridge(gpointer data)
 {
-    // query Pidgin for a list of all connections. bail if it does not exist
+    // query Pidgin for a list of all accounts. bail if no connection exists
     gowhatsapp_message_t * gwamsg = (gowhatsapp_message_t *)data;
-    PurpleConnection *pc = (PurpleConnection *)gwamsg->connection;
-    int connection_exists = 0;
-    {
-        GList * connection = purple_connections_get_connecting();
-        while (connection != NULL && connection_exists == 0) {
-            connection_exists = connection->data == pc;
-            connection = connection->next;
+    int account_exists = 0;
+    PurpleAccount *account = NULL;
+    PurpleConnection *connection = NULL;
+    for (GList *iter = purple_accounts_get_all(); iter != NULL && !account_exists; iter = iter->next) {
+        account = (PurpleAccount *)iter->data;
+        const char *username = purple_account_get_username(account);
+        account_exists = purple_strequal(gwamsg->username, username);
+        if (account_exists) {
+            connection = purple_account_get_connection(account);
         }
     }
-    {
-        GList * connection = purple_connections_get_all();
-        while (connection != NULL && connection_exists == 0) {
-            connection_exists = connection->data == pc;
-            connection = connection->next;
-        }
-    }
-    if (connection_exists == 0) {
-        purple_debug_info(
-            "gowhatsapp", "Avoiding crash by not handling message for not-existant connection %p.\n", pc
-        );
+    if (connection == NULL) {
+        purple_debug_info("gowhatsapp", "No active connection for account %s. Ignoring message.\n", gwamsg->username);
     } else {
-        //TODO: gowhatsapp_process_message(gwamsg);
+        gowhatsapp_process_message(account, gwamsg);
     }
     g_free(gwamsg->id);
     g_free(gwamsg->remoteJid);
