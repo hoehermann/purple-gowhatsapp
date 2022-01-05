@@ -18,6 +18,7 @@ set(GO_SRCS
   bridge.go
   init.go
   login.go
+  handler.go
 )
 set(OUTPUT_PREFIX purple-go-whatsapp)
 add_custom_command(
@@ -32,5 +33,5 @@ add_custom_command(
   ${CMAKE_GO_FLAGS} ${GO_SRCS}
 )
 add_custom_target(${OUTPUT_PREFIX} DEPENDS ${OUTPUT_PREFIX}.a ${OUTPUT_PREFIX}.h)
-set(GO_WHATSAPP_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE)
+set(GO_WHATSAPP_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}" PARENT_SCOPE)
 set(GO_WHATSAPP_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_PREFIX}.a" PARENT_SCOPE)

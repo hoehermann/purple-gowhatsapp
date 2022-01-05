@@ -9,6 +9,11 @@ import (
 )
 
 /*
+ * whatsmew stores all data in a container (set by init_()).
+ */
+var container *sqlstore.Container = nil
+
+/*
  * Initializes the whatsmew session store.
  * This sets the global container variable.
  */

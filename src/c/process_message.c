@@ -32,7 +32,7 @@ gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
             gowhatsapp_display_qrcode(pc, gwamsg->text, gwamsg->blob, gwamsg->blobsize);
             break;
         case gowhatsapp_message_type_text:
-            //gowhatsapp_display_message(pc, gwamsg);
+            gowhatsapp_display_text_message(pc, gwamsg);
             break;
         default:
             purple_debug_info("gowhatsapp", "handling this message type is not implemented");

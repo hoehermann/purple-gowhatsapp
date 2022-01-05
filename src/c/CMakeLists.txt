@@ -10,6 +10,11 @@ add_library(${TARGET_NAME} SHARED
     "qrcode.c"
     "bridge.c"
     "process_message.c"
+    "display_message.c"
+    "groups.c"
+    "blist.c"
+    "constants.c"
+    "message_filtering.c"
     "msc_adjustments.c"
 )
 add_dependencies(${TARGET_NAME} purple-go-whatsapp)

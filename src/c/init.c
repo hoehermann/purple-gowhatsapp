@@ -22,6 +22,7 @@
   */
 
 #include "gowhatsapp.h"
+#include "purple-go-whatsapp.h" // for gowhatsapp_go_init
 
 #ifndef PLUGIN_VERSION
 #error Must set PLUGIN_VERSION in build system
@@ -29,10 +30,6 @@
 // https://github.com/LLNL/lbann/issues/117#issuecomment-334333286
 #define MAKE_STR(x) _MAKE_STR(x)
 #define _MAKE_STR(x) #x
-
-#define GOWHATSAPP_STATUS_STR_ONLINE   "online"
-#define GOWHATSAPP_STATUS_STR_OFFLINE  "offline"
-#define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
 
 static GList *
 status_types(PurpleAccount *account)

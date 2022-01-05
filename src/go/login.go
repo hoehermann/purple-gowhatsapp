@@ -12,19 +12,19 @@ import (
  */
 func login(username string) {
 	// TODO: protect against concurrent invocation
-	client := Client{
-		client:   nil,
-		username: username,
-	}
-	clients[username] = &client
-
 	deviceStore, err := container.GetFirstDevice()     // TODO: find out how to use a device jid and use .GetDevice(jid)
-	clientLog := waLog.Stdout("Client", "DEBUG", true) // TODO: have logger write to purple
+	clientLog := waLog.Stdout("Purple", "DEBUG", true) // TODO: have logger write to purple
 	if err != nil {
 		clientLog.Errorf("%v", err)
 	} else {
-		client.client = whatsmeow.NewClient(deviceStore, clientLog)
-		go connect(client, clientLog)
+		handler := Handler{
+			client:   whatsmeow.NewClient(deviceStore, clientLog),
+			username: username,
+			log:      clientLog,
+		}
+		handlers[username] = &handler
+		handler.client.AddEventHandler(handler.eventHandler)
+		go handler.connect()
 	}
 }
 
@@ -32,8 +32,9 @@ func login(username string) {
  * Helper function for login procedure.
  * Calls whatsmeow.Client.Connect().
  */
-func connect(client_ Client, clientLog waLog.Logger) {
-	client := client_.client
+func (handler *Handler) connect() {
+	clientLog := handler.log
+	client := handler.client
 	if client.Store.ID == nil {
 		// No ID stored, new login
 		qrChan, _ := client.GetQRChannel(context.Background())
@@ -45,12 +46,11 @@ func connect(client_ Client, clientLog waLog.Logger) {
 			if evt.Event == "code" {
 				// Render the QR code here
 				// e.g. qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-				// or just manually `echo 2@... | qrencode -t ansiutf8` in a terminal
 				png, err := qrcode.Encode(evt.Code, qrcode.Medium, 256) // TODO: make size user configurable
 				if err != nil {
 					clientLog.Errorf("%v", png)
 				} else {
-					purple_display_qrcode(client_.username, evt.Code, png)
+					purple_display_qrcode(handler.username, evt.Code, png)
 				}
 			} else {
 				clientLog.Infof("Login event:", evt.Event)
@@ -69,11 +69,11 @@ func connect(client_ Client, clientLog waLog.Logger) {
  * This is the go part of purple's close() function.
  */
 func close(username string) {
-	handler, ok := clients[username]
+	handler, ok := handlers[username]
 	if ok {
 		if handler.client != nil {
 			handler.client.Disconnect()
 		}
-		delete(clients, username)
+		delete(handlers, username)
 	}
 }
