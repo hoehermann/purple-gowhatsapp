@@ -22,6 +22,7 @@
   */
 
 #include "gowhatsapp.h"
+#include "purple-go-whatsapp.h"
 
 #ifndef PLUGIN_VERSION
 #error Must set PLUGIN_VERSION in build system
@@ -47,7 +48,8 @@ actions(PurplePlugin *plugin, gpointer context)
 static gboolean
 libpurple2_plugin_load(PurplePlugin *plugin)
 {
-    return TRUE;
+    char * user_dir = (char *)purple_user_dir(); // cgo does not suport const
+    return gowhatsapp_go_init(user_dir);
 }
 
 static gboolean
@@ -69,7 +71,7 @@ plugin_init(PurplePlugin *plugin)
         plugin->info = info = g_new0(PurplePluginInfo, 1);
     }
 
-    info->name = "Whatsapp (HTTP)";
+    info->name = "WhatsApp (Multi-Device)";
     info->extra_info = prpl_info;
     prpl_info->options = OPT_PROTO_NO_PASSWORD; // add OPT_PROTO_IM_IMAGE?
     //prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
@@ -101,7 +103,7 @@ static PurplePluginInfo info = {
     0, /* flags */
     NULL, /* dependencies */
     PURPLE_PRIORITY_DEFAULT, /* priority */
-    "prpl-hehoe-gowhatsapp", /* id */
+    "prpl-hehoe-gowhatsapp-md", /* id */
     "gowhatsapp", /* name */
     MAKE_STR(PLUGIN_VERSION), /* version */
     "", /* summary */

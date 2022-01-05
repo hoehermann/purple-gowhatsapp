@@ -1,9 +1,8 @@
 module github.com/hoehermann/purple-gowhatsapp/src/go
 
-go 1.13
+go 1.17
 
 require (
-	github.com/Rhymen/go-whatsapp master
-	github.com/pkg/errors master
-	github.com/skip2/go-qrcode master
+	go.mau.fi/whatsmeow latest
+	modernc.org/sqlite latest
 )

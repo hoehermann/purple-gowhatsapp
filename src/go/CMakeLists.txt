@@ -15,12 +15,13 @@ set(CMAKE_Go_COMPILER go)
 set(GOPATH "${CMAKE_CURRENT_BINARY_DIR}/go")
 set(GO_SRCS
   bridge.go
+  init.go
   login.go
 )
 set(OUTPUT_PREFIX purple-go-whatsapp)
 add_custom_command(
   OUTPUT ${OUTPUT_PREFIX}.a ${OUTPUT_PREFIX}.h
-  DEPENDS purple-dummy ${GO_SRCS}
+  DEPENDS purple-dummy ${GO_SRCS} go.mod
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   COMMAND ${CMAKE_COMMAND} -E env
   GOPATH=${GOPATH}

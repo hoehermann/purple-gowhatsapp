@@ -93,55 +93,64 @@ extern const char * gowhatsapp_account_get_password(void *account);
 import "C"
 
 import (
-//	"encoding/base64"
-//	"encoding/json"
-//	"fmt"
-//	"net/http"
-//	"net/url"
-//	"os"
-//	"strings"
-//	"time"
+	//	"encoding/base64"
+	//	"encoding/json"
+	//	"fmt"
+	//	"net/http"
+	//	"net/url"
+	//	"os"
+	//	"strings"
+	//	"time"
 
-	"github.com/Rhymen/go-whatsapp"
-//	"github.com/pkg/errors"
-//	"github.com/skip2/go-qrcode"
+	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/store/sqlstore"
+	//	"github.com/pkg/errors"
+	//	"github.com/skip2/go-qrcode"
 )
 
 /*
- * Holds all data of one message which is going to be exposed
- * to the C part ("front-end") of the plug-in. However, it is converted
- * to a C compatible gowhatsapp_message type first.
+ * Holds all data of one message which is eventually going to be exposed
+ * to the C part ("front-end") of the plug-in.
  */
 type MessageAggregate struct {
-	info    whatsapp.MessageInfo
-	text    string
-	session *whatsapp.Session
-	data    []byte
-	err     error
-	system  bool
+	//info    whatsapp.MessageInfo
+	text   string
+	data   []byte
+	err    error
+	system bool
 }
 
 /*
- * Holds all data for one account (connection) instance.
+ * Holds all data for one connection.
  */
-type waHandler struct {
-	wac                *whatsapp.Conn
-	connID             C.uintptr_t
+type Client struct {
+	client   *whatsmeow.Client
+	username string
 }
 
 /*
- * This plug-in can handle multiple connections (identified by C pointer adresses).
+ * This plug-in can handle multiple connections (identified by JID).
  */
-var waHandlers = make(map[C.uintptr_t]*waHandler)
+var clients = make(map[string]*Client)
+
+/*
+ * whatsmew stores all data in a container (set by main.init()).
+ */
+var container *sqlstore.Container = nil
+
+//export gowhatsapp_go_init
+func gowhatsapp_go_init(purple_user_dir *C.char) C.int {
+	return C.int(init_(C.GoString(purple_user_dir)))
+}
 
 //export gowhatsapp_go_login
-func gowhatsapp_go_login(connID C.uintptr_t) {
-    login(connID);
+func gowhatsapp_go_login(username *C.char) {
+	login(C.GoString(username))
 }
 
 //export gowhatsapp_go_close
-func gowhatsapp_go_close(connID C.uintptr_t) {
-	close(connID);
+func gowhatsapp_go_close(username *C.char) {
+	close(C.GoString(username))
 }
 
 func main() {

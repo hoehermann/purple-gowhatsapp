@@ -1,44 +1,59 @@
-/*
- *   gowhatsapp plugin for libpurple
- *   Copyright (C) 2019 Hermann Höhne
- *
- *   This program is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package main
 
-/*
-#include <stdint.h>
-*/
-import "C"
+import (
+	"context"
+	"fmt"
+	"go.mau.fi/whatsmeow"
+	waLog "go.mau.fi/whatsmeow/util/log"
+)
 
-func login(connID C.uintptr_t) {
+func login(username string) {
 	// TODO: protect against concurrent invocation
-	handler := waHandler{
-		wac:                nil,
-		connID:             connID,
+	handler := Client{
+		client:   nil,
+		username: username,
 	}
-	waHandlers[connID] = &handler
-    // TODO
+	clients[username] = &handler
+
+	deviceStore, err := container.GetFirstDevice()     // TODO: find out how to use a device jid and use .GetDevice(jid)
+	clientLog := waLog.Stdout("Client", "DEBUG", true) // TODO: have logger write to purple
+	if err != nil {
+		clientLog.Errorf("%v", err)
+	} else {
+		client := whatsmeow.NewClient(deviceStore, clientLog)
+		if client.Store.ID == nil {
+			// No ID stored, new login
+			qrChan, _ := client.GetQRChannel(context.Background())
+			err = client.Connect()
+			if err != nil {
+				clientLog.Errorf("%v", err)
+			}
+			for evt := range qrChan {
+				if evt.Event == "code" {
+					// Render the QR code here
+					// e.g. qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
+					// or just manually `echo 2@... | qrencode -t ansiutf8` in a terminal
+					fmt.Println("QR code:", evt.Code)
+				} else {
+					fmt.Println("Login event:", evt.Event)
+				}
+			}
+		} else {
+			// Already logged in, just connect
+			err = client.Connect()
+			if err != nil {
+				clientLog.Errorf("%v", err)
+			}
+		}
+	}
 }
 
-func close(connID C.uintptr_t) {
-	handler, ok := waHandlers[connID]
+func close(username string) {
+	handler, ok := clients[username]
 	if ok {
-		if handler.wac != nil {
-			handler.wac.Disconnect()
+		if handler.client != nil {
+			handler.client.Disconnect()
 		}
-		delete(waHandlers, connID)
+		delete(clients, username)
 	}
 }
