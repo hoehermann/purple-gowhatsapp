@@ -21,7 +21,7 @@
   * I still have no idea what I am doing.
   */
 
-#include "gowhatsapp.hpp"
+#include "gowhatsapp.h"
 
 #ifndef PLUGIN_VERSION
 #error Must set PLUGIN_VERSION in build system
@@ -77,8 +77,8 @@ plugin_init(PurplePlugin *plugin)
     //prpl_info->status_types = gowhatsapp_status_types; // this actually needs to exist, else the protocol cannot be set to "online"
     //prpl_info->chat_info = gowhatsapp_chat_info;
     //prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
-    prpl_info->login = gowhatsapp::login;
-    prpl_info->close = gowhatsapp::close;
+    prpl_info->login = gowhatsapp_login;
+    prpl_info->close = gowhatsapp_close;
     //prpl_info->send_im = gowhatsapp_send_im;
     //prpl_info->join_chat = gowhatsapp_join_chat;
     //prpl_info->get_chat_name = gowhatsapp_get_chat_name;
@@ -121,7 +121,4 @@ static PurplePluginInfo info = {
     NULL
 };
 
-extern "C" 
-{
 PURPLE_INIT_PLUGIN(gowhatsapp, plugin_init, info);
-}

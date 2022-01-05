@@ -22,7 +22,6 @@
 package main
 
 /*
-//#cgo LDFLAGS: gwa-to-purple.o
 #cgo CFLAGS: -DCGO
 
 #include <stdint.h>
@@ -30,15 +29,6 @@ package main
 //#include <unistd.h>
 
 #ifdef _MSC_VER
-// resolves LNK2001: unresolved external symbol _fprintf, __imp___iob
-// from https://stackoverflow.com/questions/30412951/unresolved-external-symbol-imp-fprintf-and-imp-iob-func-sdl2#comment72347668_36504365
-// and https://stackoverflow.com/questions/49353467/unresolved-symbol-imp-iob-not-imp-iob
-#pragma comment(lib, "legacy_stdio_definitions.lib")
-FILE iob[] = { *stdin, *stdout, *stderr };
-extern "C" {
-    FILE * __cdecl _iob(void) { return iob; }
-}
-
 #ifdef GO_CGO_PROLOGUE_H
 #error GO_CGO_PROLOGUE_H already defined, but must override.
 #endif
@@ -93,11 +83,11 @@ struct gowhatsapp_message {
 };
 typedef struct gowhatsapp_message gowhatsapp_message_t;
 
-//extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
-//extern void * gowhatsapp_get_account(uintptr_t pc);
-//extern int gowhatsapp_account_get_bool(void *account, const char *name, int default_value);
-//extern const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value);
-//extern const char * gowhatsapp_account_get_password(void *account);
+extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
+extern void * gowhatsapp_get_account(uintptr_t pc);
+extern int gowhatsapp_account_get_bool(void *account, const char *name, int default_value);
+extern const char * gowhatsapp_account_get_string(void *account, const char *name, const char *default_value);
+extern const char * gowhatsapp_account_get_password(void *account);
 //extern const PurpleProxyInfo * gowhatsapp_account_get_proxy(void *account);
 */
 import "C"
@@ -146,6 +136,7 @@ var waHandlers = make(map[C.uintptr_t]*waHandler)
 
 //export gowhatsapp_go_login
 func gowhatsapp_go_login(connID C.uintptr_t) {
+    login(connID);
 }
 
 //export gowhatsapp_go_close

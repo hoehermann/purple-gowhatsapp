@@ -23,6 +23,16 @@ package main
 */
 import "C"
 
+func login(connID C.uintptr_t) {
+	// TODO: protect against concurrent invocation
+	handler := waHandler{
+		wac:                nil,
+		connID:             connID,
+	}
+	waHandlers[connID] = &handler
+    // TODO
+}
+
 func close(connID C.uintptr_t) {
 	handler, ok := waHandlers[connID]
 	if ok {
