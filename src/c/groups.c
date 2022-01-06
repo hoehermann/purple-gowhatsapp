@@ -1,16 +1,6 @@
 #include "gowhatsapp.h"
 
 /*
- * Determines if given jid denotes a group chat.
- */
-int gowhatsapp_remotejid_is_group_chat(char *remoteJid) {
-    char *suffix = strrchr(remoteJid, '@');
-    if (suffix != NULL)
-        return strcmp(suffix, "@g.us") == 0;
-    return FALSE;
-}
-
-/*
  * Determines if user is participating in conversation.
  */
 int gowhatsapp_user_in_conv_chat(PurpleConvChat *conv_chat, const char *userJid) {

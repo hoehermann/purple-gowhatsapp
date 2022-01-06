@@ -29,12 +29,13 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	cli := handler.client
 	switch evt := rawEvt.(type) {
 	case *events.AppStateSyncComplete:
+		// TODO: find out what this does
 		if len(cli.Store.PushName) > 0 && evt.Name == appstate.WAPatchCriticalBlock {
 			err := cli.SendPresence(types.PresenceAvailable)
 			if err != nil {
-				log.Warnf("Failed to send available presence: %v", err)
+				log.Warnf("AppStateSyncComplete: Failed to send available presence: %v", err)
 			} else {
-				log.Infof("Marked self as available")
+				log.Infof("AppStateSyncComplete: Marked self as available")
 			}
 		}
 	case *events.Connected, *events.PushNameSetting:
@@ -49,16 +50,25 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		} else {
 			log.Infof("Marked self as available")
 		}
+		purple_connected(handler.username)
 	case *events.StreamReplaced:
 		log.Errorf("StreamReplaced: %+v", evt)
 		//os.Exit(0)
 		// TODO: signal error
 	case *events.Message:
-		log.Infof("Received message: %+v", evt)
-		purple_display_text_message(handler.username, evt.Info.ID, evt.Info.SourceString(), evt.Info.Timestamp, *evt.Message.Conversation)
+		log.Infof("Received message: %#v", evt)
+		//MessageSource.IsFromMe
+		text := evt.Message.GetConversation()
+		quote := ""
+		etm := evt.Message.ExtendedTextMessage
+		if etm != nil {
+			quote = etm.ContextInfo.QuotedMessage.GetConversation()
+		}
+		purple_display_text_message(handler.username, evt.Info.ID, evt.Info.MessageSource.Chat.ToNonAD().String(), evt.Info.MessageSource.IsGroup, evt.Info.MessageSource.Sender.ToNonAD().String(), evt.Info.Timestamp, text, quote)
 		// TODO: investigate evt.Info.SourceString() in context of group messages
 		// TODO: also use evt.Info.PushName
 
+		// TODO: implement receiving files
 		img := evt.Message.GetImageMessage()
 		if img != nil {
 			// data, err := cli.Download(img)
@@ -84,11 +94,17 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		}
 	case *events.HistorySync:
 		log.Infof("history sync: %+v", evt.Data)
-	case *types.ChatPresence:
-		// (composing, paused) ignored for now
+	case *events.ChatPresence:
+		who := evt.MessageSource.Chat.ToNonAD().String()
+		switch evt.State {
+		case types.ChatPresenceComposing:
+			purple_composing(handler.username, who)
+		case types.ChatPresencePaused:
+			purple_paused(handler.username, who)
+		}
 	case *events.AppState:
 		log.Debugf("App state event: %+v / %+v", evt.Index, evt.SyncActionValue)
 	default:
-		log.Warnf("Event type not handled: %v", rawEvt)
+		log.Warnf("Event type not handled: %#v", rawEvt)
 	}
 }

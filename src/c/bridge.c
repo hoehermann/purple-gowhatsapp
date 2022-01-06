@@ -38,6 +38,7 @@ process_message_bridge(gpointer data)
     g_free(gwamsg->remoteJid);
     g_free(gwamsg->senderJid);
     g_free(gwamsg->text);
+    g_free(gwamsg->quote);
     g_free(gwamsg->blob);
     /*
     g_free(gwamsg->clientId);

@@ -31,6 +31,12 @@
 #define MAKE_STR(x) _MAKE_STR(x)
 #define _MAKE_STR(x) #x
 
+static const char *
+list_icon(PurpleAccount *account, PurpleBuddy *buddy)
+{
+    return "whatsapp";
+}
+
 static GList *
 status_types(PurpleAccount *account)
 {
@@ -52,10 +58,81 @@ status_types(PurpleAccount *account)
     return types;
 }
 
-static const char *
-list_icon(PurpleAccount *account, PurpleBuddy *buddy)
+static GList *
+add_account_options(GList *account_options)
 {
-    return "whatsapp";
+    PurpleAccountOption *option;
+    
+    /*
+    option = purple_account_option_int_new(
+                "QR code size (pixels)",
+                GOWHATSAPP_QRCODE_SIZE_OPTION,
+                256
+                );
+    account_options = g_list_append(account_options, option);
+    */
+
+    option = purple_account_option_bool_new(
+                "Display all contacts as online",
+                GOWHATSAPP_FAKE_ONLINE_OPTION,
+                TRUE
+                );
+    account_options = g_list_append(account_options, option);
+    
+    option = purple_account_option_bool_new(
+                "Automatically add contacts",
+                GOWHATSAPP_FETCH_CONTACTS_OPTION,
+                TRUE
+                );
+    account_options = g_list_append(account_options, option);
+    
+    /*
+    option = purple_account_option_bool_new(
+                _("Download user profile pictures"),
+                GOWHATSAPP_GET_ICONS_OPTION,
+                FALSE
+                );
+    account_options = g_list_append(account_options, option);
+    */
+    
+    /*
+    option = purple_account_option_bool_new(
+                "Mark displayed messages as read."),
+                GOWHATSAPP_MARK_READ_OPTION,
+                TRUE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
+                _("Plain text login"),
+                GOWHATSAPP_PLAIN_TEXT_LOGIN,
+                FALSE
+                );
+    account_options = g_list_append(account_options, option);
+    */
+
+    option = purple_account_option_int_new(
+                "Number of received messages to remember",
+                GOWHATSAPP_MESSAGE_ID_STORE_SIZE_OPTION,
+                10000
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
+                "Do not show old messages",
+                GOWHATSAPP_TIMESTAMP_FILTERING_OPTION,
+                FALSE
+                );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_int_new(
+                "Maximum age in seconds for a historical message",
+                GOWHATSAPP_MAX_HISTORY_SECONDS_OPTION,
+                0
+                );
+    account_options = g_list_append(account_options, option);
+
+    return account_options;
 }
 
 static GList *
@@ -95,7 +172,7 @@ plugin_init(PurplePlugin *plugin)
     info->name = "WhatsApp (Multi-Device)";
     info->extra_info = prpl_info;
     prpl_info->options = OPT_PROTO_NO_PASSWORD; // add OPT_PROTO_IM_IMAGE?
-    //prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
+    prpl_info->protocol_options = add_account_options(prpl_info->protocol_options);
     prpl_info->list_icon = list_icon;
     prpl_info->status_types = status_types; // this actually needs to exist, else the protocol cannot be set to "online"
     //prpl_info->chat_info = gowhatsapp_chat_info;

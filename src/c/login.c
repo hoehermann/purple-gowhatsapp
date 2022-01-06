@@ -4,7 +4,7 @@
 void
 gowhatsapp_login(PurpleAccount *account)
 {   
-    purple_connection_set_state(purple_account_get_connection(account), PURPLE_CONNECTING);
+    purple_connection_set_state(purple_account_get_connection(account), PURPLE_CONNECTION_CONNECTING);
     char * username = (char *)purple_account_get_username(account); // cgo does not suport const
     gowhatsapp_go_login(username);
 }

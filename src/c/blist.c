@@ -19,6 +19,16 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
     }
 }
 
+void
+gowhatsapp_assume_all_buddies_online(PurpleAccount *account)
+{
+    GSList *buddies = purple_find_buddies(account, NULL);
+    while (buddies != NULL) {
+        gowhatsapp_assume_buddy_online(account, buddies->data);
+        buddies = g_slist_delete_link(buddies, buddies);
+    }
+}
+
 /*
  * Ensure buddy in the buddy list. Updates existing entry if there is
  * one. In both cases only if fetch contacts is enabled.

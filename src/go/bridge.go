@@ -33,6 +33,15 @@ import "C"
 
 import "time"
 
+// TODO: find out how to enable C99's bool type in cgo
+func bool_to_Cchar(b bool) C.char {
+	if b {
+		return C.char(1)
+	} else {
+		return C.char(0)
+	}
+}
+
 //export gowhatsapp_go_init
 func gowhatsapp_go_init(purple_user_dir *C.char) C.int {
 	return C.int(init_(C.GoString(purple_user_dir)))
@@ -63,17 +72,55 @@ func purple_display_qrcode(username string, qr_data string, png []byte) {
 }
 
 /*
+ * This will inform purple that the connection has been established.
+ */
+func purple_connected(username string) {
+	cmessage := C.struct_gowhatsapp_message{
+		username: C.CString(username),
+		msgtype:  C.char(C.gowhatsapp_message_type_connected),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
  * This will display a text message.
  * Single participants and group chats.
  */
-func purple_display_text_message(username string, id string, remoteJid string, timestamp time.Time, text string) {
+func purple_display_text_message(username string, id string, remoteJid string, isGroup bool, senderJid string, timestamp time.Time, text string, quote string) {
 	cmessage := C.struct_gowhatsapp_message{
 		username:  C.CString(username),
 		msgtype:   C.char(C.gowhatsapp_message_type_text),
 		id:        C.CString(id),
 		remoteJid: C.CString(remoteJid),
+		senderJid: C.CString(senderJid),
 		timestamp: C.time_t(timestamp.Unix()),
 		text:      C.CString(text),
+		quote:     C.CString(quote),
+		isGroup:   bool_to_Cchar(isGroup),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
+ * This will inform purple that the remote user started typing.
+ */
+func purple_composing(username string, remoteJid string) {
+	cmessage := C.struct_gowhatsapp_message{
+		username:  C.CString(username),
+		msgtype:   C.char(C.gowhatsapp_message_type_typing),
+		remoteJid: C.CString(remoteJid),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
+ * This will inform purple that the remote user stopped typing.
+ */
+func purple_paused(username string, remoteJid string) {
+	cmessage := C.struct_gowhatsapp_message{
+		username:  C.CString(username),
+		msgtype:   C.char(C.gowhatsapp_message_type_typing_stopped),
+		remoteJid: C.CString(remoteJid),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
