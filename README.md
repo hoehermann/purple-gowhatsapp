@@ -1,6 +1,29 @@
 This project is in alpha state.  
 It intends to replace https://github.com/hoehermann/purple-gowhatsapp/.
 
+Major differences from the non-multi-device vesion:
+
+* Messages are sent asynchronously.
+* Incoming messages are not filtered (whatsmeow keeps track of already received messages internally).
+
+Other improvements:
+
+* There is an "away" state.
+
+Missing features which are presend in the non-multi-device vesion:
+
+* Error handling (currently logged to console only).
+* Receiving files.
+* Sending files.
+* Downloading profile pictures.
+* Proxy support.
+
+Other planned features.
+
+* Logging via purple.
+* Send receipts conditionally.
+* Testing more message types (e.g. stickers).
+
 ## Configuration
 
 Environment Variables:
