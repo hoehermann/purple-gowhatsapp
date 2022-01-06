@@ -8,7 +8,7 @@ void
 gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
 {
     purple_debug_info(
-        "gowhatsapp", "recieved message type %d for user %s at %ld id %s remote %s sender %s (fromMe %d, system %d): %s %s\n",
+        "gowhatsapp", "recieved message type %d for user %s at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
         (int)gwamsg->msgtype,
         gwamsg->username,
         gwamsg->timestamp,
@@ -17,8 +17,7 @@ gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
         gwamsg->senderJid,
         gwamsg->fromMe,
         gwamsg->system,
-        gwamsg->text,
-        gwamsg->quote
+        gwamsg->text
     );
 
     PurpleConnection *pc = purple_account_get_connection(account);

@@ -36,7 +36,7 @@ func (handler *Handler) send_message(username string, who string, message string
 		} else {
 			handler.log.Infof("Message sent (server timestamp: %s)", ts)
 			// inject message back to self to indicate success
-			purple_display_text_message(handler.username, nil, recipient.ToNonAD().String(), isGroup, true, handler.username, nil, ts, message, nil)
+			purple_display_text_message(handler.username, nil, recipient.ToNonAD().String(), isGroup, true, handler.username, nil, ts, message)
 		}
 	}
 

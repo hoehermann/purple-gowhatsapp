@@ -23,7 +23,6 @@ struct gowhatsapp_message {
     char *remoteJid; /// conversation identifier (may be a single contact or a group)
     char *senderJid; /// message author's identifier (useful in group chats)
     char *text; /// the message payload (interpretation depends on type)
-    char *quote; /// quote (in case of replies)
     char *alias; /// remote users name (chosen by them)
     void *blob; /// binary payload (used for inlining images)
     size_t blobsize; /// size of binary payload in bytes
