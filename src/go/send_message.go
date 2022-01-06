@@ -26,7 +26,7 @@ func (handler *Handler) parseJID(arg string) (types.JID, bool) {
 	}
 }
 
-func (handler *Handler) send_message(username string, who string, message string) {
+func (handler *Handler) send_message(username string, who string, message string, isGroup bool) {
 	recipient, ok := handler.parseJID(who)
 	if ok {
 		msg := &waProto.Message{Conversation: &message}
@@ -35,7 +35,8 @@ func (handler *Handler) send_message(username string, who string, message string
 			handler.log.Errorf("Error sending message: %v", err)
 		} else {
 			handler.log.Infof("Message sent (server timestamp: %s)", ts)
-			purple_display_text_message(handler.username, nil, recipient.ToNonAD().String(), false, true, handler.username, nil, ts, message, nil)
+			// inject message back to self to indicate success
+			purple_display_text_message(handler.username, nil, recipient.ToNonAD().String(), isGroup, true, handler.username, nil, ts, message, nil)
 		}
 	}
 

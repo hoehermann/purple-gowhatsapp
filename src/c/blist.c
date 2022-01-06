@@ -89,3 +89,44 @@ PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
 
     return chat;
 }
+
+/*
+ * Largely borrowed from:
+ * https://github.com/EionRobb/purple-discord/blob/master/libdiscord.c
+ */
+PurpleChat * gowhatsapp_find_blist_chat(
+    PurpleAccount *account, const char *jid
+) {
+    PurpleBlistNode *node;
+
+    for (node = purple_blist_get_root();
+         node != NULL;
+         node = purple_blist_node_next(node, TRUE)) {
+        if (PURPLE_IS_CHAT(node)) {
+            PurpleChat *chat = PURPLE_CHAT(node);
+
+            if (purple_chat_get_account(chat) != account) {
+                continue;
+            }
+
+            GHashTable *components = purple_chat_get_components(chat);
+            const gchar *chat_jid = g_hash_table_lookup(
+                components, "remoteJid"
+            );
+
+            if (purple_strequal(chat_jid, jid)) {
+                return chat;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+void
+gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group)
+{
+    // does not actually do anything. buddy is added to pidgin's local list and is usable from there.
+    PurpleAccount *account = purple_connection_get_account(pc);
+    gowhatsapp_assume_buddy_online(account, buddy);
+}

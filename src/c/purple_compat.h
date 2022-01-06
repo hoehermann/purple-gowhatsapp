@@ -1,5 +1,6 @@
 #include <purple.h>
 
+#define PURPLE_IS_CHAT PURPLE_BLIST_NODE_IS_CHAT
 #define purple_connection_error purple_connection_error_reason
 #define PURPLE_CONNECTION_CONNECTING PURPLE_CONNECTING
 #define PURPLE_CONNECTION_CONNECTED PURPLE_CONNECTED

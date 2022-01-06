@@ -42,6 +42,10 @@ func bool_to_Cchar(b bool) C.char {
 	}
 }
 
+func Cint_to_bool(i C.int) bool {
+	return i != 0
+}
+
 //export gowhatsapp_go_init
 func gowhatsapp_go_init(purple_user_dir *C.char) C.int {
 	return C.int(init_(C.GoString(purple_user_dir)))
@@ -58,11 +62,11 @@ func gowhatsapp_go_close(username *C.char) {
 }
 
 //export gowhatsapp_go_send_message
-func gowhatsapp_go_send_message(username *C.char, who *C.char, message *C.char) int {
+func gowhatsapp_go_send_message(username *C.char, who *C.char, message *C.char, is_group C.int) int {
 	u := C.GoString(username)
 	handler, ok := handlers[u]
 	if ok {
-		go handler.send_message(u, C.GoString(who), C.GoString(message))
+		go handler.send_message(u, C.GoString(who), C.GoString(message), Cint_to_bool(is_group))
 		return 0
 	}
 	return -107 // ENOTCONN, see libpurple/prpl.h

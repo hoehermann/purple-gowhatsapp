@@ -12,7 +12,20 @@ func (handler *Handler) handle_message(evt *events.Message) {
 	var quote *string = nil
 	etm := evt.Message.ExtendedTextMessage
 	if etm != nil {
-		quote = etm.ContextInfo.QuotedMessage.Conversation
+		// message containing quote or link to group
+		if etm.Text != nil {
+			// quoted message repeat the text
+			// link messages have evt.Message.Conversation set to nil
+			// it should be safe to overwrite here
+			text = *etm.Text
+		}
+		ci := etm.ContextInfo
+		if ci != nil {
+			cm := ci.QuotedMessage
+			if cm != nil {
+				quote = cm.Conversation
+			}
+		}
 	}
 	purple_display_text_message(handler.username, &evt.Info.ID, evt.Info.MessageSource.Chat.ToNonAD().String(), evt.Info.MessageSource.IsGroup, evt.Info.MessageSource.IsFromMe, evt.Info.MessageSource.Sender.ToNonAD().String(), &evt.Info.PushName, evt.Info.Timestamp, text, quote)
 	// TODO: investigate evt.Info.SourceString() in context of group messages

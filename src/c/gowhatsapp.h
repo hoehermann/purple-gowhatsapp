@@ -27,12 +27,20 @@ gboolean gowhatsapp_message_is_new_enough(PurpleAccount *account, const time_t t
 PurpleConvChat *gowhatsapp_find_group_chat(const char *remoteJid, const char *senderJid, const char *topic, PurpleConnection *pc);
 int gowhatsapp_user_in_conv_chat(PurpleConvChat *conv_chat, const char *userJid);
 int gowhatsapp_remotejid_is_group_chat(char *remoteJid);
+void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data);
+char *gowhatsapp_get_chat_name(GHashTable *components);
+PurpleRoomlist *gowhatsapp_roomlist_get_list(PurpleConnection *pc);
+void gowhatsapp_set_chat_topic(PurpleConnection *pc, int id, const char *topic);
+gchar *gowhatsapp_roomlist_serialize(PurpleRoomlistRoom *room);
 
 // blist
 void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, char *remoteJid, char *display_name);
 PurpleChat * gowhatsapp_ensure_group_chat_in_blist(PurpleAccount *account, const char *remoteJid, const char *topic);
 PurpleGroup * gowhatsapp_get_purple_group();
 void gowhatsapp_assume_all_buddies_online(PurpleAccount *account);
+PurpleChat * gowhatsapp_find_blist_chat(PurpleAccount *account, const char *jid);
+void gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group);
 
-// send_im
+// send_message
 int gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message, PurpleMessageFlags flags);
+int gowhatsapp_send_chat(PurpleConnection *pc, int id, const gchar *message, PurpleMessageFlags flags);

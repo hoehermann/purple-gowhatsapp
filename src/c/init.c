@@ -180,14 +180,14 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->login = gowhatsapp_login;
     prpl_info->close = gowhatsapp_close;
     prpl_info->send_im = gowhatsapp_send_im;
-    //prpl_info->join_chat = gowhatsapp_join_chat;
-    //prpl_info->get_chat_name = gowhatsapp_get_chat_name;
-    //prpl_info->find_blist_chat = gowhatsapp_find_blist_chat;
-    //prpl_info->chat_send = gowhatsapp_send_chat;
-    //prpl_info->set_chat_topic = gowhatsapp_set_chat_topic;
-    //prpl_info->add_buddy = gowhatsapp_add_buddy;
-    //prpl_info->roomlist_get_list = gowhatsapp_roomlist_get_list;
-    //prpl_info->roomlist_room_serialize = gowhatsapp_roomlist_serialize;
+    prpl_info->join_chat = gowhatsapp_join_chat;
+    prpl_info->get_chat_name = gowhatsapp_get_chat_name;
+    prpl_info->find_blist_chat = gowhatsapp_find_blist_chat;
+    prpl_info->chat_send = gowhatsapp_send_chat;
+    prpl_info->set_chat_topic = gowhatsapp_set_chat_topic;
+    prpl_info->add_buddy = gowhatsapp_add_buddy;
+    prpl_info->roomlist_get_list = gowhatsapp_roomlist_get_list;
+    prpl_info->roomlist_room_serialize = gowhatsapp_roomlist_serialize;
     //prpl_info->new_xfer = gowhatsapp_new_xfer;
     //prpl_info->send_file = gowhatsapp_send_file;
 }
