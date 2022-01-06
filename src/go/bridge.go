@@ -86,7 +86,7 @@ func purple_connected(username string) {
  * This will display a text message.
  * Single participants and group chats.
  */
-func purple_display_text_message(username string, id string, remoteJid string, isGroup bool, senderJid string, timestamp time.Time, text string, quote string) {
+func purple_display_text_message(username string, id string, remoteJid string, isGroup bool, isFromMe bool, senderJid string, pushName string, timestamp time.Time, text string, quote string) {
 	cmessage := C.struct_gowhatsapp_message{
 		username:  C.CString(username),
 		msgtype:   C.char(C.gowhatsapp_message_type_text),
@@ -96,6 +96,7 @@ func purple_display_text_message(username string, id string, remoteJid string, i
 		timestamp: C.time_t(timestamp.Unix()),
 		text:      C.CString(text),
 		quote:     C.CString(quote),
+		alias:     C.CString(pushName),
 		isGroup:   bool_to_Cchar(isGroup),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)

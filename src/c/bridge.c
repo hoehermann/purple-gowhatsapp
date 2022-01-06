@@ -39,15 +39,8 @@ process_message_bridge(gpointer data)
     g_free(gwamsg->senderJid);
     g_free(gwamsg->text);
     g_free(gwamsg->quote);
+    g_free(gwamsg->alias);
     g_free(gwamsg->blob);
-    /*
-    g_free(gwamsg->clientId);
-    g_free(gwamsg->clientToken);
-    g_free(gwamsg->serverToken);
-    g_free(gwamsg->encKey_b64);
-    g_free(gwamsg->macKey_b64);
-    g_free(gwamsg->wid);
-    */
     g_free(gwamsg);
     return FALSE;
 }

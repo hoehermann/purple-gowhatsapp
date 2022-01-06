@@ -20,7 +20,7 @@ type Handler struct {
 }
 
 /*
- * This plug-in can handle multiple connections (identified by JID).
+ * This plug-in can handle multiple connections (identified by user-supplied name).
  */
 var handlers = make(map[string]*Handler)
 
@@ -57,16 +57,14 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// TODO: signal error
 	case *events.Message:
 		log.Infof("Received message: %#v", evt)
-		//MessageSource.IsFromMe
 		text := evt.Message.GetConversation()
 		quote := ""
 		etm := evt.Message.ExtendedTextMessage
 		if etm != nil {
 			quote = etm.ContextInfo.QuotedMessage.GetConversation()
 		}
-		purple_display_text_message(handler.username, evt.Info.ID, evt.Info.MessageSource.Chat.ToNonAD().String(), evt.Info.MessageSource.IsGroup, evt.Info.MessageSource.Sender.ToNonAD().String(), evt.Info.Timestamp, text, quote)
+		purple_display_text_message(handler.username, evt.Info.ID, evt.Info.MessageSource.Chat.ToNonAD().String(), evt.Info.MessageSource.IsGroup, evt.Info.MessageSource.IsFromMe, evt.Info.MessageSource.Sender.ToNonAD().String(), evt.Info.PushName, evt.Info.Timestamp, text, quote)
 		// TODO: investigate evt.Info.SourceString() in context of group messages
-		// TODO: also use evt.Info.PushName
 
 		// TODO: implement receiving files
 		img := evt.Message.GetImageMessage()

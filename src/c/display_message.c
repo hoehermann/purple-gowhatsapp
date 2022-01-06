@@ -20,23 +20,17 @@ PurpleConversation *gowhatsapp_find_conversation(char *username, PurpleAccount *
 static void
 gowhatsapp_display_group_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags) {
     if (gwamsg->fromMe) {
-        PurpleConvChat *chat = gowhatsapp_find_group_chat(
-            gwamsg->remoteJid, NULL, NULL, pc
-        );
+        PurpleConvChat *chat = gowhatsapp_find_group_chat(gwamsg->remoteJid, NULL, NULL, pc);
         if (chat != NULL) {
             // display message sent from own account (but other device) here
-            purple_conv_chat_write(chat, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp
-            );
+            purple_conv_chat_write(chat, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
         }
     } else {
         // don't create chat if not joined
-        PurpleConvChat *chat = gowhatsapp_find_group_chat(
-            gwamsg->remoteJid, gwamsg->senderJid, NULL, pc
-        );
+        PurpleConvChat *chat = gowhatsapp_find_group_chat(gwamsg->remoteJid, gwamsg->senderJid, NULL, pc);
         if (chat != NULL) {
             // participants in group chats have their senderJid supplied
-            purple_conv_chat_write(chat, gwamsg->senderJid, gwamsg->text, flags, gwamsg->timestamp
-            );
+            purple_conv_chat_write(chat, gwamsg->senderJid, gwamsg->text, flags, gwamsg->timestamp);
         }
     }
 }
@@ -54,6 +48,7 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
             */
     int message_is_new = 1;
     if (message_is_new) {
+        // TODO: consider gwamsg->quote for output
         if (gwamsg->fromMe) {
             // special handling of messages sent by self incoming from remote, addressing issue #32
             // copied from EionRobb/purple-discord/blob/master/libdiscord.c
@@ -72,7 +67,7 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
                 // messages sometimes arrive before buddy has been
                 // created... this method will be missing a display
                 // name, but i don't think i ever saw one of them anyway
-                gowhatsapp_ensure_buddy_in_blist(account, gwamsg->remoteJid, gwamsg->remoteJid);
+                gowhatsapp_ensure_buddy_in_blist(account, gwamsg->remoteJid, gwamsg->alias);
                 // normal mode: direct incoming message
                 purple_serv_got_im(pc, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
             }

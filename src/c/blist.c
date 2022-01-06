@@ -30,8 +30,8 @@ gowhatsapp_assume_all_buddies_online(PurpleAccount *account)
 }
 
 /*
- * Ensure buddy in the buddy list. Updates existing entry if there is
- * one. In both cases only if fetch contacts is enabled.
+ * Ensure buddy in the buddy list. Only if fetch contacts is enabled.
+ * Updates alias non-destructively.
  */
 void gowhatsapp_ensure_buddy_in_blist(
     PurpleAccount *account, char *remoteJid, char *display_name
@@ -49,8 +49,8 @@ void gowhatsapp_ensure_buddy_in_blist(
         gowhatsapp_assume_buddy_online(account, buddy);
     }
 
-    if (buddy && fetch_contacts) {
-        purple_blist_alias_buddy(buddy, display_name);
+    if (fetch_contacts) {
+        serv_got_alias(purple_account_get_connection(account), remoteJid, display_name);
     }
 }
 
