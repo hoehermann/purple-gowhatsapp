@@ -43,9 +43,12 @@ status_types(PurpleAccount *account)
     status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, GOWHATSAPP_STATUS_STR_OFFLINE, "Offline", TRUE, TRUE, FALSE);
     types = g_list_append(types, status);
 
-    status = purple_status_type_new_full(PURPLE_STATUS_MOBILE, GOWHATSAPP_STATUS_STR_MOBILE, NULL, FALSE, FALSE, TRUE);
+    status = purple_status_type_new_full(PURPLE_STATUS_AWAY, GOWHATSAPP_STATUS_STR_AWAY, NULL, TRUE, TRUE, FALSE);
     types = g_list_prepend(types, status);
 
+    status = purple_status_type_new_full(PURPLE_STATUS_MOBILE, GOWHATSAPP_STATUS_STR_MOBILE, NULL, FALSE, FALSE, TRUE);
+    types = g_list_prepend(types, status);
+    
     return types;
 }
 

@@ -4,6 +4,7 @@
 #define GOWHATSAPP_STATUS_STR_ONLINE   "online"
 #define GOWHATSAPP_STATUS_STR_OFFLINE  "offline"
 #define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
+#define GOWHATSAPP_STATUS_STR_AWAY     "away"
 
 // login
 void gowhatsapp_login(PurpleAccount *account);
