@@ -34,5 +34,6 @@ struct gowhatsapp_message {
     char system; /// this is a system-message, not user-generated
 };
 typedef struct gowhatsapp_message gowhatsapp_message_t;
+// TODO: remove ID (no longer used)
 
 #endif

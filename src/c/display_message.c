@@ -57,6 +57,7 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
             flags |= PURPLE_MESSAGE_RECV;
         }
         if (gwamsg->isGroup) {
+            // TODO: find out why messes from status@broadcast produce a crash
             gowhatsapp_display_group_message(pc, gwamsg, flags);
         } else {
             if (gwamsg->fromMe) {

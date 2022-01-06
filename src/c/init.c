@@ -109,7 +109,6 @@ add_account_options(GList *account_options)
                 FALSE
                 );
     account_options = g_list_append(account_options, option);
-    */
 
     option = purple_account_option_int_new(
                 "Number of received messages to remember",
@@ -131,7 +130,8 @@ add_account_options(GList *account_options)
                 0
                 );
     account_options = g_list_append(account_options, option);
-
+    */
+    
     return account_options;
 }
 
@@ -179,7 +179,7 @@ plugin_init(PurplePlugin *plugin)
     //prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
     prpl_info->login = gowhatsapp_login;
     prpl_info->close = gowhatsapp_close;
-    //prpl_info->send_im = gowhatsapp_send_im;
+    prpl_info->send_im = gowhatsapp_send_im;
     //prpl_info->join_chat = gowhatsapp_join_chat;
     //prpl_info->get_chat_name = gowhatsapp_get_chat_name;
     //prpl_info->find_blist_chat = gowhatsapp_find_blist_chat;

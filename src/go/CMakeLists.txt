@@ -19,6 +19,8 @@ set(GO_SRCS
   init.go
   login.go
   handler.go
+  send_message.go
+  handle_message.go
 )
 set(OUTPUT_PREFIX purple-go-whatsapp)
 add_custom_command(

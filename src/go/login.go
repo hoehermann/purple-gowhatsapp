@@ -71,9 +71,7 @@ func (handler *Handler) connect() {
 func close(username string) {
 	handler, ok := handlers[username]
 	if ok {
-		if handler.client != nil {
-			handler.client.Disconnect()
-		}
+		handler.client.Disconnect()
 		delete(handlers, username)
 	}
 }

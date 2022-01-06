@@ -57,6 +57,17 @@ func gowhatsapp_go_close(username *C.char) {
 	close(C.GoString(username))
 }
 
+//export gowhatsapp_go_send_message
+func gowhatsapp_go_send_message(username *C.char, who *C.char, message *C.char) int {
+	u := C.GoString(username)
+	handler, ok := handlers[u]
+	if ok {
+		go handler.send_message(u, C.GoString(who), C.GoString(message))
+		return 0
+	}
+	return -107 // ENOTCONN, see libpurple/prpl.h
+}
+
 /*
  * This will display a QR code via PurpleRequest API.
  */
@@ -86,18 +97,22 @@ func purple_connected(username string) {
  * This will display a text message.
  * Single participants and group chats.
  */
-func purple_display_text_message(username string, id string, remoteJid string, isGroup bool, isFromMe bool, senderJid string, pushName string, timestamp time.Time, text string, quote string) {
+func purple_display_text_message(username string, id *string, remoteJid string, isGroup bool, isFromMe bool, senderJid string, pushName *string, timestamp time.Time, text string, quote *string) {
 	cmessage := C.struct_gowhatsapp_message{
 		username:  C.CString(username),
 		msgtype:   C.char(C.gowhatsapp_message_type_text),
-		id:        C.CString(id),
 		remoteJid: C.CString(remoteJid),
 		senderJid: C.CString(senderJid),
 		timestamp: C.time_t(timestamp.Unix()),
 		text:      C.CString(text),
-		quote:     C.CString(quote),
-		alias:     C.CString(pushName),
 		isGroup:   bool_to_Cchar(isGroup),
+		fromMe:    bool_to_Cchar(isFromMe),
+	}
+	if pushName != nil {
+		cmessage.alias = C.CString(*pushName)
+	}
+	if quote != nil {
+		cmessage.quote = C.CString(*quote)
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }

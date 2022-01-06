@@ -33,3 +33,6 @@ void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, char *remoteJid, c
 PurpleChat * gowhatsapp_ensure_group_chat_in_blist(PurpleAccount *account, const char *remoteJid, const char *topic);
 PurpleGroup * gowhatsapp_get_purple_group();
 void gowhatsapp_assume_all_buddies_online(PurpleAccount *account);
+
+// send_im
+int gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message, PurpleMessageFlags flags);

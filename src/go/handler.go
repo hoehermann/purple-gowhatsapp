@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/appstate"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
-	"mime"
 )
 
 /*
@@ -56,24 +54,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		//os.Exit(0)
 		// TODO: signal error
 	case *events.Message:
-		log.Infof("Received message: %#v", evt)
-		text := evt.Message.GetConversation()
-		quote := ""
-		etm := evt.Message.ExtendedTextMessage
-		if etm != nil {
-			quote = etm.ContextInfo.QuotedMessage.GetConversation()
-		}
-		purple_display_text_message(handler.username, evt.Info.ID, evt.Info.MessageSource.Chat.ToNonAD().String(), evt.Info.MessageSource.IsGroup, evt.Info.MessageSource.IsFromMe, evt.Info.MessageSource.Sender.ToNonAD().String(), evt.Info.PushName, evt.Info.Timestamp, text, quote)
-		// TODO: investigate evt.Info.SourceString() in context of group messages
-
-		// TODO: implement receiving files
-		img := evt.Message.GetImageMessage()
-		if img != nil {
-			// data, err := cli.Download(img)
-			exts, _ := mime.ExtensionsByType(img.GetMimetype())
-			path := fmt.Sprintf("%s%s", evt.Info.ID, exts[0])
-			log.Infof("ImageMessage: %s", path)
-		}
+		handler.handle_message(evt)
 	case *events.Receipt:
 		if evt.Type == events.ReceiptTypeRead || evt.Type == events.ReceiptTypeReadSelf {
 			log.Infof("%v was read by %s at %s", evt.MessageIDs, evt.SourceString(), evt.Timestamp)
