@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/types"
 	"strings"
@@ -16,10 +17,10 @@ func (handler *Handler) parseJID(arg string) (types.JID, bool) {
 	} else {
 		recipient, err := types.ParseJID(arg)
 		if err != nil {
-			handler.log.Errorf("Invalid JID %s: %v", arg, err)
+			purple_error(handler.username, fmt.Sprintf("Invalid JID %s: %v", arg, err))
 			return recipient, false
 		} else if recipient.User == "" {
-			handler.log.Errorf("Invalid JID %s: no server specified", arg)
+			purple_error(handler.username, fmt.Sprintf("Invalid JID %s: no server specified", arg))
 			return recipient, false
 		}
 		return recipient, true
@@ -32,6 +33,7 @@ func (handler *Handler) send_message(username string, who string, message string
 		msg := &waProto.Message{Conversation: &message}
 		ts, err := handler.client.SendMessage(recipient, "", msg)
 		if err != nil {
+			// TODO: display error in conversation
 			handler.log.Errorf("Error sending message: %v", err)
 		} else {
 			handler.log.Infof("Message sent (server timestamp: %s)", ts)

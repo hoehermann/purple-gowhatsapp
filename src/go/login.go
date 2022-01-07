@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
 )
@@ -14,7 +15,7 @@ func login(username string) {
 	deviceStore, err := container.GetFirstDevice() // TODO: find out how to use a device jid and use .GetDevice(jid)
 	log := PurpleLogger("Handler")
 	if err != nil {
-		log.Errorf("%v", err)
+		purple_error(username, fmt.Sprintf("%#v", err))
 	} else {
 		handler := Handler{
 			username: username,
@@ -39,7 +40,7 @@ func (handler *Handler) connect() {
 		qrChan, _ := client.GetQRChannel(context.Background())
 		err := client.Connect()
 		if err != nil {
-			clientLog.Errorf("%v", err)
+			purple_error(handler.username, fmt.Sprintf("%#v", err))
 		}
 		for evt := range qrChan {
 			if evt.Event == "code" {
@@ -47,7 +48,7 @@ func (handler *Handler) connect() {
 				// e.g. qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
 				png, err := qrcode.Encode(evt.Code, qrcode.Medium, 256) // TODO: make size user configurable
 				if err != nil {
-					clientLog.Errorf("%v", png)
+					purple_error(handler.username, fmt.Sprintf("%#v", err))
 				} else {
 					purple_display_qrcode(handler.username, evt.Code, png)
 				}
@@ -59,7 +60,7 @@ func (handler *Handler) connect() {
 		// Already logged in, just connect
 		err := client.Connect()
 		if err != nil {
-			clientLog.Errorf("%v", err)
+			purple_error(handler.username, fmt.Sprintf("%#v", err))
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/appstate"
 	"go.mau.fi/whatsmeow/types"
@@ -22,6 +23,11 @@ type Handler struct {
  */
 var handlers = make(map[string]*Handler)
 
+/*
+ * Handle incoming events.
+ *
+ * Largely based on https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go.
+ */
 func (handler *Handler) eventHandler(rawEvt interface{}) {
 	log := handler.log
 	cli := handler.client
@@ -50,9 +56,8 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		}
 		purple_connected(handler.username)
 	case *events.StreamReplaced:
-		log.Errorf("StreamReplaced: %+v", evt)
-		//os.Exit(0)
-		// TODO: signal error
+		// TODO: test this
+		purple_error(handler.username, fmt.Sprintf("StreamReplaced: %+v", evt))
 	case *events.Message:
 		handler.handle_message(evt)
 	case *events.Receipt:
@@ -62,6 +67,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			log.Infof("%s was delivered to %s at %s", evt.MessageIDs[0], evt.SourceString(), evt.Timestamp)
 		}
 	case *events.Presence:
+		// TODO: find a way to test this
 		if evt.Unavailable {
 			if evt.LastSeen.IsZero() {
 				log.Infof("%s is now offline", evt.From)
@@ -72,6 +78,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			log.Infof("%s is now online", evt.From)
 		}
 	case *events.HistorySync:
+		// TODO: find out what this does
 		log.Infof("history sync: %+v", evt.Data)
 	case *events.ChatPresence:
 		who := evt.MessageSource.Chat.ToNonAD().String()
@@ -80,6 +87,8 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			purple_composing(handler.username, who)
 		case types.ChatPresencePaused:
 			purple_paused(handler.username, who)
+		default:
+			log.Warnf("ChatPresence not handled: %v", evt.State)
 		}
 	case *events.AppState:
 		log.Debugf("App state event: %+v / %+v", evt.Index, evt.SyncActionValue)

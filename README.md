@@ -28,7 +28,7 @@ Other improvements:
 
 Features which are present in the go-whatsapp version but missing here:
 
-* Error handling (currently logged to console only).
+* Consistent error handling (currently logged to console only in some places).
 * Sending files.
 * Downloading profile pictures.
 * Proxy support.
@@ -37,6 +37,7 @@ Features which are present in the go-whatsapp version but missing here:
 Other planned features:
 
 * Join group chat via link.
+* Display receipts in conversation window.
 
 ### Building
 

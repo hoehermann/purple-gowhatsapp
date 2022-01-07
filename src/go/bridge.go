@@ -170,5 +170,17 @@ func purple_debug(loglevel int, message string) {
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
 
+/*
+ * Forward error to purple. This will cause a disconnect.
+ */
+func purple_error(username string, message string) {
+	cmessage := C.struct_gowhatsapp_message{
+		username: C.CString(username),
+		msgtype:  C.char(C.gowhatsapp_message_type_error),
+		text:     C.CString(message),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
 func main() {
 }

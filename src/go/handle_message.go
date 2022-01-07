@@ -96,6 +96,7 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 		filename = hex.EncodeToString(sm.FileSha256) + extension_from_mimetype(sm.Mimetype)
 	}
 	if err != nil {
+		// TODO: display error in conversation
 		handler.log.Errorf("Download failed: %#v", err)
 	}
 	if filename != "" {
