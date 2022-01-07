@@ -5,3 +5,4 @@ out
 build
 
 go.sum
+go.mod
