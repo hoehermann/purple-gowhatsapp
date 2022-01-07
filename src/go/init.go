@@ -25,9 +25,7 @@ func init_(purple_user_dir string) int {
 	}
 	uri := os.Getenv("PURPLE_GOWHATSAPP_DATABASE_ADDRESS")
 	if uri == "" {
-		dirname := purple_user_dir + "/whatsmeow" // assume default configuration
-		os.Mkdir(dirname, os.ModeDir|0700)        // create directory
-		uri = "file:" + dirname + "/store.db?_foreign_keys=on"
+		uri = "file:" + purple_user_dir + "/whatsmeow.db?_foreign_keys=on"
 	}
 	dbLog.Infof("%s connecting to %s", dialect, uri)
 	container_, err := sqlstore.New(dialect, uri, dbLog)

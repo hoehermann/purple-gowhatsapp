@@ -169,9 +169,9 @@ plugin_init(PurplePlugin *plugin)
         plugin->info = info = g_new0(PurplePluginInfo, 1);
     }
 
-    info->name = "WhatsApp (Multi-Device)";
+    info->name = "WhatsApp (whatsmeow)";
     info->extra_info = prpl_info;
-    prpl_info->options = OPT_PROTO_NO_PASSWORD; // add OPT_PROTO_IM_IMAGE?
+    prpl_info->options = OPT_PROTO_NO_PASSWORD; // add OPT_PROTO_IM_IMAGE for sending images via drag and drop
     prpl_info->protocol_options = add_account_options(prpl_info->protocol_options);
     prpl_info->list_icon = list_icon;
     prpl_info->status_types = status_types; // this actually needs to exist, else the protocol cannot be set to "online"
@@ -201,7 +201,7 @@ static PurplePluginInfo info = {
     0, /* flags */
     NULL, /* dependencies */
     PURPLE_PRIORITY_DEFAULT, /* priority */
-    "prpl-hehoe-gowhatsapp-md", /* id */
+    "prpl-hehoe-whatsmeow", /* id */
     "gowhatsapp", /* name */
     MAKE_STR(PLUGIN_VERSION), /* version */
     "", /* summary */
