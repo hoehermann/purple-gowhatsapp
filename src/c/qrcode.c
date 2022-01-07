@@ -7,6 +7,7 @@ null_cb() {
 void
 gowhatsapp_display_qrcode(PurpleConnection *pc, const char * qr_code_raw, void * image_data, size_t image_data_len)
 {
+    g_return_if_fail(pc != NULL);
     PurpleAccount *account = purple_connection_get_account(pc);
 
     PurpleRequestFields *fields = purple_request_fields_new();

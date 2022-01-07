@@ -38,6 +38,7 @@ gowhatsapp_display_group_message(PurpleConnection *pc, gowhatsapp_message_t *gwa
 void
 gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
+    g_return_if_fail(pc != NULL);
     PurpleAccount *account = purple_connection_get_account(pc);
     PurpleMessageFlags flags = 0;
     /*

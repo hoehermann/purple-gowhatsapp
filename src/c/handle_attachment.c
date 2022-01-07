@@ -27,6 +27,7 @@ void xfer_release_blob(PurpleXfer * xfer) {
 }
 
 void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
+    g_return_if_fail(pc != NULL);
     PurpleAccount *account = purple_connection_get_account(pc);
     PurpleXfer * xfer = purple_xfer_new(account, PURPLE_XFER_RECEIVE, gwamsg->senderJid);
     purple_xfer_ref(xfer);

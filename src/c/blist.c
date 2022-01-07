@@ -22,6 +22,7 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
 void
 gowhatsapp_assume_all_buddies_online(PurpleAccount *account)
 {
+    g_return_if_fail(account != NULL);
     GSList *buddies = purple_find_buddies(account, NULL);
     while (buddies != NULL) {
         gowhatsapp_assume_buddy_online(account, buddies->data);
