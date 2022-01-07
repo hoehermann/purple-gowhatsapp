@@ -188,8 +188,8 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->add_buddy = gowhatsapp_add_buddy;
     prpl_info->roomlist_get_list = gowhatsapp_roomlist_get_list;
     prpl_info->roomlist_room_serialize = gowhatsapp_roomlist_serialize;
-    //prpl_info->new_xfer = gowhatsapp_new_xfer;
-    //prpl_info->send_file = gowhatsapp_send_file;
+    prpl_info->new_xfer = gowhatsapp_new_xfer;
+    prpl_info->send_file = gowhatsapp_send_file;
 }
 
 static PurplePluginInfo info = {

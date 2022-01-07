@@ -47,3 +47,7 @@ int gowhatsapp_send_chat(PurpleConnection *pc, int id, const gchar *message, Pur
 
 // handle_attachment
 void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
+
+// send_file
+PurpleXfer * gowhatsapp_new_xfer(PurpleConnection *pc, const char *who);
+void gowhatsapp_send_file(PurpleConnection *pc, const gchar *who, const gchar *filename);

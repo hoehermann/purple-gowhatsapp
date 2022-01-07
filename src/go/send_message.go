@@ -27,8 +27,8 @@ func (handler *Handler) parseJID(arg string) (types.JID, bool) {
 	}
 }
 
-func (handler *Handler) send_message(username string, who string, message string, isGroup bool) {
-	recipient, ok := handler.parseJID(who)
+func (handler *Handler) send_message(who string, message string, isGroup bool) {
+	recipient, ok := handler.parseJID(who) // calls purple_error directly
 	if ok {
 		msg := &waProto.Message{Conversation: &message}
 		ts, err := handler.client.SendMessage(recipient, "", msg)

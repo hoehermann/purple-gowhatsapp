@@ -63,11 +63,19 @@ func gowhatsapp_go_close(username *C.char) {
 
 //export gowhatsapp_go_send_message
 func gowhatsapp_go_send_message(username *C.char, who *C.char, message *C.char, is_group C.int) int {
-	u := C.GoString(username)
-	handler, ok := handlers[u]
+	handler, ok := handlers[C.GoString(username)]
 	if ok {
-		go handler.send_message(u, C.GoString(who), C.GoString(message), Cint_to_bool(is_group))
+		go handler.send_message(C.GoString(who), C.GoString(message), Cint_to_bool(is_group))
 		return 0
+	}
+	return -107 // ENOTCONN, see libpurple/prpl.h
+}
+
+//export gowhatsapp_go_send_file
+func gowhatsapp_go_send_file(username *C.char, who *C.char, filename *C.char) int {
+	handler, ok := handlers[C.GoString(username)]
+	if ok {
+		return handler.send_file(C.GoString(who), C.GoString(filename))
 	}
 	return -107 // ENOTCONN, see libpurple/prpl.h
 }

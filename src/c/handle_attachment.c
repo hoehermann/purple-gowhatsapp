@@ -30,7 +30,7 @@ void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gw
     g_return_if_fail(pc != NULL);
     PurpleAccount *account = purple_connection_get_account(pc);
     PurpleXfer * xfer = purple_xfer_new(account, PURPLE_XFER_RECEIVE, gwamsg->senderJid);
-    purple_xfer_ref(xfer);
+    //purple_xfer_ref(xfer);
     purple_xfer_set_filename(xfer, gwamsg->name);
     purple_xfer_set_size(xfer, gwamsg->blobsize);
     xfer->data = gwamsg->blob;
@@ -39,7 +39,7 @@ void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gw
     purple_xfer_set_start_fnc(xfer, xfer_start_fnc);
     purple_xfer_set_read_fnc(xfer, xfer_read_fnc);
     
-    // be very sure to release blob whatever happens
+    // be very sure to release the data no matter what
     purple_xfer_set_end_fnc(xfer, xfer_release_blob);
     purple_xfer_set_request_denied_fnc(xfer, xfer_release_blob);
     purple_xfer_set_cancel_recv_fnc(xfer, xfer_release_blob);

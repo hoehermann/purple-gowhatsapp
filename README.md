@@ -15,6 +15,7 @@ Standard features:
 * Receiving files (images, videos, voice, document, stickers).
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
 * Under the hood: Reasonable callback mechanism thanks to [Eiron Robb](https://github.com/EionRobb).
+* Sending images.
 
 Major differences from the go-whatsapp vesion:
 
@@ -28,8 +29,8 @@ Other improvements:
 
 Features which are present in the go-whatsapp version but missing here:
 
+* Sending files other than images.
 * Consistent error handling (currently logged to console only in some places).
-* Sending files.
 * Downloading profile pictures.
 * Proxy support.
 * Send receipts conditionally.

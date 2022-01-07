@@ -17,6 +17,7 @@ add_library(${TARGET_NAME} SHARED
     "message_filtering.c"
     "send_message.c"
     "handle_attachment.c"
+    "send_file.c"
     "msc_adjustments.c"
 )
 add_dependencies(${TARGET_NAME} purple-go-whatsapp)
