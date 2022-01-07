@@ -11,6 +11,7 @@ Major differences from the go-whatsapp vesion:
 Other improvements:
 
 * There is an "away" state.
+* Logging happens via purple.
 
 Missing features which are presend in the go-whatsapp version:
 
@@ -18,11 +19,11 @@ Missing features which are presend in the go-whatsapp version:
 * Sending files.
 * Downloading profile pictures.
 * Proxy support.
+* Send receipts conditionally.
 
 Other planned features.
 
-* Logging via purple.
-* Send receipts conditionally.
+* Join group chat via link.
 
 ## Run-Time Configuration
 
@@ -51,3 +52,19 @@ Additional dependencies:
 * [gcc (32 bit)](https://osdn.net/projects/mingw/)
 
 go and gcc must be in %PATH%.
+
+## Notes
+
+### Attachment handling and memory consumption
+
+Attachments (images, videos, voice messages, stickers, document) are *always* downloaded as *soon as the message is processed*. The user is then asked where they want the file to be written. During this time, the file data is residing in memory multiple times:
+
+* in the input buffer
+* in the decryption buffer
+* in the go → C message buffer
+* in the C → purple output buffer
+* in the output buffer
+
+On systems with many concurrent connection, this could exhaust memory.
+
+As of writing, whatsmeow does not offer an interface to read the file in chunks.
