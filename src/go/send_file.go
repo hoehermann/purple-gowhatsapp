@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path"
 	"context"
 	"net/http"
 	"go.mau.fi/whatsmeow"
@@ -25,8 +26,7 @@ func (handler *Handler) send_file(who string, filename string) int {
 	if mimetype == "image/jpeg" {
 		msg, err = handler.send_file_image(data, mimetype)
 	} else {
-		handler.log.Errorf("Error sending file: Only images are supported right now, but this is %v.", mimetype)
-		return 95 //ENOTSUP
+		msg, err = handler.send_file_document(data, mimetype, path.Base(filename))
 	}
 	if err != nil {
 		handler.log.Errorf("Failed to upload file: %v", err)
@@ -34,7 +34,7 @@ func (handler *Handler) send_file(who string, filename string) int {
 	}
 	ts, err := handler.client.SendMessage(recipient, "", msg)
 	if err != nil {
-		handler.log.Errorf("Error sending image message: %v", err)
+		handler.log.Errorf("Error sending file: %v", err)
 		return 70 //ECOMM
 	} else {
 		handler.log.Infof("Attachment sent (server timestamp: %s)", ts)
@@ -48,6 +48,24 @@ func (handler *Handler) send_file_image(data []byte, mimetype string) (*waProto.
 		return nil, err
 	}
 	msg := &waProto.Message{ImageMessage: &waProto.ImageMessage{
+		Url:           proto.String(uploaded.URL),
+		DirectPath:    proto.String(uploaded.DirectPath),
+		MediaKey:      uploaded.MediaKey,
+		Mimetype:      proto.String(mimetype),
+		FileEncSha256: uploaded.FileEncSHA256,
+		FileSha256:    uploaded.FileSHA256,
+		FileLength:    proto.Uint64(uint64(len(data))),
+	}}
+	return msg, nil
+}
+
+func (handler *Handler) send_file_document(data []byte, mimetype string, filename string) (*waProto.Message, error) {
+	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaDocument)
+	if err != nil {
+		return nil, err
+	}
+	msg := &waProto.Message{DocumentMessage: &waProto.DocumentMessage{
+		Title:         proto.String(filename),
 		Url:           proto.String(uploaded.URL),
 		DirectPath:    proto.String(uploaded.DirectPath),
 		MediaKey:      uploaded.MediaKey,
