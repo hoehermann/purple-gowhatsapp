@@ -1,10 +1,10 @@
 package main
 
 import (
-	"go.mau.fi/whatsmeow/types/events"
-	"strings"
-	"mime"
 	"encoding/hex"
+	"go.mau.fi/whatsmeow/types/events"
+	"mime"
+	"strings"
 )
 
 func (handler *Handler) handle_message(evt *events.Message) {
@@ -23,14 +23,14 @@ func (handler *Handler) handle_message(evt *events.Message) {
 			cm := ci.QuotedMessage
 			if cm != nil && cm.Conversation != nil {
 				quotelines := strings.Split(*cm.Conversation, "\n")
-				text = "> "+strings.Join(quotelines, "\n> ")+"\n"
+				text = "> " + strings.Join(quotelines, "\n> ") + "\n"
 			}
 		}
 		if etm.Text != nil {
 			text += *etm.Text
 		}
 	}
-	
+
 	im := message.GetImageMessage()
 	if im != nil && im.Caption != nil {
 		text += *message.GetImageMessage().Caption
@@ -39,7 +39,7 @@ func (handler *Handler) handle_message(evt *events.Message) {
 	if vm != nil && vm.Caption != nil {
 		text += *message.GetVideoMessage().Caption
 	}
-	
+
 	if text == "" {
 		handler.log.Warnf("Received a message without any text.")
 	} else {

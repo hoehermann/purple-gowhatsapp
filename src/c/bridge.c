@@ -1,4 +1,5 @@
 #include "gowhatsapp.h"
+#include "constants.h"
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -16,24 +17,30 @@
 static gboolean
 process_message_bridge(gpointer data)
 {
-    // query Pidgin for a list of all accounts. bail if no connection exists
     gowhatsapp_message_t * gwamsg = (gowhatsapp_message_t *)data;
-    int account_exists = 0;
-    PurpleAccount *account = NULL;
-    PurpleConnection *connection = NULL;
-    for (GList *iter = purple_accounts_get_all(); iter != NULL && !account_exists; iter = iter->next) {
-        account = (PurpleAccount *)iter->data;
-        const char *username = purple_account_get_username(account);
-        account_exists = purple_strequal(gwamsg->username, username);
-        if (account_exists) {
-            connection = purple_account_get_connection(account);
+    if (gwamsg->msgtype == gowhatsapp_message_type_log) {
+        // log messages do not need an active connection
+        purple_debug(gwamsg->loglevel, GOWHATSAPP_STR, "%s", gwamsg->text);
+    } else {
+        // query Pidgin for a list of all accounts. bail if no connection exists
+        int account_exists = 0;
+        PurpleAccount *account = NULL;
+        PurpleConnection *connection = NULL;
+        for (GList *iter = purple_accounts_get_all(); iter != NULL && !account_exists; iter = iter->next) {
+            account = (PurpleAccount *)iter->data;
+            const char *username = purple_account_get_username(account);
+            account_exists = purple_strequal(gwamsg->username, username);
+            if (account_exists) {
+                connection = purple_account_get_connection(account);
+            }
+        }
+        if (connection == NULL) {
+            purple_debug_info(GOWHATSAPP_STR, "No active connection for account %s. Ignoring message.\n", gwamsg->username);
+        } else {
+            gowhatsapp_process_message(account, gwamsg);
         }
     }
-    if (connection == NULL) {
-        purple_debug_info("gowhatsapp", "No active connection for account %s. Ignoring message.\n", gwamsg->username);
-    } else {
-        gowhatsapp_process_message(account, gwamsg);
-    }
+    // always clean up data in heap
     g_free(gwamsg->id);
     g_free(gwamsg->remoteJid);
     g_free(gwamsg->senderJid);

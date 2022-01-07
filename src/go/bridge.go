@@ -127,9 +127,9 @@ func purple_handle_attachment(username string, senderJid string, filename string
 		username:  C.CString(username),
 		msgtype:   C.char(C.gowhatsapp_message_type_attachment),
 		senderJid: C.CString(senderJid),
-		name:  C.CString(filename),
-		blob:       C.CBytes(data),
-		blobsize:   C.size_t(len(data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
+		name:      C.CString(filename),
+		blob:      C.CBytes(data),
+		blobsize:  C.size_t(len(data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
@@ -154,6 +154,18 @@ func purple_paused(username string, remoteJid string) {
 		username:  C.CString(username),
 		msgtype:   C.char(C.gowhatsapp_message_type_typing_stopped),
 		remoteJid: C.CString(remoteJid),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
+ * Print debug information via purple.
+ */
+func purple_debug(loglevel int, message string) {
+	cmessage := C.struct_gowhatsapp_message{
+		msgtype:  C.char(C.gowhatsapp_message_type_log),
+		loglevel: C.char(loglevel),
+		text:     C.CString(message),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }

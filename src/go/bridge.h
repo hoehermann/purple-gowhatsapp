@@ -12,7 +12,8 @@ enum gowhatsapp_message_type {
     gowhatsapp_message_type_connected,
     gowhatsapp_message_type_typing,
     gowhatsapp_message_type_typing_stopped,
-    gowhatsapp_message_type_attachment
+    gowhatsapp_message_type_attachment,
+    gowhatsapp_message_type_log
 };
 
 // Structure to communicate go → purple.
@@ -30,6 +31,7 @@ struct gowhatsapp_message {
     time_t timestamp; /// timestamp the message was sent(?)
     char msgtype; /// message type – see above
     char isGroup; /// this is a group chat message
+    char loglevel; /// loglevel
     char fromMe; /// this is (a copy of) an outgoing message
     char system; /// this is a system-message, not user-generated
 };

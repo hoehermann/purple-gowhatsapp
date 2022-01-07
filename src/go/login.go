@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
-	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
 /*
@@ -12,15 +11,15 @@ import (
  */
 func login(username string) {
 	// TODO: protect against concurrent invocation
-	deviceStore, err := container.GetFirstDevice()     // TODO: find out how to use a device jid and use .GetDevice(jid)
-	clientLog := waLog.Stdout("Purple", "DEBUG", true) // TODO: have logger write to purple
+	deviceStore, err := container.GetFirstDevice() // TODO: find out how to use a device jid and use .GetDevice(jid)
+	log := PurpleLogger("Handler")
 	if err != nil {
-		clientLog.Errorf("%v", err)
+		log.Errorf("%v", err)
 	} else {
 		handler := Handler{
-			client:   whatsmeow.NewClient(deviceStore, clientLog),
 			username: username,
-			log:      clientLog,
+			client:   whatsmeow.NewClient(deviceStore, PurpleLogger("Client")),
+			log:      log,
 		}
 		handlers[username] = &handler
 		handler.client.AddEventHandler(handler.eventHandler)
