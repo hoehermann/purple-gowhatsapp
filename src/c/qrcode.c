@@ -17,6 +17,8 @@ gowhatsapp_display_qrcode(PurpleConnection *pc, const char * qr_code_raw, void *
     purple_request_field_group_add_field(group, string_field);
     PurpleRequestField *image_field = purple_request_field_image_new("qr_image", "QR Code Image", image_data, image_data_len);
     purple_request_field_group_add_field(group, image_field);
+    
+    g_free(image_data); // purple_request_field_image_new maintains an internal copy
 
     const char *username = g_strdup(purple_account_get_username(account));
     const char *secondary = g_strdup_printf("WhatsApp account %s", username);

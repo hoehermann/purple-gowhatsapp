@@ -68,7 +68,7 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
                 // messages sometimes arrive before buddy has been
                 // created... this method will be missing a display
                 // name, but i don't think i ever saw one of them anyway
-                gowhatsapp_ensure_buddy_in_blist(account, gwamsg->remoteJid, gwamsg->alias);
+                gowhatsapp_ensure_buddy_in_blist(account, gwamsg->remoteJid, gwamsg->name);
                 // normal mode: direct incoming message
                 purple_serv_got_im(pc, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
             }

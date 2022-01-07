@@ -34,9 +34,7 @@ gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
             break;
         case gowhatsapp_message_type_connected:
             purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
-            if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
-                gowhatsapp_assume_all_buddies_online(account);
-            }
+            gowhatsapp_assume_all_buddies_online(account);
             break;
         case gowhatsapp_message_type_text:
             gowhatsapp_display_text_message(pc, gwamsg);
@@ -46,6 +44,9 @@ gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
             break;
         case gowhatsapp_message_type_typing_stopped:
             serv_got_typing_stopped(pc, gwamsg->remoteJid);
+            break;
+        case gowhatsapp_message_type_attachment:
+            gowhatsapp_handle_attachment(pc, gwamsg);
             break;
         default:
             purple_debug_info("gowhatsapp", "handling this message type is not implemented");

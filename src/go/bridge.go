@@ -113,7 +113,23 @@ func purple_display_text_message(username string, id *string, remoteJid string, 
 		fromMe:    bool_to_Cchar(isFromMe),
 	}
 	if pushName != nil {
-		cmessage.alias = C.CString(*pushName)
+		cmessage.name = C.CString(*pushName)
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
+ * This will display a text message.
+ * Single participants and group chats.
+ */
+func purple_handle_attachment(username string, senderJid string, filename string, data []byte) {
+	cmessage := C.struct_gowhatsapp_message{
+		username:  C.CString(username),
+		msgtype:   C.char(C.gowhatsapp_message_type_attachment),
+		senderJid: C.CString(senderJid),
+		name:  C.CString(filename),
+		blob:       C.CBytes(data),
+		blobsize:   C.size_t(len(data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }

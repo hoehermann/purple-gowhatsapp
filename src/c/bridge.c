@@ -38,8 +38,8 @@ process_message_bridge(gpointer data)
     g_free(gwamsg->remoteJid);
     g_free(gwamsg->senderJid);
     g_free(gwamsg->text);
-    g_free(gwamsg->alias);
-    g_free(gwamsg->blob);
+    g_free(gwamsg->name);
+    //g_free(gwamsg->blob); this is cleared after handling the attachment / qrcode
     g_free(gwamsg);
     return FALSE;
 }

@@ -1,20 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"go.mau.fi/whatsmeow/types/events"
-	"mime"
 	"strings"
+	"mime"
+	"encoding/hex"
 )
 
 func (handler *Handler) handle_message(evt *events.Message) {
 	handler.log.Infof("Received message: %#v", evt)
-
-	text := evt.Message.GetConversation()
-	etm := evt.Message.ExtendedTextMessage
+	message := evt.Message
+	info := evt.Info
+	text := message.GetConversation()
+	etm := message.ExtendedTextMessage
 	if etm != nil {
 		// message containing quote or link to group
-		// link messages have evt.Message.Conversation set to nil anyway
+		// link messages have message.Conversation set to nil anyway
 		// it should be safe to overwrite here
 		// quoted message repeats the text
 		ci := etm.ContextInfo
@@ -29,15 +30,76 @@ func (handler *Handler) handle_message(evt *events.Message) {
 			text += *etm.Text
 		}
 	}
-	purple_display_text_message(handler.username, &evt.Info.ID, evt.Info.MessageSource.Chat.ToNonAD().String(), evt.Info.MessageSource.IsGroup, evt.Info.MessageSource.IsFromMe, evt.Info.MessageSource.Sender.ToNonAD().String(), &evt.Info.PushName, evt.Info.Timestamp, text)
-	// TODO: investigate evt.Info.SourceString() in context of group messages
+	
+	im := message.GetImageMessage()
+	if im != nil && im.Caption != nil {
+		text += *message.GetImageMessage().Caption
+	}
+	vm := message.GetVideoMessage()
+	if vm != nil && vm.Caption != nil {
+		text += *message.GetVideoMessage().Caption
+	}
+	
+	if text == "" {
+		handler.log.Warnf("Received a message without any text.")
+	} else {
+		purple_display_text_message(handler.username, &info.ID, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, info.MessageSource.IsFromMe, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text)
+		// TODO: investigate info.SourceString() in context of group messages
+	}
 
-	// TODO: implement receiving files
-	img := evt.Message.GetImageMessage()
-	if img != nil {
-		// data, err := cli.Download(img)
-		exts, _ := mime.ExtensionsByType(img.GetMimetype())
-		path := fmt.Sprintf("%s%s", evt.Info.ID, exts[0])
-		handler.log.Infof("ImageMessage: %s", path)
+	handler.handle_attachment(evt)
+}
+
+func extension_from_mimetype(mimeType *string) string {
+	extension := ".data"
+	if mimeType != nil {
+		extensions, _ := mime.ExtensionsByType(*mimeType)
+		if extensions != nil {
+			extension = extensions[0]
+		}
+	}
+	return extension
+}
+
+// based on https://github.com/FKLC/WhatsAppToDiscord/blob/master/WA2DC.go
+func (handler *Handler) handle_attachment(evt *events.Message) {
+	var (
+		data     []byte
+		err      error
+		filename = ""
+	)
+	message := evt.Message
+	im := message.GetImageMessage()
+	if im != nil {
+		data, err = handler.client.Download(im)
+		filename = hex.EncodeToString(im.FileSha256) + extension_from_mimetype(im.Mimetype)
+	}
+	vm := message.GetVideoMessage()
+	if vm != nil {
+		data, err = handler.client.Download(vm)
+		filename = hex.EncodeToString(vm.FileSha256) + extension_from_mimetype(vm.Mimetype)
+	}
+	am := message.GetAudioMessage()
+	if am != nil {
+		data, err = handler.client.Download(am)
+		filename = hex.EncodeToString(am.FileSha256) + extension_from_mimetype(am.Mimetype)
+	}
+	dm := message.GetDocumentMessage()
+	if dm != nil {
+		data, err = handler.client.Download(dm)
+		filename = *message.GetDocumentMessage().Title
+		// TODO: sanitize filename
+	}
+	sm := message.GetStickerMessage()
+	if sm != nil {
+		data, err = handler.client.Download(sm)
+		filename = hex.EncodeToString(sm.FileSha256) + extension_from_mimetype(sm.Mimetype)
+	}
+	if err != nil {
+		handler.log.Errorf("Download failed: %#v", err)
+	}
+	if filename != "" {
+		sender := evt.Info.MessageSource.Sender.ToNonAD().String()
+		purple_handle_attachment(handler.username, sender, filename, data)
 	}
 }

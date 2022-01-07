@@ -44,3 +44,6 @@ void gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup 
 // send_message
 int gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message, PurpleMessageFlags flags);
 int gowhatsapp_send_chat(PurpleConnection *pc, int id, const gchar *message, PurpleMessageFlags flags);
+
+// handle_attachment
+void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
