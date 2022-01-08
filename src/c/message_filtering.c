@@ -45,7 +45,7 @@ gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message
     const gchar *received_messages_ids_str = purple_account_get_string(account, GOWHATSAPP_RECEIVED_MESSAGES_ID_KEY, "");
     if (strstr(received_messages_ids_str, message_id) != NULL) {
         purple_debug_info(
-            GOWHATSAPP_STR, "Suppressed message (already received).\n"
+            GOWHATSAPP_NAME, "Suppressed message (already received).\n"
         );
         return FALSE;
     } else {

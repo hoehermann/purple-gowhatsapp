@@ -8,7 +8,7 @@ void
 gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
 {
     purple_debug_info(
-        GOWHATSAPP_STR, "recieved message type %d for user %s at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
+        GOWHATSAPP_NAME, "recieved message type %d for user %s at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
         (int)gwamsg->msgtype,
         gwamsg->username,
         gwamsg->timestamp,
@@ -52,6 +52,6 @@ gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
             gowhatsapp_handle_attachment(pc, gwamsg);
             break;
         default:
-            purple_debug_info(GOWHATSAPP_STR, "handling this message type is not implemented");
+            purple_debug_info(GOWHATSAPP_NAME, "handling this message type is not implemented");
     }
 }

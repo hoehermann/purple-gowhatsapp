@@ -13,7 +13,8 @@
 #define CHARCONSTANT(key, value) extern const char * key
 #endif
 
-CHARCONSTANT(GOWHATSAPP_STR, "whatsmeow"); // name to refer to this plug-in (in logs)
+#define GOWHATSAPP_NAME "whatsmeow"  // name to refer to this plug-in (in logs)
+#define GOWHATSAPP_PRPL_ID "prpl-hehoe-whatsmeow"
 
 /*
  * String keys for user-configurable settings.

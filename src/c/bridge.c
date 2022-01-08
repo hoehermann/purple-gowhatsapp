@@ -20,7 +20,7 @@ process_message_bridge(gpointer data)
     gowhatsapp_message_t * gwamsg = (gowhatsapp_message_t *)data;
     if (gwamsg->msgtype == gowhatsapp_message_type_log) {
         // log messages do not need an active connection
-        purple_debug(gwamsg->loglevel, GOWHATSAPP_STR, "%s", gwamsg->text);
+        purple_debug(gwamsg->loglevel, GOWHATSAPP_NAME, "%s", gwamsg->text);
     } else {
         // query Pidgin for a list of all accounts. bail if no connection exists
         int account_exists = 0;
@@ -28,14 +28,16 @@ process_message_bridge(gpointer data)
         PurpleConnection *connection = NULL;
         for (GList *iter = purple_accounts_get_all(); iter != NULL && !account_exists; iter = iter->next) {
             account = (PurpleAccount *)iter->data;
+            const char *protocol_id = purple_account_get_protocol_id(account);
             const char *username = purple_account_get_username(account);
-            account_exists = purple_strequal(gwamsg->username, username);
+            account_exists = purple_strequal(protocol_id, GOWHATSAPP_PRPL_ID) && purple_strequal(gwamsg->username, username);
             if (account_exists) {
                 connection = purple_account_get_connection(account);
+                purple_debug_info(GOWHATSAPP_NAME, "Account %p exists for username %s, connection is %p.\n", account, username, connection);
             }
         }
         if (connection == NULL) {
-            purple_debug_info(GOWHATSAPP_STR, "No active connection for account %s. Ignoring message.\n", gwamsg->username);
+            purple_debug_info(GOWHATSAPP_NAME, "No active connection for account %s. Ignoring message.\n", gwamsg->username);
         } else {
             gowhatsapp_process_message(account, gwamsg);
         }

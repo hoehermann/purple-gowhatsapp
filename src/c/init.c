@@ -201,8 +201,8 @@ static PurplePluginInfo info = {
     0, /* flags */
     NULL, /* dependencies */
     PURPLE_PRIORITY_DEFAULT, /* priority */
-    "prpl-hehoe-whatsmeow", /* id */
-    "whatsmeow", /* name */
+    GOWHATSAPP_PRPL_ID, /* id */
+    GOWHATSAPP_NAME, /* name */
     MAKE_STR(PLUGIN_VERSION), /* version */
     "", /* summary */
     "", /* description */
