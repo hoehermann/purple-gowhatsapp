@@ -10,6 +10,7 @@ enum gowhatsapp_message_type {
     gowhatsapp_message_type_text,
     gowhatsapp_message_type_login,
     gowhatsapp_message_type_connected,
+    gowhatsapp_message_type_disconnected,
     gowhatsapp_message_type_typing,
     gowhatsapp_message_type_typing_stopped,
     gowhatsapp_message_type_attachment,

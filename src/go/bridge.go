@@ -105,6 +105,17 @@ func purple_connected(username string) {
 }
 
 /*
+ * This will inform purple that the connection has been destroyed.
+ */
+func purple_disconnected(username string) {
+	cmessage := C.struct_gowhatsapp_message{
+		username: C.CString(username),
+		msgtype:  C.char(C.gowhatsapp_message_type_disconnected),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
  * This will display a text message.
  * Single participants and group chats.
  */

@@ -92,6 +92,8 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		}
 	case *events.AppState:
 		log.Debugf("App state event: %+v / %+v", evt.Index, evt.SyncActionValue)
+	case *events.LoggedOut:
+		purple_disconnected(handler.username)
 	default:
 		log.Warnf("Event type not handled: %#v", rawEvt)
 	}

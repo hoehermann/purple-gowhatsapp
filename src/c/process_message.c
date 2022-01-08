@@ -36,6 +36,9 @@ gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
             purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
             gowhatsapp_assume_all_buddies_online(account);
             break;
+        case gowhatsapp_message_type_disconnected:
+            purple_connection_set_state(pc, PURPLE_CONNECTION_DISCONNECTED);
+            break;
         case gowhatsapp_message_type_text:
             gowhatsapp_display_text_message(pc, gwamsg);
             break;

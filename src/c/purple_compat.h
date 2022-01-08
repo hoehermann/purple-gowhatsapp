@@ -5,6 +5,7 @@
 #define purple_connection_error purple_connection_error_reason
 #define PURPLE_CONNECTION_CONNECTING PURPLE_CONNECTING
 #define PURPLE_CONNECTION_CONNECTED PURPLE_CONNECTED
+#define PURPLE_CONNECTION_DISCONNECTED PURPLE_DISCONNECTED
 #define PurpleIMConversation PurpleConvIm
 #define purple_blist_find_group purple_find_group
 #define purple_blist_find_buddy purple_find_buddy
