@@ -2,9 +2,8 @@ package main
 
 import (
 	"go.mau.fi/whatsmeow/store/sqlstore"
-	_ "modernc.org/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 	"os"
-	// popular alternative: _ "github.com/mattn/go-sqlite3"
 )
 
 /*
@@ -20,7 +19,7 @@ func init_(purple_user_dir string) int {
 	dbLog := PurpleLogger("Handler")
 	dialect := os.Getenv("PURPLE_GOWHATSAPP_DATABASE_DIALECT")
 	if dialect == "" {
-		dialect = "sqlite"
+		dialect = "sqlite3"
 	}
 	uri := os.Getenv("PURPLE_GOWHATSAPP_DATABASE_ADDRESS")
 	if uri == "" {

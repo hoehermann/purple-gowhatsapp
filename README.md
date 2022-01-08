@@ -100,7 +100,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 whatsmeow stores all session information in a file-based sqlite database. These variables are read when the plug-in loads (even before a connection is established):
 
 * `PURPLE_GOWHATSAPP_DATABASE_DIALECT`  
-  default: `sqlite`  
+  default: `sqlite3`  
 
 * `PURPLE_GOWHATSAPP_DATABASE_ADDRESS`  
   default: `file:purple_user_dir/whatsmeow.db?_foreign_keys=on`  
