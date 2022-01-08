@@ -11,6 +11,7 @@ enum gowhatsapp_message_type {
     gowhatsapp_message_type_login,
     gowhatsapp_message_type_connected,
     gowhatsapp_message_type_disconnected,
+    gowhatsapp_message_type_name,
     gowhatsapp_message_type_typing,
     gowhatsapp_message_type_typing_stopped,
     gowhatsapp_message_type_attachment,
@@ -26,7 +27,7 @@ struct gowhatsapp_message {
     char *remoteJid; /// conversation identifier (may be a single contact or a group)
     char *senderJid; /// message author's identifier (useful in group chats)
     char *text; /// the message payload (interpretation depends on type)
-    char *name; /// remote users name (chosen by them) or filename (in case of attachment)
+    char *name; /// remote user's name (chosen by them) or filename (in case of attachment)
     void *blob; /// binary payload (used for inlining images)
     size_t blobsize; /// size of binary payload in bytes
     time_t timestamp; /// timestamp the message was sent(?)

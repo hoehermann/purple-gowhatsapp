@@ -1,8 +1,8 @@
 package main
 
 import (
-	"go.mau.fi/whatsmeow/store/sqlstore"
 	_ "github.com/mattn/go-sqlite3"
+	"go.mau.fi/whatsmeow/store/sqlstore"
 	"os"
 )
 

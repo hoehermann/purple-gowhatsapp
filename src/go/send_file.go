@@ -1,13 +1,13 @@
 package main
 
 import (
+	"context"
+	"go.mau.fi/whatsmeow"
+	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"google.golang.org/protobuf/proto"
+	"net/http"
 	"os"
 	"path"
-	"context"
-	"net/http"
-	"go.mau.fi/whatsmeow"
-	"google.golang.org/protobuf/proto"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
 )
 
 // based on https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go
@@ -26,11 +26,12 @@ func (handler *Handler) send_file(who string, filename string) int {
 	if mimetype == "image/jpeg" {
 		msg, err = handler.send_file_image(data, mimetype)
 	} else {
-		msg, err = handler.send_file_document(data, mimetype, path.Base(filename))
+		basename := path.Base(filename) // TODO: find out whether this should be with or without extension. WhatsApp server seems to add extention.
+		msg, err = handler.send_file_document(data, mimetype, basename)
 	}
 	if err != nil {
 		handler.log.Errorf("Failed to upload file: %v", err)
-		return 32 //EPIPE 
+		return 32 //EPIPE
 	}
 	ts, err := handler.client.SendMessage(recipient, "", msg)
 	if err != nil {

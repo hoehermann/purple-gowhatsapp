@@ -33,13 +33,14 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	cli := handler.client
 	switch evt := rawEvt.(type) {
 	case *events.AppStateSyncComplete:
-		// TODO: find out what this does
+		// this happens after initial logon via QR code (before HistorySync)
 		if len(cli.Store.PushName) > 0 && evt.Name == appstate.WAPatchCriticalBlock {
 			err := cli.SendPresence(types.PresenceAvailable)
 			if err != nil {
 				log.Warnf("AppStateSyncComplete: Failed to send available presence: %v", err)
 			} else {
 				log.Infof("AppStateSyncComplete: Marked self as available")
+				purple_connected(handler.username)
 			}
 		}
 	case *events.Connected, *events.PushNameSetting:
@@ -53,8 +54,8 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			log.Warnf("Failed to send available presence: %v", err)
 		} else {
 			log.Infof("Marked self as available")
+			purple_connected(handler.username)
 		}
-		purple_connected(handler.username)
 	case *events.StreamReplaced:
 		// TODO: test this
 		purple_error(handler.username, fmt.Sprintf("StreamReplaced: %+v", evt))
@@ -78,8 +79,15 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			log.Infof("%s is now online", evt.From)
 		}
 	case *events.HistorySync:
-		// TODO: find out what this does
-		log.Infof("history sync: %+v", evt.Data)
+		// this happens after initial logon via QR code (after AppStateSyncComplete)
+		log.Infof("history sync: %#v", evt.Data)
+		pushnames := evt.Data.GetPushnames()
+		for _, p := range pushnames {
+			if p.Id != nil && p.Pushname != nil {
+				purple_update_name(handler.username, *p.Id, *p.Pushname)
+			}
+		}
+		//conversations := evt.Data.GetConversations() // TODO: enable this if user wants it
 	case *events.ChatPresence:
 		who := evt.MessageSource.Chat.ToNonAD().String()
 		switch evt.State {
@@ -94,6 +102,18 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		log.Debugf("App state event: %+v / %+v", evt.Index, evt.SyncActionValue)
 	case *events.LoggedOut:
 		purple_disconnected(handler.username)
+	case *events.QR:
+		// this is handled explicitly in connect()
+		// though maybe I should move it here for consistency
+	case *events.PairSuccess:
+		jid := evt.ID.ToNonAD().String()
+		if jid != handler.username {
+			log.Warnf("Paired JID %s differs from user-supplied username %s!", jid, handler.username)
+		}
+	case *events.PushName:
+		// other device changed our friendly name
+		// setting is regarded by whatsmeow internally
+		// no need to forward to purple
 	default:
 		log.Warnf("Event type not handled: %#v", rawEvt)
 	}

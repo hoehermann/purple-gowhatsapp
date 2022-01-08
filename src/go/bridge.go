@@ -140,6 +140,20 @@ func purple_display_text_message(username string, id *string, remoteJid string, 
  * This will display a text message.
  * Single participants and group chats.
  */
+func purple_update_name(username string, remoteJid string, pushName string) {
+	cmessage := C.struct_gowhatsapp_message{
+		username:  C.CString(username),
+		msgtype:   C.char(C.gowhatsapp_message_type_name),
+		remoteJid: C.CString(remoteJid),
+		name:      C.CString(pushName),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
+ * This will display a text message.
+ * Single participants and group chats.
+ */
 func purple_handle_attachment(username string, senderJid string, filename string, data []byte) {
 	cmessage := C.struct_gowhatsapp_message{
 		username:  C.CString(username),

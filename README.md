@@ -13,9 +13,10 @@ Standard features:
 * Connecting to existing account via QR-code.
 * Receiving messages, sending messages.
 * Receiving files (images, videos, voice, document, stickers).
+* Sending images (everything else is considered a document).
+* Fetching all contacts from account, show friendly names in buddy list.
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
 * Under the hood: Reasonable callback mechanism thanks to [Eiron Robb](https://github.com/EionRobb).
-* Sending images (everything else is considered a document).
 
 Major differences from the go-whatsapp vesion:
 
@@ -29,16 +30,14 @@ Other improvements:
 
 Features which are present in the go-whatsapp version but missing here:
 
-* Consistent error handling (currently logged to console only in some places).
-* Show friendly names in buddy list.
-* Get list of participants in group chat.
-* Download profile pictures.
-* Proxy support.
-* Send receipts conditionally.
+* Handling errors consistently (currently logged to console only in some places).
+* Geting list of participants in group chat.
+* Downloading profile pictures.
+* Supportin proxy servers.
+* Sending receipts conditionally.
 
 Known issues:
 
-* After successfully scanning the QR code, connection is not marked as "connected". Manual reconnect resolves the issue.
 * In case the QR code times out, the request window remains visible until dismissed by user.
 * Notification about friendly name is shown every time it is received.
 
@@ -47,6 +46,7 @@ Other planned features:
 * Sending proper voice and video messages.
 * Join group chat via link.
 * Display receipts in conversation window.
+* Remove user from whatsmeow's internal storage.
 
 ### Building
 
