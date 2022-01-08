@@ -16,7 +16,7 @@ gssize xfer_read_fnc(guchar **buffer, PurpleXfer * xfer) {
     // entire attachment already is in memory.
     // just copy the entire thing to the destination buffer.
     size_t size = purple_xfer_get_size(xfer);
-    *buffer = g_memdup(xfer->data, size);
+    *buffer = g_memdup2(xfer->data, size);
     return size;
 }
 

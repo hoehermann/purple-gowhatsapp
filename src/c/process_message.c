@@ -30,9 +30,10 @@ gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
             purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg->text);
             break;
         case gowhatsapp_message_type_login:
-            gowhatsapp_display_qrcode(pc, gwamsg->text, gwamsg->blob, gwamsg->blobsize);
+            gowhatsapp_handle_qrcode(pc, gwamsg->text, gwamsg->name, gwamsg->blob, gwamsg->blobsize);
             break;
         case gowhatsapp_message_type_connected:
+            gowhatsapp_close_qrcode(account);
             purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
             gowhatsapp_assume_all_buddies_online(account);
             break;

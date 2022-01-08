@@ -27,6 +27,14 @@ package main
 
 // for feeding messages from go into purple
 extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
+
+// for querying current settings
+#ifndef _PURPLE_ACCOUNT_H_
+struct _PurpleAccount;
+extern struct _PurpleAccount * gowhatsapp_get_account(char *username);
+extern int purple_account_get_int(const struct _PurpleAccount *account, const char *name, int default_value);
+//extern int purple_account_get_int(void *account, const char *name, int default_value);
+#endif
 */
 import "C"
 
@@ -82,11 +90,12 @@ func gowhatsapp_go_send_file(username *C.char, who *C.char, filename *C.char) in
 /*
  * This will display a QR code via PurpleRequest API.
  */
-func purple_display_qrcode(username string, qr_data string, png []byte) {
+func purple_display_qrcode(username string, challenge string, png []byte, terminal string) {
 	cmessage := C.struct_gowhatsapp_message{
 		username: C.CString(username),
 		msgtype:  C.char(C.gowhatsapp_message_type_login),
-		text:     C.CString(qr_data),
+		text:     C.CString(challenge),
+		name:     C.CString(terminal),
 		blob:     C.CBytes(png),
 		blobsize: C.size_t(len(png)),
 	}
@@ -212,6 +221,14 @@ func purple_error(username string, message string) {
 		text:     C.CString(message),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
+ * Get int from the purple account's settings.
+ */
+func purple_get_int(username string, key *C.char, default_value int) int {
+	account := C.gowhatsapp_get_account(C.CString(username))
+	return int(C.purple_account_get_int(account, key, C.int(default_value)))
 }
 
 func main() {

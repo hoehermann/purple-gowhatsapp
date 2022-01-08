@@ -14,7 +14,7 @@ add_custom_command(
 )
 
 # perpare a stub so cgo can determine our custom function signatures
-add_library(purple-dummy purple-dummy.c)
+add_library(purple-dummy STATIC purple-dummy.c constants.c)
 
 # build cgo library
 # partly taken from https://github.com/mutse/go-cmake

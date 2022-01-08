@@ -33,12 +33,11 @@ Features which are present in the go-whatsapp version but missing here:
 * Handling errors consistently (currently logged to console only in some places).
 * Geting list of participants in group chat.
 * Downloading profile pictures.
-* Supportin proxy servers.
+* Support for proxy servers.
 * Sending receipts conditionally.
 
 Known issues:
 
-* In case the QR code times out, the request window remains visible until dismissed by user.
 * Notification about friendly name is shown every time it is received.
 
 Other planned features:
@@ -46,7 +45,7 @@ Other planned features:
 * Sending proper voice and video messages.
 * Join group chat via link.
 * Display receipts in conversation window.
-* Remove user from whatsmeow's internal storage.
+* Option to remove user from whatsmeow's internal storage.
 
 ### Building
 
@@ -56,7 +55,14 @@ To be announced
 
 #### Instructions
 
-Dependencies: pidgin pkg-config cmake make go gcc
+Dependencies: 
+
+* pidgin
+* pkg-config
+* cmake
+* make
+* go
+* gcc
 
 This project uses CMake.
 
@@ -64,7 +70,7 @@ This project uses CMake.
     cd build
     cmake ..
     cmake --build .
-    sudo cmake --install .
+    sudo make install/strip
 
 #### Windows specific
 

@@ -5,4 +5,5 @@ go 1.17
 require (
 	go.mau.fi/whatsmeow latest
 	github.com/skip2/go-qrcode latest
+	github.com/mdp/qrterminal/v3 latest
 )

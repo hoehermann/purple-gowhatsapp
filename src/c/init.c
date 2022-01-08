@@ -63,14 +63,12 @@ add_account_options(GList *account_options)
 {
     PurpleAccountOption *option;
     
-    /*
     option = purple_account_option_int_new(
-                "QR code size (pixels)",
+                "QR code size (pixels), set to 0 for plain-text login",
                 GOWHATSAPP_QRCODE_SIZE_OPTION,
                 256
                 );
     account_options = g_list_append(account_options, option);
-    */
 
     option = purple_account_option_bool_new(
                 "Display all contacts as online",
@@ -100,13 +98,6 @@ add_account_options(GList *account_options)
                 "Mark displayed messages as read."),
                 GOWHATSAPP_MARK_READ_OPTION,
                 TRUE
-                );
-    account_options = g_list_append(account_options, option);
-
-    option = purple_account_option_bool_new(
-                _("Plain text login"),
-                GOWHATSAPP_PLAIN_TEXT_LOGIN,
-                FALSE
                 );
     account_options = g_list_append(account_options, option);
 

@@ -1,17 +1,25 @@
 #include "bridge.h"
 #include "purple_compat.h"
 
+#if !(GLIB_CHECK_VERSION(2, 67, 3))
+#define g_memdup2 g_memdup
+#endif
+
 #define GOWHATSAPP_STATUS_STR_ONLINE   "online"
 #define GOWHATSAPP_STATUS_STR_OFFLINE  "offline"
 #define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
 #define GOWHATSAPP_STATUS_STR_AWAY     "away"
+
+typedef struct {
+} WhatsappAccountData;
 
 // login
 void gowhatsapp_login(PurpleAccount *account);
 void gowhatsapp_close(PurpleConnection *pc);
 
 // qrcode
-void gowhatsapp_display_qrcode(PurpleConnection *pc, const char * qr_code_raw, void * image_data, size_t image_data_len);
+void gowhatsapp_handle_qrcode(PurpleConnection *pc, const char *challenge, const char *terminal, void *image_data, size_t image_data_len);
+void gowhatsapp_close_qrcode(PurpleAccount *account);
 
 // process_message
 void gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg);

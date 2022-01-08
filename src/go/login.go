@@ -1,19 +1,30 @@
 package main
 
+/*
+#include "constants.h"
+*/
+import "C"
+
 import (
 	"context"
 	"fmt"
+	"github.com/mdp/qrterminal/v3"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
+	"strings"
 )
 
 /*
  * This is the go part of purple's login() function.
  */
 func login(username string) {
+	log := PurpleLogger("Handler")
+	_, ok := handlers[username]
+	if ok {
+		purple_error(username, "This connection already exists.")
+	}
 	// TODO: protect against concurrent invocation
 	deviceStore, err := container.GetFirstDevice() // TODO: find out how to use a device jid and use .GetDevice(jid)
-	log := PurpleLogger("Handler")
 	if err != nil {
 		purple_error(username, fmt.Sprintf("%#v", err))
 	} else {
@@ -45,12 +56,19 @@ func (handler *Handler) connect() {
 		for evt := range qrChan {
 			if evt.Event == "code" {
 				// Render the QR code here
-				// e.g. qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-				png, err := qrcode.Encode(evt.Code, qrcode.Medium, 256) // TODO: make size user configurable
-				if err != nil {
-					purple_error(handler.username, fmt.Sprintf("%#v", err))
+				size := purple_get_int(handler.username, C.GOWHATSAPP_QRCODE_SIZE_OPTION, 256)
+				if size > 0 {
+					png, err := qrcode.Encode(evt.Code, qrcode.Medium, size)
+					if err != nil {
+						purple_error(handler.username, fmt.Sprintf("%#v", err))
+					} else {
+						purple_display_qrcode(handler.username, evt.Code, png, "")
+					}
 				} else {
-					purple_display_qrcode(handler.username, evt.Code, png)
+					var b strings.Builder
+					fmt.Fprintf(&b, "Scan this code to log in:\n%s\n", evt.Code)
+					qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, &b)
+					purple_display_qrcode(handler.username, evt.Code, nil, b.String())
 				}
 			} else {
 				clientLog.Infof("Login event:", evt.Event)
