@@ -1,15 +1,22 @@
 # Dummy must be built by cgo-compatible compiler (gcc or clang). Assume gcc on Windows.
 if(MSVC)
-add_custom_command(
-  OUTPUT purple-dummy.o
-  DEPENDS purple-dummy.c
-  COMMAND gcc -m32 -o "${CMAKE_CURRENT_BINARY_DIR}/purple-dummy.o" -c "${CMAKE_CURRENT_SOURCE_DIR}/purple-dummy.c"
-)
-add_custom_target(purple-dummy DEPENDS purple-dummy.o)
-set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/purple-dummy.o")
+  add_custom_command(
+    OUTPUT purple-dummy.o
+    DEPENDS purple-dummy.c
+    COMMAND gcc -m32 -o "${CMAKE_CURRENT_BINARY_DIR}/purple-dummy.o" -c "${CMAKE_CURRENT_SOURCE_DIR}/purple-dummy.c"
+  )
+  add_custom_target(purple-dummy DEPENDS purple-dummy.o)
+  set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/purple-dummy.o")
 else()
-add_library(purple-dummy OBJECT purple-dummy.c)
-set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/purple-dummy.dir/purple-dummy.c.o") # TODO: get this path properly
+  add_library(purple-dummy OBJECT purple-dummy.c)
+  # TODO: get this path properly
+  # https://stackoverflow.com/questions/55090306/cmake-cannt-get-target-output-file-name
+  # https://stackoverflow.com/questions/4346281/path-to-target-output-file
+  if(MSYS)
+    set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/purple-dummy.dir/purple-dummy.c.obj")
+  else()
+    set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/purple-dummy.dir/purple-dummy.c.o")
+  endif()
 endif()
 
 # assume go is in path

@@ -38,20 +38,24 @@ ENDIF()
 IF(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll)
     file(ARCHIVE_EXTRACT INPUT ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_BINARY_ZIP} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 ENDIF()
-set(LIBPURPLE_LIB ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.lib)
-add_custom_target(
-  libpurple_lib
-  DEPENDS ${LIBPURPLE_LIB}
-)
-add_custom_command(
-    OUTPUT ${LIBPURPLE_LIB}
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/dll2lib.bat 
-    ARGS 32 ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin
-    MAIN_DEPENDENCY ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll
-    COMMENT "Generating .lib file from .dll..."
-    USES_TERMINAL
-)
+if (MSVC)
+    set(LIBPURPLE_LIB ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.lib)
+    add_custom_target(
+      libpurple_lib
+      DEPENDS ${LIBPURPLE_LIB}
+    )
+    add_custom_command(
+        OUTPUT ${LIBPURPLE_LIB}
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/dll2lib.bat 
+        ARGS 32 ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin
+        MAIN_DEPENDENCY ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll
+        COMMENT "Generating .lib file from .dll..."
+        USES_TERMINAL
+    )
+else()
+    set(LIBPURPLE_LIB ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll)
+endif()
 
 set(PURPLE_INCLUDE_DIRS
     ${GTK_INCLUDE_DIRS}
@@ -63,10 +67,10 @@ set(PURPLE_LIBRARIES
     PARENT_SCOPE
 )
 set(PURPLE_DATA_DIR
-    ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/
+    ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin
     PARENT_SCOPE
 )
 set(PURPLE_PLUGIN_DIR
-    ${PURPLE_DATA_DIR}/plugins
+    ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/plugins
     PARENT_SCOPE
 )

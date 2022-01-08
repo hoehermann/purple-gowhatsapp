@@ -30,9 +30,17 @@ Other improvements:
 Features which are present in the go-whatsapp version but missing here:
 
 * Consistent error handling (currently logged to console only in some places).
+* Show friendly names in buddy list.
+* Get list of participants in group chat.
 * Download profile pictures.
 * Proxy support.
 * Send receipts conditionally.
+
+Known issues:
+
+* After successfully scanning the QR code, connection is not marked as "connected". Manual reconnect resolves the issue.
+* In case the QR code times out, the request window remains visible until dismissed by user.
+* Notification about friendly name is shown every time it is received.
 
 Other planned features:
 
@@ -42,16 +50,25 @@ Other planned features:
 
 ### Building
 
-This project uses CMake.
-
 #### Pre-Built Binaries
 
 To be announced
 
+#### Instructions
+
+Dependencies: pidgin pkg-config cmake make go gcc
+
+This project uses CMake.
+
+    mkdir build
+    cd build
+    cmake ..
+    cmake --build .
+    sudo cmake --install .
+
 #### Windows specific
 
 CMake will try to set-up a development environment automatically. 
-The project can be opened using Microsoft Visual Studio 2022.
 
 Additional dependencies:
 
@@ -59,6 +76,10 @@ Additional dependencies:
 * [gcc (32 bit)](https://osdn.net/projects/mingw/)
 
 go and gcc must be in `%PATH%`.
+
+MSYS make and CMake generator "MSYS Makefiles" are recommended.  
+The project can be opened using Microsoft Visual Studio 2022.  
+Compiling with MSVC results in an unusable binary. NOT recommended.  
 
 ### Installation
 
