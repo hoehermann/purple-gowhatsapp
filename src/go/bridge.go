@@ -24,7 +24,6 @@ package main
 /*
 #include "constants.h"
 #include "bridge.h"
-#include "msc_adjustments.h"
 
 // for feeding messages from go into purple
 extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);

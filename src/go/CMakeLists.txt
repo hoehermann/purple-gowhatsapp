@@ -1,24 +1,3 @@
-# Dummy must be built by cgo-compatible compiler (gcc or clang). Assume gcc on Windows.
-if(MSVC)
-  add_custom_command(
-    OUTPUT purple-dummy.o
-    DEPENDS purple-dummy.c
-    COMMAND gcc -m32 -o "${CMAKE_CURRENT_BINARY_DIR}/purple-dummy.o" -c "${CMAKE_CURRENT_SOURCE_DIR}/purple-dummy.c"
-  )
-  add_custom_target(purple-dummy DEPENDS purple-dummy.o)
-  set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/purple-dummy.o")
-else()
-  add_library(purple-dummy OBJECT purple-dummy.c)
-  # TODO: get this path properly
-  # https://stackoverflow.com/questions/55090306/cmake-cannt-get-target-output-file-name
-  # https://stackoverflow.com/questions/4346281/path-to-target-output-file
-  if(MSYS)
-    set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/purple-dummy.dir/purple-dummy.c.obj")
-  else()
-    set(PURPLE_DUMMY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/purple-dummy.dir/purple-dummy.c.o")
-  endif()
-endif()
-
 # assume go is in path
 set(CMAKE_Go_COMPILER go)
 # have a self-contained GOPATH
@@ -26,12 +5,16 @@ set(GOPATH "${CMAKE_CURRENT_BINARY_DIR}/go")
 
 # hack to depend on latest version using go mod tidy
 add_custom_command(
+  COMMENT "Updating go modules..."
   OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/go.mod" "${CMAKE_CURRENT_SOURCE_DIR}/go.sum"
   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/go.mod.in"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/go.mod.in" "${CMAKE_CURRENT_SOURCE_DIR}/go.mod"
   COMMAND ${CMAKE_COMMAND} -E env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} mod tidy
 )
+
+# perpare a stub so cgo can determine our custom function signatures
+add_library(purple-dummy purple-dummy.c)
 
 # build cgo library
 # partly taken from https://github.com/mutse/go-cmake
@@ -52,7 +35,7 @@ add_custom_command(
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   COMMAND ${CMAKE_COMMAND} -E env
   GOPATH=${GOPATH}
-  CGO_LDFLAGS="${PURPLE_DUMMY_OBJ}"
+  CGO_LDFLAGS="$<TARGET_FILE:purple-dummy>"
   ${CMAKE_Go_COMPILER} build -buildmode=c-archive
   -o "${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_PREFIX}.a"
   ${CMAKE_GO_FLAGS} ${GO_SRCS}

@@ -18,7 +18,6 @@ add_library(${TARGET_NAME} SHARED
     "send_message.c"
     "handle_attachment.c"
     "send_file.c"
-    "msc_adjustments.c"
 )
 add_dependencies(${TARGET_NAME} purple-go-whatsapp)
 
@@ -31,7 +30,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "lib")
 
 message(STATUS "PURPLE_PLUGIN_DIR: ${PURPLE_PLUGIN_DIR}")
 if (WIN32)
-install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION "${PURPLE_PLUGIN_DIR}")
+    install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION "${PURPLE_PLUGIN_DIR}")
 else()
-install(TARGETS ${TARGET_NAME} DESTINATION "${PURPLE_PLUGIN_DIR}")
+    install(TARGETS ${TARGET_NAME} DESTINATION "${PURPLE_PLUGIN_DIR}")
 endif()
