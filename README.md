@@ -124,7 +124,6 @@ Attachments (images, videos, voice messages, stickers, document) are *always* do
 * in the input buffer
 * in the decryption buffer
 * in the go → C message buffer
-* in the C → purple output buffer
 * in the output buffer
 
 On systems with many concurrent connection, this could exhaust memory.

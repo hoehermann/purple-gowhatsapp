@@ -14,10 +14,10 @@ void xfer_start_fnc(PurpleXfer * xfer) {
 static
 gssize xfer_read_fnc(guchar **buffer, PurpleXfer * xfer) {
     // entire attachment already is in memory.
-    // just copy the entire thing to the destination buffer.
-    size_t size = purple_xfer_get_size(xfer);
-    *buffer = g_memdup2(xfer->data, size);
-    return size;
+    // just forward the pointer to the destination buffer.
+    *buffer = xfer->data;
+    xfer->data = NULL; // not our memory to free any more
+    return purple_xfer_get_size(xfer);
 }
 
 static
