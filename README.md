@@ -15,6 +15,7 @@ Standard features:
 * Receiving files (images, videos, voice, document, stickers).
 * Sending images (everything else is considered a document).
 * Fetching all contacts from account, show friendly names in buddy list.
+* Sending receipts (configurable).
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
 * Under the hood: Reasonable callback mechanism thanks to [Eiron Robb](https://github.com/EionRobb).
 
@@ -35,18 +36,18 @@ Features which are present in the go-whatsapp version but missing here:
 * Geting list of participants in group chat.
 * Downloading profile pictures.
 * Support for proxy servers.
-* Sending receipts conditionally.
 
 Known issues:
 
 * If the buddy was not given a local alias, the notification about them changing their friendly name is shown every time it is received.
+* Files sent to groups are downloaded, but link is not shown in group conversation window.
 
 Other planned features:
 
 * Sending proper voice and video messages.
 * Join group chat via link.
 * Display receipts in conversation window.
-* Option to remove user from whatsmeow's internal storage.
+* Option to logout and remove user from whatsmeow's internal storage.
 
 ### Building
 
@@ -58,11 +59,11 @@ To be announced
 
 Dependencies: 
 
-* pidgin
+* pidgin (libpurple glib gtk)
 * pkg-config
 * cmake
 * make
-* go
+* go (1.17 or later)
 * gcc
 
 This project uses CMake.
@@ -96,9 +97,9 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 * Create a new account  
   You can enter an arbitrary username. 
-  However, it is recommended to use your own internationalized number, followed by `@s.whatsapp.net`.  
-  Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`.  
-  This way, Pidgin's logs look sane.
+  It is recommended to use your own internationalized number, followed by `@s.whatsapp.net`.  
+  Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`. This way, Pidgin's logs look sane.  
+  **You must not change the username while the connection is established.**
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with the browser-based WhatsApp Web.

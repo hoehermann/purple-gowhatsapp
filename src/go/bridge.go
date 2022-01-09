@@ -29,11 +29,13 @@ package main
 extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
 
 // for querying current settings
+// these signatures are redefinitions taken from purple.h
+// CGO needs to have them re-declared as external
 #ifndef _PURPLE_ACCOUNT_H_
 struct _PurpleAccount;
 extern struct _PurpleAccount * gowhatsapp_get_account(char *username);
 extern int purple_account_get_int(const struct _PurpleAccount *account, const char *name, int default_value);
-//extern int purple_account_get_int(void *account, const char *name, int default_value);
+extern char * purple_account_get_string(const struct _PurpleAccount *account, const char *name, char *default_value);
 #endif
 */
 import "C"
@@ -128,7 +130,7 @@ func purple_disconnected(username string) {
  * This will display a text message.
  * Single participants and group chats.
  */
-func purple_display_text_message(username string, id *string, remoteJid string, isGroup bool, isFromMe bool, senderJid string, pushName *string, timestamp time.Time, text string) {
+func purple_display_text_message(username string, remoteJid string, isGroup bool, isFromMe bool, senderJid string, pushName *string, timestamp time.Time, text string) {
 	cmessage := C.struct_gowhatsapp_message{
 		username:  C.CString(username),
 		msgtype:   C.char(C.gowhatsapp_message_type_text),
@@ -243,6 +245,14 @@ func purple_error(username string, message string) {
 func purple_get_int(username string, key *C.char, default_value int) int {
 	account := C.gowhatsapp_get_account(C.CString(username))
 	return int(C.purple_account_get_int(account, key, C.int(default_value)))
+}
+
+/*
+ * Get string from the purple account's settings.
+ */
+func purple_get_string(username string, key *C.char, default_value *C.char) string {
+	account := C.gowhatsapp_get_account(C.CString(username))
+	return C.GoString(C.purple_account_get_string(account, key, default_value))
 }
 
 func main() {

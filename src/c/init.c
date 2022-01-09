@@ -59,53 +59,6 @@ status_types(PurpleAccount *account)
 }
 
 static GList *
-add_account_options(GList *account_options)
-{
-    PurpleAccountOption *option;
-    
-    option = purple_account_option_int_new(
-                "QR code size (pixels), set to 0 for plain-text login",
-                GOWHATSAPP_QRCODE_SIZE_OPTION,
-                256
-                );
-    account_options = g_list_append(account_options, option);
-
-    option = purple_account_option_bool_new(
-                "Display offline contacts as away",
-                GOWHATSAPP_FAKE_ONLINE_OPTION,
-                TRUE
-                );
-    account_options = g_list_append(account_options, option);
-    
-    option = purple_account_option_bool_new(
-                "Automatically add contacts",
-                GOWHATSAPP_FETCH_CONTACTS_OPTION,
-                TRUE
-                );
-    account_options = g_list_append(account_options, option);
-    
-    /*
-    option = purple_account_option_bool_new(
-                _("Download user profile pictures"),
-                GOWHATSAPP_GET_ICONS_OPTION,
-                FALSE
-                );
-    account_options = g_list_append(account_options, option);
-    */
-    
-    /*
-    option = purple_account_option_bool_new(
-                "Mark displayed messages as read."),
-                GOWHATSAPP_MARK_READ_OPTION,
-                TRUE
-                );
-    account_options = g_list_append(account_options, option);
-    */
-    
-    return account_options;
-}
-
-static GList *
 actions(PurplePlugin *plugin, gpointer context)
 {
     GList *m = NULL;
@@ -141,8 +94,8 @@ plugin_init(PurplePlugin *plugin)
 
     info->name = "WhatsApp (whatsmeow)";
     info->extra_info = prpl_info;
-    prpl_info->options = OPT_PROTO_NO_PASSWORD; // add OPT_PROTO_IM_IMAGE for sending images via drag and drop
-    prpl_info->protocol_options = add_account_options(prpl_info->protocol_options);
+    prpl_info->options = OPT_PROTO_NO_PASSWORD; // add OPT_PROTO_IM_IMAGE?
+    prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
     prpl_info->list_icon = list_icon;
     prpl_info->status_types = status_types; // this actually needs to exist, else the protocol cannot be set to "online"
     //prpl_info->chat_info = gowhatsapp_chat_info;

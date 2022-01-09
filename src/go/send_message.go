@@ -38,7 +38,7 @@ func (handler *Handler) send_message(who string, message string, isGroup bool) {
 		} else {
 			handler.log.Infof("Message sent (server timestamp: %s)", ts)
 			// inject message back to self to indicate success
-			purple_display_text_message(handler.username, nil, recipient.ToNonAD().String(), isGroup, true, handler.username, nil, ts, message)
+			purple_display_text_message(handler.username, recipient.ToNonAD().String(), isGroup, true, handler.username, nil, ts, message)
 		}
 	}
 

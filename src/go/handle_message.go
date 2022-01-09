@@ -43,8 +43,8 @@ func (handler *Handler) handle_message(evt *events.Message) {
 	if text == "" {
 		handler.log.Warnf("Received a message without any text.")
 	} else {
-		purple_display_text_message(handler.username, &info.ID, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, info.MessageSource.IsFromMe, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text)
-		// TODO: investigate info.SourceString() in context of group messages
+		purple_display_text_message(handler.username, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, info.MessageSource.IsFromMe, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text)
+		handler.mark_read_immediately(info.ID, info.MessageSource.Chat, info.MessageSource.Sender)
 	}
 
 	handler.handle_attachment(evt)

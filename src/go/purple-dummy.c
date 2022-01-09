@@ -27,6 +27,15 @@ purple_account_get_int(void *account, const char *name, int default_value)
     return 0;
 }
 
+char * 
+purple_account_get_string(void *account, const char *name, char *default_value)
+{
+    (void) account;
+    (void) name;
+    (void) default_value;
+    return 0;
+}
+
 /*
 const PurpleProxyInfo * gowhatsapp_account_get_proxy(void *account) {
     (void) account;

@@ -75,6 +75,10 @@ process_message_bridge(gpointer data)
     return FALSE;
 }
 
+#if !(GLIB_CHECK_VERSION(2, 67, 3))
+#define g_memdup2 g_memdup
+#endif
+
 /*
  * Handler for a message received by go-whatsapp.
  * Called by go-whatsapp (outside of the GTK eventloop).

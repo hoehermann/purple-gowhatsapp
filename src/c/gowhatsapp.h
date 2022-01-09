@@ -1,10 +1,6 @@
 #include "bridge.h"
 #include "purple_compat.h"
 
-#if !(GLIB_CHECK_VERSION(2, 67, 3))
-#define g_memdup2 g_memdup
-#endif
-
 #define GOWHATSAPP_STATUS_STR_ONLINE   "online"
 #define GOWHATSAPP_STATUS_STR_OFFLINE  "offline"
 #define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
@@ -12,6 +8,10 @@
 
 typedef struct {
 } WhatsappAccountData;
+
+// options
+
+GList *gowhatsapp_add_account_options(GList *account_options);
 
 // login
 void gowhatsapp_login(PurpleAccount *account);
