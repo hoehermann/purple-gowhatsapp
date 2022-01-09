@@ -22,6 +22,7 @@ Major differences from the go-whatsapp vesion:
 
 * Messages are sent asynchronously.
 * Incoming messages are not filtered (whatsmeow keeps track of already received messages internally).
+* Note: Under the hood, gowhatsapp and whatsmeow use completely different prototocls. whatsmeow actually uses the same mechanics as Signal. For this reason, one must establish a new session (scan QR-code) when switching. All sessions will be invalidated.
 
 Other improvements:
 
@@ -38,7 +39,7 @@ Features which are present in the go-whatsapp version but missing here:
 
 Known issues:
 
-* Notification about friendly name is shown every time it is received.
+* If the buddy was not given a local alias, the notification about them changing their friendly name is shown every time it is received.
 
 Other planned features:
 
@@ -98,8 +99,9 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   However, it is recommended to use your own internationalized number, followed by `@s.whatsapp.net`.  
   Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`.  
   This way, Pidgin's logs look sane.
+
 * Upon login, a QR code is shown in a Pidgin request window.  
-  Using your phone's camera, scan the code within 20 seconds – just like you would do with the browser-based WhatsApp Web.  
+  Using your phone's camera, scan the code within 20 seconds – just like you would do with the browser-based WhatsApp Web.
 
 #### Environment Variables:
 
