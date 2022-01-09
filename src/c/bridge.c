@@ -36,7 +36,7 @@ static void
 process_message(gowhatsapp_message_t * gwamsg) {
     if (gwamsg->msgtype == gowhatsapp_message_type_log) {
         // log messages do not need an active connection
-        purple_debug(gwamsg->loglevel, GOWHATSAPP_NAME, "%s", gwamsg->text);
+        purple_debug(gwamsg->level, GOWHATSAPP_NAME, "%s", gwamsg->text);
         return;
     }
     // 
@@ -66,7 +66,6 @@ process_message_bridge(gpointer data)
     gowhatsapp_message_t * gwamsg = (gowhatsapp_message_t *)data;
     process_message(gwamsg);
     // always clean up data in heap
-    g_free(gwamsg->id);
     g_free(gwamsg->remoteJid);
     g_free(gwamsg->senderJid);
     g_free(gwamsg->text);

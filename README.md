@@ -72,7 +72,7 @@ This project uses CMake.
     cmake --build .
     sudo make install/strip
 
-#### Windows specific
+#### Windows Specific
 
 CMake will try to set-up a development environment automatically. 
 
@@ -91,7 +91,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 * Place the binary in your Pidgin's plugin directory (`~/.purple/plugins` on Linux).
 
-#### Set-up
+#### Set-Up
 
 * Create a new account  
   You can enter an arbitrary username. 
@@ -103,21 +103,36 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 #### Environment Variables:
 
-whatsmeow stores all session information in a file-based sqlite database. These variables are read when the plug-in loads (even before a connection is established):
+whatsmeow stores all session information in a SQL database. These variables are read when the plug-in loads (even before a connection is established):
 
 * `PURPLE_GOWHATSAPP_DATABASE_DIALECT`  
   default: `sqlite3`  
+  File-based sqlite3 database.
 
 * `PURPLE_GOWHATSAPP_DATABASE_ADDRESS`  
   default: `file:purple_user_dir/whatsmeow.db?_foreign_keys=on`  
   Folder must exist, `whatsmeow.db` is created automatically.
-  The file-system must support file locking and be responsive, else the database driver will not work.
+  The file-system must support file locking and be responsive, else the database driver will not work. Network shares (NFS, SMB) will probably not work well.
   
 Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added upon request.
 
+#### Purple Settings
+
+* `qrcode-size`  
+  The size of the QR code shown for login purposes, in pixels.
+  If set to 0, QR code will be rendered as a text message (for text-only clients).
+  
+* `fetch-contacts`  
+  If set to true, buddy list will be populated with contacts sent by server. 
+  This is useful for the first login, especially.
+  
+* `fake-online`  
+  If set to true, contacts currently not online will be regarded as "away" (so they still appear in the buddy list).
+  If set to false, offline contacts will be regarded as "offline" (no messages can be sent).
+
 ### Notes
 
-#### Attachment handling and memory consumption
+#### Attachment Handling and Memory Consumption
 
 Attachments (images, videos, voice messages, stickers, document) are *always* downloaded as *soon as the message is processed*. The user is then asked where they want the file to be written. During this time, the file data is residing in memory multiple times:
 

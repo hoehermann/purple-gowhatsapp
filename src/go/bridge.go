@@ -200,13 +200,27 @@ func purple_paused(username string, remoteJid string) {
 }
 
 /*
+ * This will inform purple that the remote user's presence (online/offline) changed.
+ */
+func purple_update_presence(username string, remoteJid string, online bool, lastSeen time.Time) {
+	cmessage := C.struct_gowhatsapp_message{
+		username:  C.CString(username),
+		msgtype:   C.char(C.gowhatsapp_message_type_presence),
+		remoteJid: C.CString(remoteJid),
+		timestamp: C.time_t(lastSeen.Unix()),
+		level:     bool_to_Cchar(online),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
  * Print debug information via purple.
  */
 func purple_debug(loglevel int, message string) {
 	cmessage := C.struct_gowhatsapp_message{
-		msgtype:  C.char(C.gowhatsapp_message_type_log),
-		loglevel: C.char(loglevel),
-		text:     C.CString(message),
+		msgtype: C.char(C.gowhatsapp_message_type_log),
+		level:   C.char(loglevel),
+		text:    C.CString(message),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }

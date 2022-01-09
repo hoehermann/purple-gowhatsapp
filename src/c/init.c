@@ -43,10 +43,10 @@ status_types(PurpleAccount *account)
     GList *types = NULL;
     PurpleStatusType *status;
 
-    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE, GOWHATSAPP_STATUS_STR_ONLINE, "Online", TRUE, TRUE, FALSE);
+    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE, GOWHATSAPP_STATUS_STR_ONLINE, NULL, TRUE, TRUE, FALSE);
     types = g_list_append(types, status);
 
-    status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, GOWHATSAPP_STATUS_STR_OFFLINE, "Offline", TRUE, TRUE, FALSE);
+    status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, GOWHATSAPP_STATUS_STR_OFFLINE, NULL, TRUE, TRUE, FALSE);
     types = g_list_append(types, status);
 
     status = purple_status_type_new_full(PURPLE_STATUS_AWAY, GOWHATSAPP_STATUS_STR_AWAY, NULL, TRUE, TRUE, FALSE);
@@ -71,7 +71,7 @@ add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
 
     option = purple_account_option_bool_new(
-                "Display all contacts as online",
+                "Display offline contacts as away",
                 GOWHATSAPP_FAKE_ONLINE_OPTION,
                 TRUE
                 );

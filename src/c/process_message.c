@@ -8,15 +8,15 @@ void
 gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
 {
     purple_debug_info(
-        GOWHATSAPP_NAME, "recieved message type %d for user %s at %ld id %s remote %s sender %s (fromMe %d, system %d): %s\n",
+        GOWHATSAPP_NAME, "recieved message type %d for user %s at %ld remote %s (alias %s, isGroup %d) sender %s (fromMe %d): %s\n",
         (int)gwamsg->msgtype,
         gwamsg->username,
         gwamsg->timestamp,
-        gwamsg->id,
         gwamsg->remoteJid,
+        gwamsg->name,
+        gwamsg->isGroup,
         gwamsg->senderJid,
         gwamsg->fromMe,
-        gwamsg->system,
         gwamsg->text
     );
 
@@ -53,6 +53,9 @@ gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg)
             break;
         case gowhatsapp_message_type_typing_stopped:
             serv_got_typing_stopped(pc, gwamsg->remoteJid);
+            break;
+        case gowhatsapp_message_type_presence:
+            gowhatsapp_handle_presence(account, gwamsg->remoteJid, gwamsg->level, gwamsg->timestamp);
             break;
         case gowhatsapp_message_type_attachment:
             gowhatsapp_handle_attachment(pc, gwamsg);

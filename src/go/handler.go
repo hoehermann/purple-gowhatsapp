@@ -7,6 +7,7 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
+	"time"
 )
 
 /*
@@ -75,8 +76,10 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			} else {
 				log.Infof("%s is now offline (last seen: %s)", evt.From, evt.LastSeen)
 			}
+			purple_update_presence(handler.username, evt.From.ToNonAD().String(), false, evt.LastSeen)
 		} else {
 			log.Infof("%s is now online", evt.From)
+			purple_update_presence(handler.username, evt.From.ToNonAD().String(), true, time.Time{})
 		}
 	case *events.HistorySync:
 		// this happens after initial logon via QR code (after AppStateSyncComplete)
