@@ -41,15 +41,8 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
     g_return_if_fail(pc != NULL);
     PurpleAccount *account = purple_connection_get_account(pc);
     PurpleMessageFlags flags = 0;
-    /*
-    gboolean check_message_date = purple_account_get_bool(account, GOWHATSAPP_TIMESTAMP_FILTERING_OPTION, FALSE);
-    int message_is_new =
-            gowhatsapp_append_message_id_if_not_exists(account, gwamsg->id) &&
-            (!check_message_date || gowhatsapp_message_is_new_enough(account, gwamsg->timestamp));
-            */
     int message_is_new = 1;
     if (message_is_new) {
-        // TODO: consider gwamsg->quote for output
         if (gwamsg->fromMe) {
             // special handling of messages sent by self incoming from remote, addressing issue #32
             // copied from EionRobb/purple-discord/blob/master/libdiscord.c
