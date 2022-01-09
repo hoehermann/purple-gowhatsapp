@@ -100,27 +100,6 @@ add_account_options(GList *account_options)
                 TRUE
                 );
     account_options = g_list_append(account_options, option);
-
-    option = purple_account_option_int_new(
-                "Number of received messages to remember",
-                GOWHATSAPP_MESSAGE_ID_STORE_SIZE_OPTION,
-                10000
-                );
-    account_options = g_list_append(account_options, option);
-
-    option = purple_account_option_bool_new(
-                "Do not show old messages",
-                GOWHATSAPP_TIMESTAMP_FILTERING_OPTION,
-                FALSE
-                );
-    account_options = g_list_append(account_options, option);
-
-    option = purple_account_option_int_new(
-                "Maximum age in seconds for a historical message",
-                GOWHATSAPP_MAX_HISTORY_SECONDS_OPTION,
-                0
-                );
-    account_options = g_list_append(account_options, option);
     */
     
     return account_options;
