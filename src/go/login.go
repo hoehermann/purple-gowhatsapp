@@ -17,23 +17,23 @@ import (
 /*
  * This is the go part of purple's login() function.
  */
-func login(username string) {
+func login(account *PurpleAccount) {
 	log := PurpleLogger("Handler")
-	_, ok := handlers[username]
+	_, ok := handlers[account]
 	if ok {
-		purple_error(username, "This connection already exists.")
+		purple_error(account, "This connection already exists.")
 	}
 	// TODO: protect against concurrent invocation
 	deviceStore, err := container.GetFirstDevice() // TODO: find out how to use a device jid and use .GetDevice(jid)
 	if err != nil {
-		purple_error(username, fmt.Sprintf("%#v", err))
+		purple_error(account, fmt.Sprintf("%#v", err))
 	} else {
 		handler := Handler{
-			username: username,
-			client:   whatsmeow.NewClient(deviceStore, PurpleLogger("Client")),
-			log:      log,
+			account: account,
+			client:  whatsmeow.NewClient(deviceStore, PurpleLogger("Client")),
+			log:     log,
 		}
-		handlers[username] = &handler
+		handlers[account] = &handler
 		handler.client.AddEventHandler(handler.eventHandler)
 		go handler.connect()
 	}
@@ -51,24 +51,24 @@ func (handler *Handler) connect() {
 		qrChan, _ := client.GetQRChannel(context.Background())
 		err := client.Connect()
 		if err != nil {
-			purple_error(handler.username, fmt.Sprintf("%#v", err))
+			purple_error(handler.account, fmt.Sprintf("%#v", err))
 		}
 		for evt := range qrChan {
 			if evt.Event == "code" {
 				// Render the QR code here
-				size := purple_get_int(handler.username, C.GOWHATSAPP_QRCODE_SIZE_OPTION, 256)
+				size := purple_get_int(handler.account, C.GOWHATSAPP_QRCODE_SIZE_OPTION, 256)
 				if size > 0 {
 					png, err := qrcode.Encode(evt.Code, qrcode.Medium, size)
 					if err != nil {
-						purple_error(handler.username, fmt.Sprintf("%#v", err))
+						purple_error(handler.account, fmt.Sprintf("%#v", err))
 					} else {
-						purple_display_qrcode(handler.username, evt.Code, png, "")
+						purple_display_qrcode(handler.account, evt.Code, png, "")
 					}
 				} else {
 					var b strings.Builder
 					fmt.Fprintf(&b, "Scan this code to log in:\n%s\n", evt.Code)
 					qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, &b)
-					purple_display_qrcode(handler.username, evt.Code, nil, b.String())
+					purple_display_qrcode(handler.account, evt.Code, nil, b.String())
 				}
 			} else {
 				clientLog.Infof("Login event:", evt.Event)
@@ -78,7 +78,7 @@ func (handler *Handler) connect() {
 		// Already logged in, just connect
 		err := client.Connect()
 		if err != nil {
-			purple_error(handler.username, fmt.Sprintf("%#v", err))
+			purple_error(handler.account, fmt.Sprintf("%#v", err))
 		}
 	}
 }
@@ -86,10 +86,10 @@ func (handler *Handler) connect() {
 /*
  * This is the go part of purple's close() function.
  */
-func close(username string) {
-	handler, ok := handlers[username]
+func close(account *PurpleAccount) {
+	handler, ok := handlers[account]
 	if ok {
 		handler.client.Disconnect()
-		delete(handlers, username)
+		delete(handlers, account)
 	}
 }

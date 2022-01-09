@@ -4,6 +4,18 @@
 #include <stdint.h> // for int64_t
 #include <time.h> // for time_t
 
+// for querying current settings
+// these signatures are redefinitions taken from purple.h
+// CGO needs to have them re-declared as external
+#ifndef _PURPLE_ACCOUNT_H_
+#define _PURPLE_ACCOUNT_H_
+struct _PurpleAccount;
+typedef struct _PurpleAccount PurpleAccount;
+extern int gowhatsapp_account_exists(PurpleAccount *account);
+extern int purple_account_get_int(PurpleAccount *account, const char *name, int default_value);
+extern const char * purple_account_get_string(PurpleAccount *account, const char *name, const char *default_value);
+#endif
+
 enum gowhatsapp_message_type {
     gowhatsapp_message_type_error = -1,
     gowhatsapp_message_type_none = 0,
@@ -23,7 +35,7 @@ enum gowhatsapp_message_type {
 // This holds all data for incoming messages, error messages, login data, etc.
 // NOTE: If the cgo and gcc compilers disagree on padding or alignment, chaos will ensue.
 struct gowhatsapp_message {
-    char *username; /// username identifying the account
+    PurpleAccount *account; /// pointer identifying the account
     char *remoteJid; /// conversation identifier (may be a single contact or a group)
     char *senderJid; /// message author's identifier (useful in group chats)
     char *text; /// the message payload (interpretation depends on type)
@@ -38,5 +50,8 @@ struct gowhatsapp_message {
     char system; /// this is a system-message, not user-generated
 };
 typedef struct gowhatsapp_message gowhatsapp_message_t;
+
+// for feeding messages from go into purple
+extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
 
 #endif

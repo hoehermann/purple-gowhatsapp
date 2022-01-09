@@ -99,7 +99,6 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   You can enter an arbitrary username. 
   It is recommended to use your own internationalized number, followed by `@s.whatsapp.net`.  
   Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`. This way, Pidgin's logs look sane.  
-  **You must not change the username while the connection is established.**
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with the browser-based WhatsApp Web.

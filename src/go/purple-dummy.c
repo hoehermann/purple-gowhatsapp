@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "bridge.h"
 
 /*
  * This module implements dummy bodies for C functions to be called by cgo.
@@ -6,20 +7,20 @@
  * This module MUST NOT be linked with the main target!
  */
 
-void gowhatsapp_process_message_bridge(void *gwamsg)
+void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg)
 {
     (void) gwamsg;
 }
 
-void *
-gowhatsapp_get_account(char *username)
+int
+gowhatsapp_account_exists(PurpleAccount *account)
 {
-    (void) username;
+    (void) account;
     return 0;
 }
 
 int 
-purple_account_get_int(void *account, const char *name, int default_value)
+purple_account_get_int(PurpleAccount *account, const char *name, int default_value)
 {
     (void) account;
     (void) name;
@@ -27,8 +28,8 @@ purple_account_get_int(void *account, const char *name, int default_value)
     return 0;
 }
 
-char * 
-purple_account_get_string(void *account, const char *name, char *default_value)
+const char * 
+purple_account_get_string(PurpleAccount *account, const char *name, const char *default_value)
 {
     (void) account;
     (void) name;

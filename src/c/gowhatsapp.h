@@ -1,5 +1,5 @@
-#include "bridge.h"
 #include "purple_compat.h"
+#include "bridge.h"
 
 #define GOWHATSAPP_STATUS_STR_ONLINE   "online"
 #define GOWHATSAPP_STATUS_STR_OFFLINE  "offline"
@@ -22,7 +22,7 @@ void gowhatsapp_handle_qrcode(PurpleConnection *pc, const char *challenge, const
 void gowhatsapp_close_qrcode(PurpleAccount *account);
 
 // process_message
-void gowhatsapp_process_message(PurpleAccount *account, gowhatsapp_message_t *gwamsg);
+void gowhatsapp_process_message(gowhatsapp_message_t *gwamsg);
 
 // display_message
 void gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);

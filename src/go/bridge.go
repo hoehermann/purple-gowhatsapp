@@ -24,23 +24,12 @@ package main
 /*
 #include "constants.h"
 #include "bridge.h"
-
-// for feeding messages from go into purple
-extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
-
-// for querying current settings
-// these signatures are redefinitions taken from purple.h
-// CGO needs to have them re-declared as external
-#ifndef _PURPLE_ACCOUNT_H_
-struct _PurpleAccount;
-extern struct _PurpleAccount * gowhatsapp_get_account(char *username);
-extern int purple_account_get_int(const struct _PurpleAccount *account, const char *name, int default_value);
-extern char * purple_account_get_string(const struct _PurpleAccount *account, const char *name, char *default_value);
-#endif
 */
 import "C"
 
 import "time"
+
+type PurpleAccount = C.PurpleAccount
 
 // TODO: find out how to enable C99's bool type in cgo
 func bool_to_Cchar(b bool) C.char {
@@ -61,18 +50,18 @@ func gowhatsapp_go_init(purple_user_dir *C.char) C.int {
 }
 
 //export gowhatsapp_go_login
-func gowhatsapp_go_login(username *C.char) {
-	login(C.GoString(username))
+func gowhatsapp_go_login(account *PurpleAccount) {
+	login(account)
 }
 
 //export gowhatsapp_go_close
-func gowhatsapp_go_close(username *C.char) {
-	close(C.GoString(username))
+func gowhatsapp_go_close(account *PurpleAccount) {
+	close(account)
 }
 
 //export gowhatsapp_go_send_message
-func gowhatsapp_go_send_message(username *C.char, who *C.char, message *C.char, is_group C.int) int {
-	handler, ok := handlers[C.GoString(username)]
+func gowhatsapp_go_send_message(account *PurpleAccount, who *C.char, message *C.char, is_group C.int) int {
+	handler, ok := handlers[account]
 	if ok {
 		go handler.send_message(C.GoString(who), C.GoString(message), Cint_to_bool(is_group))
 		return 0
@@ -81,8 +70,8 @@ func gowhatsapp_go_send_message(username *C.char, who *C.char, message *C.char, 
 }
 
 //export gowhatsapp_go_send_file
-func gowhatsapp_go_send_file(username *C.char, who *C.char, filename *C.char) int {
-	handler, ok := handlers[C.GoString(username)]
+func gowhatsapp_go_send_file(account *PurpleAccount, who *C.char, filename *C.char) int {
+	handler, ok := handlers[account]
 	if ok {
 		return handler.send_file(C.GoString(who), C.GoString(filename))
 	}
@@ -92,9 +81,9 @@ func gowhatsapp_go_send_file(username *C.char, who *C.char, filename *C.char) in
 /*
  * This will display a QR code via PurpleRequest API.
  */
-func purple_display_qrcode(username string, challenge string, png []byte, terminal string) {
+func purple_display_qrcode(account *PurpleAccount, challenge string, png []byte, terminal string) {
 	cmessage := C.struct_gowhatsapp_message{
-		username: C.CString(username),
+		account:  account,
 		msgtype:  C.char(C.gowhatsapp_message_type_login),
 		text:     C.CString(challenge),
 		name:     C.CString(terminal),
@@ -105,23 +94,23 @@ func purple_display_qrcode(username string, challenge string, png []byte, termin
 }
 
 /*
- * This will inform purple that the connection has been established.
+ * This will inform purple that the account has been connected.
  */
-func purple_connected(username string) {
+func purple_connected(account *PurpleAccount) {
 	cmessage := C.struct_gowhatsapp_message{
-		username: C.CString(username),
-		msgtype:  C.char(C.gowhatsapp_message_type_connected),
+		account: account,
+		msgtype: C.char(C.gowhatsapp_message_type_connected),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
 
 /*
- * This will inform purple that the connection has been destroyed.
+ * This will inform purple that the account has been disconnected.
  */
-func purple_disconnected(username string) {
+func purple_disconnected(account *PurpleAccount) {
 	cmessage := C.struct_gowhatsapp_message{
-		username: C.CString(username),
-		msgtype:  C.char(C.gowhatsapp_message_type_disconnected),
+		account: account,
+		msgtype: C.char(C.gowhatsapp_message_type_disconnected),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
@@ -130,9 +119,9 @@ func purple_disconnected(username string) {
  * This will display a text message.
  * Single participants and group chats.
  */
-func purple_display_text_message(username string, remoteJid string, isGroup bool, isFromMe bool, senderJid string, pushName *string, timestamp time.Time, text string) {
+func purple_display_text_message(account *PurpleAccount, remoteJid string, isGroup bool, isFromMe bool, senderJid string, pushName *string, timestamp time.Time, text string) {
 	cmessage := C.struct_gowhatsapp_message{
-		username:  C.CString(username),
+		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_text),
 		remoteJid: C.CString(remoteJid),
 		senderJid: C.CString(senderJid),
@@ -151,9 +140,9 @@ func purple_display_text_message(username string, remoteJid string, isGroup bool
  * This will display a text message.
  * Single participants and group chats.
  */
-func purple_update_name(username string, remoteJid string, pushName string) {
+func purple_update_name(account *PurpleAccount, remoteJid string, pushName string) {
 	cmessage := C.struct_gowhatsapp_message{
-		username:  C.CString(username),
+		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_name),
 		remoteJid: C.CString(remoteJid),
 		name:      C.CString(pushName),
@@ -165,9 +154,9 @@ func purple_update_name(username string, remoteJid string, pushName string) {
  * This will display a text message.
  * Single participants and group chats.
  */
-func purple_handle_attachment(username string, senderJid string, filename string, data []byte) {
+func purple_handle_attachment(account *PurpleAccount, senderJid string, filename string, data []byte) {
 	cmessage := C.struct_gowhatsapp_message{
-		username:  C.CString(username),
+		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_attachment),
 		senderJid: C.CString(senderJid),
 		name:      C.CString(filename),
@@ -180,9 +169,9 @@ func purple_handle_attachment(username string, senderJid string, filename string
 /*
  * This will inform purple that the remote user started typing.
  */
-func purple_composing(username string, remoteJid string) {
+func purple_composing(account *PurpleAccount, remoteJid string) {
 	cmessage := C.struct_gowhatsapp_message{
-		username:  C.CString(username),
+		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_typing),
 		remoteJid: C.CString(remoteJid),
 	}
@@ -192,9 +181,9 @@ func purple_composing(username string, remoteJid string) {
 /*
  * This will inform purple that the remote user stopped typing.
  */
-func purple_paused(username string, remoteJid string) {
+func purple_paused(account *PurpleAccount, remoteJid string) {
 	cmessage := C.struct_gowhatsapp_message{
-		username:  C.CString(username),
+		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_typing_stopped),
 		remoteJid: C.CString(remoteJid),
 	}
@@ -204,9 +193,9 @@ func purple_paused(username string, remoteJid string) {
 /*
  * This will inform purple that the remote user's presence (online/offline) changed.
  */
-func purple_update_presence(username string, remoteJid string, online bool, lastSeen time.Time) {
+func purple_update_presence(account *PurpleAccount, remoteJid string, online bool, lastSeen time.Time) {
 	cmessage := C.struct_gowhatsapp_message{
-		username:  C.CString(username),
+		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_presence),
 		remoteJid: C.CString(remoteJid),
 		timestamp: C.time_t(lastSeen.Unix()),
@@ -230,11 +219,11 @@ func purple_debug(loglevel int, message string) {
 /*
  * Forward error to purple. This will cause a disconnect.
  */
-func purple_error(username string, message string) {
+func purple_error(account *PurpleAccount, message string) {
 	cmessage := C.struct_gowhatsapp_message{
-		username: C.CString(username),
-		msgtype:  C.char(C.gowhatsapp_message_type_error),
-		text:     C.CString(message),
+		account: account,
+		msgtype: C.char(C.gowhatsapp_message_type_error),
+		text:    C.CString(message),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
@@ -242,17 +231,21 @@ func purple_error(username string, message string) {
 /*
  * Get int from the purple account's settings.
  */
-func purple_get_int(username string, key *C.char, default_value int) int {
-	account := C.gowhatsapp_get_account(C.CString(username))
-	return int(C.purple_account_get_int(account, key, C.int(default_value)))
+func purple_get_int(account *PurpleAccount, key *C.char, default_value int) int {
+	if C.gowhatsapp_account_exists(account) == 1 {
+		return int(C.purple_account_get_int(account, key, C.int(default_value)))
+	}
+	return default_value
 }
 
 /*
  * Get string from the purple account's settings.
  */
-func purple_get_string(username string, key *C.char, default_value *C.char) string {
-	account := C.gowhatsapp_get_account(C.CString(username))
-	return C.GoString(C.purple_account_get_string(account, key, default_value))
+func purple_get_string(account *PurpleAccount, key *C.char, default_value *C.char) string {
+	if C.gowhatsapp_account_exists(account) == 1 {
+		return C.GoString(C.purple_account_get_string(account, key, default_value))
+	}
+	return C.GoString(default_value)
 }
 
 func main() {

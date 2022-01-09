@@ -12,7 +12,7 @@ import (
 
 func (handler *Handler) mark_read_immediately(id types.MessageID, chat types.JID, sender types.JID) {
 	immediately := C.GoString(C.GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY)
-	if immediately == purple_get_string(handler.username, C.GOWHATSAPP_SEND_RECEIPT_OPTION, C.GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY) {
+	if immediately == purple_get_string(handler.account, C.GOWHATSAPP_SEND_RECEIPT_OPTION, C.GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY) {
 		handler.mark_read([]types.MessageID{id}, chat, sender)
 	}
 }

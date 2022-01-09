@@ -9,21 +9,17 @@
 /////////////////////////////////////////////////////////////////////
 
 /*
- * Look up the account by username
+ * Whether the given pointer actually refers to an existing account.
  */
-PurpleAccount *
-gowhatsapp_get_account(char *username)
+int
+gowhatsapp_account_exists(PurpleAccount *account)
 {
-    PurpleAccount *account = NULL;
-    for (GList *iter = purple_accounts_get_all(); iter != NULL && account == NULL; iter = iter->next) {
+    int account_exists = 0;
+    for (GList *iter = purple_accounts_get_all(); iter != NULL && account_exists == 0; iter = iter->next) {
         PurpleAccount * acc = (PurpleAccount *)iter->data;
-        const char *protocol_id = purple_account_get_protocol_id(acc);
-        const char *u = purple_account_get_username(acc);
-        if (purple_strequal(protocol_id, GOWHATSAPP_PRPL_ID) && purple_strequal(username, u)) {
-            account = acc;
-        }
+        account_exists = acc == account;
     }
-    return account;
+    return account_exists;
 }
 
 /*
@@ -40,17 +36,17 @@ process_message(gowhatsapp_message_t * gwamsg) {
         return;
     }
     // 
-    PurpleAccount *account = gowhatsapp_get_account(gwamsg->username);
-    if (account == NULL) {
-        purple_debug_warning(GOWHATSAPP_NAME, "No account for username %s. Ignoring message.\n", gwamsg->username);
+    int account_exists = gowhatsapp_account_exists(gwamsg->account);
+    if (account_exists == 0) {
+        purple_debug_warning(GOWHATSAPP_NAME, "No account %p. Ignoring message.\n", gwamsg->account);
         return;
     }
-    PurpleConnection *connection = purple_account_get_connection(account);
+    PurpleConnection *connection = purple_account_get_connection(gwamsg->account);
     if (connection == NULL) {
-        purple_debug_info(GOWHATSAPP_NAME, "No active connection for account %s. Ignoring message.\n", gwamsg->username);
+        purple_debug_info(GOWHATSAPP_NAME, "No active connection for account %p. Ignoring message.\n", gwamsg->account);
         return;
     }
-    gowhatsapp_process_message(account, gwamsg);
+    gowhatsapp_process_message(gwamsg);
 }
 
 /*

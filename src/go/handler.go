@@ -14,15 +14,15 @@ import (
  * Holds all data for one connection.
  */
 type Handler struct {
-	client   *whatsmeow.Client
-	username string
-	log      waLog.Logger
+	client  *whatsmeow.Client
+	account *PurpleAccount
+	log     waLog.Logger
 }
 
 /*
  * This plug-in can handle multiple connections (identified by user-supplied name).
  */
-var handlers = make(map[string]*Handler)
+var handlers = make(map[*PurpleAccount]*Handler)
 
 /*
  * Handle incoming events.
@@ -41,7 +41,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 				log.Warnf("AppStateSyncComplete: Failed to send available presence: %v", err)
 			} else {
 				log.Infof("AppStateSyncComplete: Marked self as available")
-				purple_connected(handler.username)
+				purple_connected(handler.account)
 			}
 		}
 	case *events.Connected, *events.PushNameSetting:
@@ -55,11 +55,11 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			log.Warnf("Failed to send available presence: %v", err)
 		} else {
 			log.Infof("Marked self as available")
-			purple_connected(handler.username)
+			purple_connected(handler.account)
 		}
 	case *events.StreamReplaced:
 		// TODO: test this
-		purple_error(handler.username, fmt.Sprintf("StreamReplaced: %+v", evt))
+		purple_error(handler.account, fmt.Sprintf("StreamReplaced: %+v", evt))
 	case *events.Message:
 		handler.handle_message(evt)
 	case *events.Receipt:
@@ -76,10 +76,10 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			} else {
 				log.Infof("%s is now offline (last seen: %s)", evt.From, evt.LastSeen)
 			}
-			purple_update_presence(handler.username, evt.From.ToNonAD().String(), false, evt.LastSeen)
+			purple_update_presence(handler.account, evt.From.ToNonAD().String(), false, evt.LastSeen)
 		} else {
 			log.Infof("%s is now online", evt.From)
-			purple_update_presence(handler.username, evt.From.ToNonAD().String(), true, time.Time{})
+			purple_update_presence(handler.account, evt.From.ToNonAD().String(), true, time.Time{})
 		}
 	case *events.HistorySync:
 		// this happens after initial logon via QR code (after AppStateSyncComplete)
@@ -87,7 +87,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		pushnames := evt.Data.GetPushnames()
 		for _, p := range pushnames {
 			if p.Id != nil && p.Pushname != nil {
-				purple_update_name(handler.username, *p.Id, *p.Pushname)
+				purple_update_name(handler.account, *p.Id, *p.Pushname)
 			}
 		}
 		//conversations := evt.Data.GetConversations() // TODO: enable this if user wants it
@@ -95,24 +95,22 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		who := evt.MessageSource.Chat.ToNonAD().String()
 		switch evt.State {
 		case types.ChatPresenceComposing:
-			purple_composing(handler.username, who)
+			purple_composing(handler.account, who)
 		case types.ChatPresencePaused:
-			purple_paused(handler.username, who)
+			purple_paused(handler.account, who)
 		default:
 			log.Warnf("ChatPresence not handled: %v", evt.State)
 		}
 	case *events.AppState:
 		log.Debugf("App state event: %+v / %+v", evt.Index, evt.SyncActionValue)
 	case *events.LoggedOut:
-		purple_disconnected(handler.username)
+		purple_disconnected(handler.account)
 	case *events.QR:
 		// this is handled explicitly in connect()
 		// though maybe I should move it here for consistency
 	case *events.PairSuccess:
-		jid := evt.ID.ToNonAD().String()
-		if jid != handler.username {
-			log.Warnf("Paired JID %s differs from user-supplied username %s!", jid, handler.username)
-		}
+		// jid := evt.ID.ToNonAD().String()
+		// TODO: check the registered jid against the user-suppled jid
 	case *events.PushName:
 		// other device changed our friendly name
 		// setting is regarded by whatsmeow internally

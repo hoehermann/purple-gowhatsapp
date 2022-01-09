@@ -43,7 +43,7 @@ func (handler *Handler) handle_message(evt *events.Message) {
 	if text == "" {
 		handler.log.Warnf("Received a message without any text.")
 	} else {
-		purple_display_text_message(handler.username, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, info.MessageSource.IsFromMe, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text)
+		purple_display_text_message(handler.account, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, info.MessageSource.IsFromMe, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text)
 		handler.mark_read_immediately(info.ID, info.MessageSource.Chat, info.MessageSource.Sender)
 	}
 
@@ -101,6 +101,6 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 	}
 	if filename != "" {
 		sender := evt.Info.MessageSource.Sender.ToNonAD().String()
-		purple_handle_attachment(handler.username, sender, filename, data)
+		purple_handle_attachment(handler.account, sender, filename, data)
 	}
 }

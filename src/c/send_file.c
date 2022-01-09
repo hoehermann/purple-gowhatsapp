@@ -10,10 +10,9 @@ static void
 gowhatsapp_xfer_send_init(PurpleXfer *xfer)
 {
     PurpleAccount *account = purple_xfer_get_account(xfer);
-    const char *username = purple_account_get_username(account);
     const char *who = purple_xfer_get_remote_user(xfer);
     const char *filename = purple_xfer_get_local_filename(xfer);
-    int error = gowhatsapp_go_send_file((char *)username, (char *)who, (char *)filename);
+    int error = gowhatsapp_go_send_file(account, (char *)who, (char *)filename);
     if (error) {
         purple_xfer_error(purple_xfer_get_type(xfer), account, who, "Sending file failed."); 
         purple_xfer_cancel_local(xfer);

@@ -17,10 +17,10 @@ func (handler *Handler) parseJID(arg string) (types.JID, bool) {
 	} else {
 		recipient, err := types.ParseJID(arg)
 		if err != nil {
-			purple_error(handler.username, fmt.Sprintf("Invalid JID %s: %v", arg, err))
+			purple_error(handler.account, fmt.Sprintf("Invalid JID %s: %v", arg, err))
 			return recipient, false
 		} else if recipient.User == "" {
-			purple_error(handler.username, fmt.Sprintf("Invalid JID %s: no server specified", arg))
+			purple_error(handler.account, fmt.Sprintf("Invalid JID %s: no server specified", arg))
 			return recipient, false
 		}
 		return recipient, true
@@ -38,7 +38,8 @@ func (handler *Handler) send_message(who string, message string, isGroup bool) {
 		} else {
 			handler.log.Infof("Message sent (server timestamp: %s)", ts)
 			// inject message back to self to indicate success
-			purple_display_text_message(handler.username, recipient.ToNonAD().String(), isGroup, true, handler.username, nil, ts, message)
+			ownJid := "" // TODO: find out if this messes up group chats
+			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, ownJid, nil, ts, message)
 		}
 	}
 

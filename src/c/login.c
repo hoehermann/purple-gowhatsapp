@@ -18,16 +18,14 @@ gowhatsapp_login(PurpleAccount *account)
     //purple_connection_set_protocol_data(pc, wad);
     
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
-    char * username = (char *)purple_account_get_username(account); // cgo does not suport const
-    gowhatsapp_go_login(username);
+    gowhatsapp_go_login(account);
 }
 
 void
 gowhatsapp_close(PurpleConnection *pc)
 {
     PurpleAccount * account = purple_connection_get_account(pc);
-    char * username = (char *)purple_account_get_username(account); // cgo does not suport const
-    gowhatsapp_go_close(username);
+    gowhatsapp_go_close(account);
     
     //g_free(purple_connection_get_protocol_data(pc));
 }
