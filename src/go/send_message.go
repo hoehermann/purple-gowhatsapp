@@ -8,28 +8,28 @@ import (
 )
 
 // from https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go
-func (handler *Handler) parseJID(arg string) (types.JID, bool) {
+func parseJID(arg string) (types.JID, error) {
 	if arg[0] == '+' {
 		arg = arg[1:]
 	}
 	if !strings.ContainsRune(arg, '@') {
-		return types.NewJID(arg, types.DefaultUserServer), true
+		return types.NewJID(arg, types.DefaultUserServer), nil
 	} else {
 		recipient, err := types.ParseJID(arg)
 		if err != nil {
-			purple_error(handler.account, fmt.Sprintf("Invalid JID %s: %v", arg, err))
-			return recipient, false
+			return recipient, fmt.Errorf("Invalid JID %s: %v", arg, err)
 		} else if recipient.User == "" {
-			purple_error(handler.account, fmt.Sprintf("Invalid JID %s: no server specified", arg))
-			return recipient, false
+			return recipient, fmt.Errorf("Invalid JID %s: no server specified", arg)
 		}
-		return recipient, true
+		return recipient, nil
 	}
 }
 
 func (handler *Handler) send_message(who string, message string, isGroup bool) {
-	recipient, ok := handler.parseJID(who) // calls purple_error directly
-	if ok {
+	recipient, err := parseJID(who) // calls purple_error directly
+	if err != nil {
+		purple_error(handler.account, fmt.Sprintf("%#v", err))
+	} else {
 		msg := &waProto.Message{Conversation: &message}
 		ts, err := handler.client.SendMessage(recipient, "", msg)
 		if err != nil {

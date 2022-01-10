@@ -50,8 +50,8 @@ func gowhatsapp_go_init(purple_user_dir *C.char) C.int {
 }
 
 //export gowhatsapp_go_login
-func gowhatsapp_go_login(account *PurpleAccount) {
-	login(account)
+func gowhatsapp_go_login(account *PurpleAccount, username *C.char, password *C.char) {
+	login(account, C.GoString(username), C.GoString(password))
 }
 
 //export gowhatsapp_go_close
@@ -256,6 +256,16 @@ func purple_get_string(account *PurpleAccount, key *C.char, default_value string
 		return C.GoString(C.purple_account_get_string(account, key, C.CString(default_value)))
 	}
 	return default_value
+}
+
+/*
+ * Store username and password.
+ */
+func purple_set_credentials(account *PurpleAccount, username string, password string) {
+	if C.gowhatsapp_account_exists(account) == 1 {
+		C.purple_account_set_password(account, C.CString(password))
+		C.purple_account_set_username(account, C.CString(username))
+	}
 }
 
 func main() {

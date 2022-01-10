@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"google.golang.org/protobuf/proto"
@@ -12,8 +13,9 @@ import (
 
 // based on https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go
 func (handler *Handler) send_file(who string, filename string) int {
-	recipient, ok := handler.parseJID(who) // calls purple_error directly
-	if !ok {
+	recipient, err := parseJID(who)
+	if err != nil {
+		purple_error(handler.account, fmt.Sprintf("%#v", err))
 		return 14 // EFAULT "Bad address"
 	}
 	data, err := os.ReadFile(filename)

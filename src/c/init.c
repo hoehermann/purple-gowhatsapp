@@ -94,7 +94,6 @@ plugin_init(PurplePlugin *plugin)
 
     info->name = "WhatsApp (whatsmeow)";
     info->extra_info = prpl_info;
-    prpl_info->options = OPT_PROTO_NO_PASSWORD; // add OPT_PROTO_IM_IMAGE?
     prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
     prpl_info->list_icon = list_icon;
     prpl_info->status_types = status_types; // this actually needs to exist, else the protocol cannot be set to "online"

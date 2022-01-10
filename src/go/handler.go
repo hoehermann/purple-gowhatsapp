@@ -109,8 +109,11 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// this is handled explicitly in connect()
 		// though maybe I should move it here for consistency
 	case *events.PairSuccess:
-		// jid := evt.ID.ToNonAD().String()
-		// TODO: check the registered jid against the user-suppled jid
+		log.Infof("PairSuccess: %#v", evt)
+		log.Infof("client.Store: %#v", cli.Store)
+		deviceId := cli.Store.ID.String()
+		registrationId := set_credentials(handler.account, deviceId, cli.Store.RegistrationID)
+		purple_error(handler.account, fmt.Sprintf("Pairing succeeded. Your username is %s. Your password is %s. Please reconnect.", deviceId, registrationId))
 	case *events.PushName:
 		// other device changed our friendly name
 		// setting is regarded by whatsmeow internally

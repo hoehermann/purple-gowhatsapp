@@ -84,11 +84,11 @@ func (handler *Handler) mark_read_if_on_receival(chat types.JID) {
  * mark_read_defer(…) should have been called before.
  */
 func (handler *Handler) mark_read_conversation(chat string) {
-	recipient, ok := handler.parseJID(chat) // calls purple_error directly
-	if ok {
-		handler.mark_read_if(recipient, C.GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_INTERACT)
-	} else {
+	recipient, err := parseJID(chat)
+	if err != nil {
 		// fail silently
+	} else {
+		handler.mark_read_if(recipient, C.GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_INTERACT)
 	}
 }
 

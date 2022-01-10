@@ -11,32 +11,73 @@ import (
 	"github.com/mdp/qrterminal/v3"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/store"
+	"strconv"
 	"strings"
 )
 
 /*
  * This is the go part of purple's login() function.
  */
-func login(account *PurpleAccount) {
+func login(account *PurpleAccount, username string, password string) {
 	log := PurpleLogger("Handler")
 	_, ok := handlers[account]
 	if ok {
 		purple_error(account, "This connection already exists.")
+		return
 	}
 	// TODO: protect against concurrent invocation
-	deviceStore, err := container.GetFirstDevice() // TODO: find out how to use a device jid and use .GetDevice(jid)
+
+	var device *store.Device = nil
+	deviceJid, err := parseJID(username)
 	if err != nil {
-		purple_error(account, fmt.Sprintf("%#v", err))
+		purple_error(account, fmt.Sprintf("Supplied username %s is not a valid device ID: %#v", err))
+		return
 	} else {
-		handler := Handler{
-			account: account,
-			client:  whatsmeow.NewClient(deviceStore, PurpleLogger("Client")),
-			log:     log,
-		}
-		handlers[account] = &handler
-		handler.client.AddEventHandler(handler.eventHandler)
-		go handler.connect()
+		device, err = container.GetDevice(deviceJid)
 	}
+	if err != nil {
+		// this is in case of database errors, presumably
+		purple_error(account, fmt.Sprintf("Unable to read device from database: %v", err))
+		return
+	}
+
+	rId, err := strconv.ParseUint(password, 16, 32)
+	registrationId := uint32(rId)
+	if err != nil {
+		purple_error(account, fmt.Sprintf("Unable to parse password into numerical registration id: ", err))
+		return
+	}
+
+	if device == nil {
+		// device == nil happens in case the database contained no appropriate device
+		device = container.NewDevice()
+		password = set_credentials(account, username, device.RegistrationID)
+		registrationId = device.RegistrationID
+	}
+
+	// check user-supplied registration id against the one stored in the device
+	// this is necessary for multi-user set-ups like spectrum or bitlbee
+	// where we cannot universally trust all local users
+	if device.RegistrationID != registrationId {
+		purple_error(account, fmt.Sprintf("Incorrect registration ID. Enter a different username to create a new pairing."))
+		return
+	}
+
+	handler := Handler{
+		account: account,
+		client:  whatsmeow.NewClient(device, PurpleLogger("Client")),
+		log:     log,
+	}
+	handlers[account] = &handler
+	handler.client.AddEventHandler(handler.eventHandler)
+	go handler.connect()
+}
+
+func set_credentials(account *PurpleAccount, username string, registrationId uint32) string {
+	rId := fmt.Sprintf("%x", registrationId)
+	purple_set_credentials(account, username, rId)
+	return rId
 }
 
 /*
@@ -54,6 +95,10 @@ func (handler *Handler) connect() {
 			purple_error(handler.account, fmt.Sprintf("%#v", err))
 		}
 		for evt := range qrChan {
+			if !client.IsConnected() {
+				clientLog.Infof("Got QR code for disconnected client. Login cancelled.")
+				break
+			}
 			if evt.Event == "code" {
 				// Render the QR code here
 				size := purple_get_int(handler.account, C.GOWHATSAPP_QRCODE_SIZE_OPTION, 256)
