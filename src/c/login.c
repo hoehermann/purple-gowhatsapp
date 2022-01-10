@@ -18,9 +18,8 @@ gowhatsapp_login(PurpleAccount *account)
     //purple_connection_set_protocol_data(pc, wad);
     
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
-    char *username = (char *)purple_account_get_username(account); // cgo does not suport const
     char *password = (char *)purple_account_get_password(account); // cgo does not suport const
-    gowhatsapp_go_login(account, username, password);
+    gowhatsapp_go_login(account, password);
     
     gowhatsapp_receipts_init(pc);
 }

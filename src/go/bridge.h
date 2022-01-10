@@ -14,7 +14,6 @@ typedef struct _PurpleAccount PurpleAccount;
 extern int gowhatsapp_account_exists(PurpleAccount *account);
 extern int purple_account_get_int(PurpleAccount *account, const char *name, int default_value);
 extern const char * purple_account_get_string(PurpleAccount *account, const char *name, const char *default_value);
-extern void purple_account_set_username(PurpleAccount *account, const char *username);
 extern void purple_account_set_password(PurpleAccount *account, const char *password);
 #endif
 

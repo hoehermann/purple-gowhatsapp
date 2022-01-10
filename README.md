@@ -97,15 +97,16 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 #### Set-Up
 
 * Create a new account  
-  The username is governed by WhatsApp. For the pairing process, you can enter an arbitrary username.  
-  To avoid confusion, it is recommended to use your own internationalized phone number.  
-  Be sure to check the "store password" option in the account settings.
+  You can enter an arbitrary username. 
+  It is recommended to use your own internationalized number, followed by `@s.whatsapp.net`.  
+  Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`. This way, Pidgin's logs look sane.  
+  Enter anything but a pipe symbol `|` into the password field. Enable "store password".
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.
   
 * After WhatsApp told us the username, the account will disconnect.  
-  The disconnection message contains the password. Be sure to have it stored.  
+  The disconnection message contains the password. Pidgin should store it automatically.  
   Reconnect to finish.
 
 #### Environment Variables:

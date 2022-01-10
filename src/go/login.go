@@ -12,6 +12,7 @@ import (
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store"
+	"go.mau.fi/whatsmeow/types"
 	"strconv"
 	"strings"
 )
@@ -19,7 +20,7 @@ import (
 /*
  * This is the go part of purple's login() function.
  */
-func login(account *PurpleAccount, username string, password string) {
+func login(account *PurpleAccount, password string) {
 	log := PurpleLogger("Handler")
 	_, ok := handlers[account]
 	if ok {
@@ -29,30 +30,36 @@ func login(account *PurpleAccount, username string, password string) {
 	// TODO: protect against concurrent invocation
 
 	var device *store.Device = nil
-	deviceJid, err := parseJID(username)
-	if err != nil {
-		purple_error(account, fmt.Sprintf("Supplied username %s is not a valid device ID: %#v", err))
-		return
-	} else {
-		device, err = container.GetDevice(deviceJid)
-	}
-	if err != nil {
-		// this is in case of database errors, presumably
-		purple_error(account, fmt.Sprintf("Unable to read device from database: %v", err))
-		return
-	}
 
-	rId, err := strconv.ParseUint(password, 16, 32)
-	registrationId := uint32(rId)
-	if err != nil {
-		purple_error(account, fmt.Sprintf("Unable to parse password into numerical registration id: ", err))
-		return
+	// find device (and session) information in database
+	// expects user-supplied password to be in the form "deviceJid|registrationId".
+	registrationId := uint32(0)
+	credentials := strings.Split(password, "|")
+	if len(credentials) == 2 {
+		deviceJid, err := parseJID(credentials[0])
+		if err != nil {
+			purple_error(account, fmt.Sprintf("Supplied device ID %s is not valid: %#v", err))
+			return
+		}
+		rId, err := strconv.ParseUint(credentials[1], 16, 32)
+		if err != nil {
+			purple_error(account, fmt.Sprintf("Unable to parse registration ID: ", err))
+			return
+		}
+		registrationId = uint32(rId)
+		// now query database for device information
+		device, err = container.GetDevice(deviceJid)
+		if err != nil {
+			// this is in case of database errors, presumably
+			purple_error(account, fmt.Sprintf("Unable to read device from database: %v", err))
+			return
+		}
 	}
 
 	if device == nil {
 		// device == nil happens in case the database contained no appropriate device
 		device = container.NewDevice()
-		password = set_credentials(account, username, device.RegistrationID)
+		// device.RegistrationID has been generated. sync it and continue (so pairing can happen)
 		registrationId = device.RegistrationID
 	}
 
@@ -60,7 +67,7 @@ func login(account *PurpleAccount, username string, password string) {
 	// this is necessary for multi-user set-ups like spectrum or bitlbee
 	// where we cannot universally trust all local users
 	if device.RegistrationID != registrationId {
-		purple_error(account, fmt.Sprintf("Incorrect registration ID. Enter a different username to create a new pairing."))
+		purple_error(account, fmt.Sprintf("Incorrect password."))
 		return
 	}
 
@@ -74,10 +81,30 @@ func login(account *PurpleAccount, username string, password string) {
 	go handler.connect()
 }
 
-func set_credentials(account *PurpleAccount, username string, registrationId uint32) string {
+func set_credentials(account *PurpleAccount, deviceJid types.JID, registrationId uint32) string {
 	rId := fmt.Sprintf("%x", registrationId)
-	purple_set_credentials(account, username, rId)
-	return rId
+	dJ := deviceJid.String()
+	creds := fmt.Sprintf("%s|%s", dJ, rId)
+	purple_set_password(account, creds)
+	return creds
+}
+
+func (handler *Handler) prune_devices(deviceJid types.JID) {
+	devices, err := container.GetAllDevices()
+	if err == nil {
+		for _, device := range devices {
+			if device.ID == nil {
+				handler.log.Infof("Deleting bogous device %s from database...", device.ID.String())
+				device.Delete() // ignores errors
+			} else {
+				obsolete := device.ID.ToNonAD() == deviceJid.ToNonAD() && *device.ID != deviceJid
+				if obsolete {
+					handler.log.Infof("Deleting obsolete device %s from database...", device.ID.String())
+					device.Delete() // ignores errors
+				}
+			}
+		}
+	}
 }
 
 /*

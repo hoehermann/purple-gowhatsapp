@@ -111,9 +111,13 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	case *events.PairSuccess:
 		log.Infof("PairSuccess: %#v", evt)
 		log.Infof("client.Store: %#v", cli.Store)
-		deviceId := cli.Store.ID.String()
-		registrationId := set_credentials(handler.account, deviceId, cli.Store.RegistrationID)
-		purple_error(handler.account, fmt.Sprintf("Pairing succeeded. Your username is %s. Your password is %s. Please reconnect.", deviceId, registrationId))
+		if cli.Store.ID == nil {
+			purple_error(handler.account, fmt.Sprintf("Pairing succeded, but device ID is missing."))
+		} else {
+			credentials := set_credentials(handler.account, *cli.Store.ID, cli.Store.RegistrationID)
+			purple_error(handler.account, fmt.Sprintf("Pairing succeeded. Your password is %s. Please reconnect.", credentials))
+			handler.prune_devices(*cli.Store.ID)
+		}
 	case *events.PushName:
 		// other device changed our friendly name
 		// setting is regarded by whatsmeow internally
