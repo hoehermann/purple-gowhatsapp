@@ -41,6 +41,7 @@ func (handler *Handler) send_message(who string, message string, isGroup bool) {
 			ownJid := "" // TODO: find out if this messes up group chats
 			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, ownJid, nil, ts, message)
 		}
+		handler.mark_read_if_on_answer(recipient)
 	}
 
 }

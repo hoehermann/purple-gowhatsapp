@@ -19,6 +19,8 @@ gowhatsapp_login(PurpleAccount *account)
     
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
     gowhatsapp_go_login(account);
+    
+    gowhatsapp_receipts_init(pc);
 }
 
 void

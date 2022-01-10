@@ -19,6 +19,7 @@ add_library(${TARGET_NAME} SHARED
     "send_file.c"
     "presence.c"
     "options.c"
+    "receipt.c"
 )
 add_dependencies(${TARGET_NAME} purple-go-whatsapp)
 

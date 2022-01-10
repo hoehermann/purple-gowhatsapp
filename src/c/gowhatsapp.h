@@ -62,3 +62,6 @@ void gowhatsapp_send_file(PurpleConnection *pc, const gchar *who, const gchar *f
 
 // presence
 void gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char available, time_t lastseen);
+
+// receipts
+void gowhatsapp_receipts_init();

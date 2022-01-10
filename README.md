@@ -40,7 +40,8 @@ Features which are present in the go-whatsapp version but missing here:
 Known issues:
 
 * If the buddy was not given a local alias, the notification about them changing their friendly name is shown every time it is received.
-* Files sent to groups are downloaded, but link is not shown in group conversation window.
+* Files received from groups are downloaded, but link is not shown in group conversation window.
+* Files received from groups are claimed to originate from the sender rahter than the group. I am undecided whether this is a bug or a feature.
 
 Other planned features:
 
@@ -131,6 +132,13 @@ Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added up
 * `fake-online`  
   If set to true, contacts currently not online will be regarded as "away" (so they still appear in the buddy list).
   If set to false, offline contacts will be regarded as "offline" (no messages can be sent).
+
+* `send-receipt`  
+  Selects when to send receipts "double blue tick" notifications:
+    * "immediately": immediately upon message receival
+    * "on-interact": as the user interacts with the conversation window (currently buggy)
+    * "on-answer": as soon as the user sends an answer
+    * "never": never
 
 ### Notes
 

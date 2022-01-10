@@ -44,7 +44,8 @@ func (handler *Handler) handle_message(evt *events.Message) {
 		handler.log.Warnf("Received a message without any text.")
 	} else {
 		purple_display_text_message(handler.account, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, info.MessageSource.IsFromMe, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text)
-		handler.mark_read_immediately(info.ID, info.MessageSource.Chat, info.MessageSource.Sender)
+		handler.mark_read_defer(info.ID, info.MessageSource.Chat, info.MessageSource.Sender)
+		handler.mark_read_if_on_receival(info.MessageSource.Chat)
 	}
 
 	handler.handle_attachment(evt)

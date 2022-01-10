@@ -19,3 +19,6 @@
 #define purple_serv_got_im serv_got_im
 #define purple_connection_set_flags(pc, f) ((pc)->flags = (f))
 #define purple_connection_get_flags(pc) ((pc)->flags)
+#define purple_connection_get_protocol          purple_connection_get_prpl
+#define PurpleConversationUpdateType       PurpleConvUpdateType
+#define PURPLE_CONVERSATION_UPDATE_UNSEEN  PURPLE_CONV_UPDATE_UNSEEN

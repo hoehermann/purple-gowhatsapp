@@ -78,6 +78,16 @@ func gowhatsapp_go_send_file(account *PurpleAccount, who *C.char, filename *C.ch
 	return -107 // ENOTCONN, see libpurple/prpl.h
 }
 
+//export gowhatsapp_go_mark_read_conversation
+func gowhatsapp_go_mark_read_conversation(account *PurpleAccount, who *C.char) {
+	handler, ok := handlers[account]
+	if ok {
+		handler.mark_read_conversation(C.GoString(who))
+	} else {
+		// fail silently
+	}
+}
+
 /*
  * This will display a QR code via PurpleRequest API.
  */
@@ -241,11 +251,11 @@ func purple_get_int(account *PurpleAccount, key *C.char, default_value int) int 
 /*
  * Get string from the purple account's settings.
  */
-func purple_get_string(account *PurpleAccount, key *C.char, default_value *C.char) string {
+func purple_get_string(account *PurpleAccount, key *C.char, default_value string) string {
 	if C.gowhatsapp_account_exists(account) == 1 {
-		return C.GoString(C.purple_account_get_string(account, key, default_value))
+		return C.GoString(C.purple_account_get_string(account, key, C.CString(default_value)))
 	}
-	return C.GoString(default_value)
+	return default_value
 }
 
 func main() {
