@@ -1,5 +1,6 @@
 #include "gowhatsapp.h"
 #include "constants.h"
+#include "purple-go-whatsapp.h" // for gowhatsapp_go_subscribe_presence
 
 PurpleGroup * gowhatsapp_get_purple_group() {
     PurpleGroup *group = purple_blist_find_group("Whatsapp");
@@ -17,6 +18,9 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_AWAY, NULL);
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_MOBILE, NULL);
     }
+    // TODO: move somewhere else so function names are not misleading
+    // this is only here because gowhatsapp_assume_buddy_online is alredy being called in all relevant situations
+    gowhatsapp_go_subscribe_presence(account, buddy->name);
 }
 
 void

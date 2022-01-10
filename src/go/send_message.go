@@ -26,7 +26,7 @@ func parseJID(arg string) (types.JID, error) {
 }
 
 func (handler *Handler) send_message(who string, message string, isGroup bool) {
-	recipient, err := parseJID(who) // calls purple_error directly
+	recipient, err := parseJID(who)
 	if err != nil {
 		purple_error(handler.account, fmt.Sprintf("%#v", err))
 	} else {

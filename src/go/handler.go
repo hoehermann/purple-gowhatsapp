@@ -7,7 +7,6 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
-	"time"
 )
 
 /*
@@ -70,17 +69,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		}
 	case *events.Presence:
 		// TODO: find a way to test this
-		if evt.Unavailable {
-			if evt.LastSeen.IsZero() {
-				log.Infof("%s is now offline", evt.From)
-			} else {
-				log.Infof("%s is now offline (last seen: %s)", evt.From, evt.LastSeen)
-			}
-			purple_update_presence(handler.account, evt.From.ToNonAD().String(), false, evt.LastSeen)
-		} else {
-			log.Infof("%s is now online", evt.From)
-			purple_update_presence(handler.account, evt.From.ToNonAD().String(), true, time.Time{})
-		}
+		handler.handle_presence(evt)
 	case *events.HistorySync:
 		// this happens after initial logon via QR code (after AppStateSyncComplete)
 		log.Infof("history sync: %#v", evt.Data)
@@ -92,15 +81,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		}
 		//conversations := evt.Data.GetConversations() // TODO: enable this if user wants it
 	case *events.ChatPresence:
-		who := evt.MessageSource.Chat.ToNonAD().String()
-		switch evt.State {
-		case types.ChatPresenceComposing:
-			purple_composing(handler.account, who)
-		case types.ChatPresencePaused:
-			purple_paused(handler.account, who)
-		default:
-			log.Warnf("ChatPresence not handled: %v", evt.State)
-		}
+		handler.handle_chat_presence(evt)
 	case *events.AppState:
 		log.Debugf("App state event: %+v / %+v", evt.Index, evt.SyncActionValue)
 	case *events.LoggedOut:

@@ -27,6 +27,8 @@ Major differences from the go-whatsapp vesion:
 
 Other improvements:
 
+* Contact presence is regarded (buddies are online and offline).
+* Typing notifications are handled.
 * There is an "away" state.
 * Logging happens via purple.
 
@@ -39,16 +41,15 @@ Features which are present in the go-whatsapp version but missing here:
 
 Known issues:
 
-* If the buddy was not given a local alias, the notification about them changing their friendly name is shown every time it is received.
-* Files received from groups are downloaded, but link is not shown in group conversation window.
-* Files received from groups are claimed to originate from the sender rahter than the group. I am undecided whether this is a bug or a feature.
+* If the buddy was not given a local alias or the alias does not match the remote user's friendly name, the notification about them changing their friendly name is shown every time it is received.
+* Files received from groups are claimed to originate from the sender rahter than the group. I am undecided whether this is a bug or a feature. The files are downloaded, but link is not shown in group conversation window.
 
 Other planned features:
 
 * Sending proper voice and video messages.
 * Join group chat via link.
 * Display receipts in conversation window.
-* Option to logout and remove user from whatsmeow's internal storage.
+* Option to terminate session explicitly.
 
 ### Building
 

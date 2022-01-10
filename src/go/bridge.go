@@ -88,6 +88,16 @@ func gowhatsapp_go_mark_read_conversation(account *PurpleAccount, who *C.char) {
 	}
 }
 
+//export gowhatsapp_go_subscribe_presence
+func gowhatsapp_go_subscribe_presence(account *PurpleAccount, who *C.char) {
+	handler, ok := handlers[account]
+	if ok {
+		handler.subscribe_presence(C.GoString(who))
+	} else {
+		// fail silently
+	}
+}
+
 /*
  * This will display a QR code via PurpleRequest API.
  */
