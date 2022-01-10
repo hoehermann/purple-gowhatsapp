@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project("purple-gowhatsapp")
+project("purple-gowhatsapp" LANGUAGES C)
 
 find_package(PkgConfig QUIET)
 if (${PKG_CONFIG_FOUND})

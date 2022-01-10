@@ -55,7 +55,7 @@ Other planned features:
 
 #### Pre-Built Binaries
 
-To be announced
+* [Nightly Build](https://buildbot.hehoe.de/purple-whatsmeow/builds/) (Windows).
 
 #### Instructions
 
