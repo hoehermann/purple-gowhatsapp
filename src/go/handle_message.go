@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"fmt"
 	"go.mau.fi/whatsmeow/types/events"
 	"mime"
 	"strings"
@@ -43,6 +44,7 @@ func (handler *Handler) handle_message(evt *events.Message) {
 	if text == "" {
 		handler.log.Warnf("Received a message without any text.")
 	} else {
+		// note: info.PushName always denotes the sender (not the chat)
 		purple_display_text_message(handler.account, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, info.MessageSource.IsFromMe, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text)
 		handler.mark_read_defer(info.ID, info.MessageSource.Chat, info.MessageSource.Sender)
 		handler.mark_read_if_on_receival(info.MessageSource.Chat)
@@ -101,7 +103,14 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 		handler.log.Errorf("Download failed: %#v", err)
 	}
 	if filename != "" {
-		sender := evt.Info.MessageSource.Sender.ToNonAD().String()
-		purple_handle_attachment(handler.account, sender, filename, data)
+		ms := evt.Info.MessageSource
+		chat := ms.Chat.ToNonAD().String()
+		if ms.IsGroup {
+			// put original sender username into file-name
+			// so source is known even when receiving from group chats
+			sender := ms.Sender.ToNonAD().User
+			filename = fmt.Sprintf("%s_%s", sender, filename)
+		}
+		purple_handle_attachment(handler.account, chat, filename, data)
 	}
 }

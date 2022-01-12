@@ -1,5 +1,8 @@
 #include "gowhatsapp.h"
 
+/*
+ * I do not actually know what this does.
+ */
 void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data) {
     const char *remoteJid = g_hash_table_lookup(data, "remoteJid");
     const char *topic = g_hash_table_lookup(data, "topic");
@@ -150,6 +153,60 @@ gowhatsapp_roomlist_serialize(PurpleRoomlistRoom *room) {
     GList *fields = purple_roomlist_room_get_fields(room);
     const gchar *remoteJid = g_list_nth_data(fields, 0);
     return g_strdup(remoteJid);
+}
+
+/*
+ * Borrowed from
+ * https://github.com/hoehermann/libpurple-signald/blob/master/groups.c
+ */
+GList * gowhatsapp_chat_info(PurpleConnection *pc)
+{
+    GList *infos = NULL;
+
+    struct proto_chat_entry *pce;
+
+    pce = g_new0(struct proto_chat_entry, 1);
+    pce->label = "Group JID:";
+    pce->identifier = "remoteJid";
+    pce->required = TRUE;
+    infos = g_list_append(infos, pce);
+
+    pce = g_new0(struct proto_chat_entry, 1);
+    pce->label = "Topic";
+    pce->identifier = "topic";
+    pce->required = TRUE;
+    infos = g_list_append(infos, pce);
+
+    return infos;
+}
+
+/*
+ * This provides the default values for extended group chat info.
+ * I have no idea if this also declares/defines the structure (see gowhatsapp_roomlist_get_list).
+ */
+GHashTable * gowhatsapp_chat_info_defaults(PurpleConnection *pc, const char *remoteJid) 
+{
+    GHashTable *defaults = g_hash_table_new_full(
+        g_str_hash, g_str_equal, NULL, g_free
+    );
+
+    if (remoteJid != NULL) {
+        // don't really understand this chat name, assume it's just the remoteJid
+        g_hash_table_insert(defaults, "remoteJid", g_strdup(remoteJid));
+        g_hash_table_insert(defaults, "topic", g_strdup(""));
+
+        PurpleAccount *account = purple_connection_get_account(pc);
+        PurpleChat *chat = purple_blist_find_chat(account, remoteJid);
+        if (chat != NULL) {
+            GHashTable *components = purple_chat_get_components(chat);
+            const gchar *topic = g_hash_table_lookup(components, "topic");
+            if (topic != NULL) {
+                g_hash_table_insert(defaults, "topic", g_strdup(topic));
+            }
+        }
+    }
+
+    return defaults;
 }
 
 /*

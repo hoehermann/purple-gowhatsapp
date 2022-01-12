@@ -42,7 +42,11 @@ Features which are present in the go-whatsapp version but missing here:
 Known issues:
 
 * If the buddy was not given a local alias or the alias does not match the remote user's friendly name, the notification about them changing their friendly name is shown every time it is received.
-* Files received from groups are claimed to originate from the sender rahter than the group. I am undecided whether this is a bug or a feature. The files are downloaded, but link is not shown in group conversation window.
+* Group Chats:
+  * Topic (friendly name) is not set.
+  * Participant lists are only populated as participants are sending messages.
+  * Attachments are downloaded, but link is not shown in group conversation window (Purple limitation?).
+  * Cannot send files of any kind to groups (Purple limitation?).
 
 Other planned features:
 

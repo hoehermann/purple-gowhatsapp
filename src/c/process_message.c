@@ -8,14 +8,13 @@ void
 gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
 {
     purple_debug_info(
-        GOWHATSAPP_NAME, "recieved message type %d for account %p at %ld remote %s (alias %s, isGroup %d) sender %s (fromMe %d): %s\n",
+        GOWHATSAPP_NAME, "recieved message type %d for account %p remote %s (isGroup %d) sender %s (alias %s, fromMe %d): %s\n",
         (int)gwamsg->msgtype,
         gwamsg->account,
-        gwamsg->timestamp,
         gwamsg->remoteJid,
-        gwamsg->name,
         gwamsg->isGroup,
         gwamsg->senderJid,
+        gwamsg->name,
         gwamsg->fromMe,
         gwamsg->text
     );

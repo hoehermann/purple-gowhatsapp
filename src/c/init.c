@@ -97,8 +97,8 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
     prpl_info->list_icon = list_icon;
     prpl_info->status_types = status_types; // this actually needs to exist, else the protocol cannot be set to "online"
-    //prpl_info->chat_info = gowhatsapp_chat_info;
-    //prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
+    prpl_info->chat_info = gowhatsapp_chat_info;
+    prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
     prpl_info->login = gowhatsapp_login;
     prpl_info->close = gowhatsapp_close;
     prpl_info->send_im = gowhatsapp_send_im;
