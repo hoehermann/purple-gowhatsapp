@@ -3,9 +3,18 @@ package main
 import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
-
 	"time"
 )
+
+func (handler *Handler) send_presence(presence types.Presence) error {
+	err := handler.client.SendPresence(presence)
+	if err != nil {
+		handler.log.Warnf("Failed to send presence: %v", err)
+	} else {
+		handler.log.Infof("Set presence to %v", presence)
+	}
+	return err
+}
 
 func (handler *Handler) handle_chat_presence(evt *events.ChatPresence) {
 	who := evt.MessageSource.Chat.ToNonAD().String()

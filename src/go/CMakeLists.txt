@@ -29,6 +29,7 @@ set(GO_SRCS
   send_file.go
   mark_read.go
   presence.go
+  profile.go
 )
 set(OUTPUT_PREFIX purple-go-whatsapp)
 add_custom_command(

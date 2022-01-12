@@ -13,9 +13,10 @@ import (
  * Holds all data for one connection.
  */
 type Handler struct {
-	client  *whatsmeow.Client
-	account *PurpleAccount
-	log     waLog.Logger
+	client          *whatsmeow.Client
+	account         *PurpleAccount
+	log             waLog.Logger
+	pictureRequests chan string
 }
 
 /*
@@ -35,26 +36,27 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	case *events.AppStateSyncComplete:
 		// this happens after initial logon via QR code (before HistorySync)
 		if len(cli.Store.PushName) > 0 && evt.Name == appstate.WAPatchCriticalBlock {
-			err := cli.SendPresence(types.PresenceAvailable)
-			if err != nil {
-				log.Warnf("AppStateSyncComplete: Failed to send available presence: %v", err)
-			} else {
-				log.Infof("AppStateSyncComplete: Marked self as available")
+			log.Infof("AppStateSyncComplete")
+			err := handler.send_presence(types.PresenceAvailable)
+			if err == nil {
 				purple_connected(handler.account)
+				// connected – start downloading profile pictures now.
+				go handler.profile_picture_downloader()
 			}
 		}
-	case *events.Connected, *events.PushNameSetting:
+	case *events.PushNameSetting:
 		if len(cli.Store.PushName) == 0 {
 			return
 		}
-		// Send presence available when connecting and when the pushname is changed.
+		// Send presence "available" when the pushname is changed remotely.
 		// This makes sure that outgoing messages always have the right pushname.
-		err := cli.SendPresence(types.PresenceAvailable)
-		if err != nil {
-			log.Warnf("Failed to send available presence: %v", err)
-		} else {
-			log.Infof("Marked self as available")
+		handler.send_presence(types.PresenceAvailable)
+	case *events.Connected:
+		err := handler.send_presence(types.PresenceAvailable)
+		if err == nil {
 			purple_connected(handler.account)
+			// connected – start downloading profile pictures now.
+			go handler.profile_picture_downloader()
 		}
 	case *events.StreamReplaced:
 		// TODO: test this

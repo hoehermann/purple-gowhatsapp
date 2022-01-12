@@ -132,23 +132,26 @@ Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added up
 #### Purple Settings
 
 * `qrcode-size`  
-  The size of the QR code shown for login purposes, in pixels.
+  The size of the QR code shown for login purposes, in pixels (default: 256).
   If set to 0, QR code will be rendered as a text message (for text-only clients).
   
 * `fetch-contacts`  
-  If set to true, buddy list will be populated with contacts sent by server. 
+  If set to true (default), buddy list will be populated with contacts sent by server. 
   This is useful for the first login, especially.
   
 * `fake-online`  
-  If set to true, contacts currently not online will be regarded as "away" (so they still appear in the buddy list).
+  If set to true (default), contacts currently not online will be regarded as "away" (so they still appear in the buddy list).
   If set to false, offline contacts will be regarded as "offline" (no messages can be sent).
 
 * `send-receipt`  
   Selects when to send receipts "double blue tick" notifications:
-    * "immediately": immediately upon message receival
+    * "immediately": immediately upon message receival (default)
     * "on-interact": as the user interacts with the conversation window (currently buggy)
     * "on-answer": as soon as the user sends an answer
     * "never": never
+    
+* `get-icons`  
+  If set to true (default: false), profile pictures are updated after every time the plug-in connects.
 
 ### Notes
 

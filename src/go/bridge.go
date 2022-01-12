@@ -98,6 +98,16 @@ func gowhatsapp_go_subscribe_presence(account *PurpleAccount, who *C.char) {
 	}
 }
 
+//export gowhatsapp_go_request_profile_picture
+func gowhatsapp_go_request_profile_picture(account *PurpleAccount, who *C.char) {
+	handler, ok := handlers[account]
+	if ok {
+		go handler.request_profile_picture(C.GoString(who))
+	} else {
+		// fail silently
+	}
+}
+
 /*
  * This will display a QR code via PurpleRequest API.
  */
@@ -172,8 +182,12 @@ func purple_update_name(account *PurpleAccount, remoteJid string, pushName strin
 }
 
 /*
- * This will display a text message.
- * Single participants and group chats.
+ * This will create a file transfer for receiving an attachment.
+ * Works well for participants. A bit wonky for group chats.
+ *
+ * Please note: Pidgin will ask the user if they wish to receive the file
+ * while in fact the file has already been received and they may only chose
+ * where to store it.
  */
 func purple_handle_attachment(account *PurpleAccount, senderJid string, filename string, data []byte) {
 	cmessage := C.struct_gowhatsapp_message{
@@ -183,6 +197,20 @@ func purple_handle_attachment(account *PurpleAccount, senderJid string, filename
 		name:      C.CString(filename),
 		blob:      C.CBytes(data),
 		blobsize:  C.size_t(len(data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
+ * Forwards a downloaded profile picture to purple.
+ */
+func purple_set_profile_picture(account *PurpleAccount, who string, data []byte) {
+	cmessage := C.struct_gowhatsapp_message{
+		account:   account,
+		msgtype:   C.char(C.gowhatsapp_message_type_profile_picture),
+		senderJid: C.CString(who),
+		blob:      C.CBytes(data),
+		blobsize:  C.size_t(len(data)),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }

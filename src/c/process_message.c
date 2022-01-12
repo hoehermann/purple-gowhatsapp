@@ -70,7 +70,12 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
         case gowhatsapp_message_type_attachment:
             gowhatsapp_handle_attachment(pc, gwamsg);
             break;
+        case gowhatsapp_message_type_profile_picture:
+            purple_buddy_icons_set_for_user(gwamsg->account, gwamsg->senderJid, gwamsg->blob, gwamsg->blobsize, NULL);
+            // no g_free(gwamsg->blob) here – purple takes ownership
+            break;
         default:
             purple_debug_info(GOWHATSAPP_NAME, "handling this message type is not implemented");
+            g_free(gwamsg->blob);
     }
 }

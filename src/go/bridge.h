@@ -32,6 +32,7 @@ extern void purple_account_set_password(PurpleAccount *account, const char *pass
     MESSAGE_TYPE(typing_stopped) \
     MESSAGE_TYPE(text) \
     MESSAGE_TYPE(attachment) \
+    MESSAGE_TYPE(profile_picture) \
     MESSAGE_TYPE(max) \
 
 #define GENERATE_ENUM(ENUM) gowhatsapp_message_type_##ENUM,

@@ -48,23 +48,12 @@ gowhatsapp_add_account_options(GList *account_options)
     );
     account_options = g_list_append(account_options, option);
     
-    /*
     option = purple_account_option_bool_new(
-        _("Download user profile pictures"),
+        "Download user profile pictures",
         GOWHATSAPP_GET_ICONS_OPTION,
         FALSE
         );
     account_options = g_list_append(account_options, option);
-    */
-    
-    /*
-    option = purple_account_option_bool_new(
-        "Mark displayed messages as read."),
-        GOWHATSAPP_MARK_READ_OPTION,
-        TRUE
-        );
-    account_options = g_list_append(account_options, option);
-    */
     
     return account_options;
 }
