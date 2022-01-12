@@ -68,7 +68,6 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			log.Infof("%s was delivered to %s at %s", evt.MessageIDs[0], evt.SourceString(), evt.Timestamp)
 		}
 	case *events.Presence:
-		// TODO: find a way to test this
 		handler.handle_presence(evt)
 	case *events.HistorySync:
 		// this happens after initial logon via QR code (after AppStateSyncComplete)

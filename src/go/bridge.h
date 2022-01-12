@@ -17,19 +17,28 @@ extern const char * purple_account_get_string(PurpleAccount *account, const char
 extern void purple_account_set_password(PurpleAccount *account, const char *password);
 #endif
 
+// no real reason to do this, I just think it is cool
+// https://stackoverflow.com/questions/9907160/how-to-convert-enum-names-to-string-in-c
+#define FOREACH_MESSAGE_TYPE(MESSAGE_TYPE) \
+    MESSAGE_TYPE(none) \
+    MESSAGE_TYPE(error) \
+    MESSAGE_TYPE(log) \
+    MESSAGE_TYPE(login) \
+    MESSAGE_TYPE(connected) \
+    MESSAGE_TYPE(disconnected) \
+    MESSAGE_TYPE(name) \
+    MESSAGE_TYPE(presence) \
+    MESSAGE_TYPE(typing) \
+    MESSAGE_TYPE(typing_stopped) \
+    MESSAGE_TYPE(text) \
+    MESSAGE_TYPE(attachment) \
+    MESSAGE_TYPE(max) \
+
+#define GENERATE_ENUM(ENUM) gowhatsapp_message_type_##ENUM,
+#define GENERATE_STRING(STRING) #STRING,
+
 enum gowhatsapp_message_type {
-    gowhatsapp_message_type_error = -1,
-    gowhatsapp_message_type_none = 0,
-    gowhatsapp_message_type_text,
-    gowhatsapp_message_type_login,
-    gowhatsapp_message_type_connected,
-    gowhatsapp_message_type_disconnected,
-    gowhatsapp_message_type_name,
-    gowhatsapp_message_type_typing,
-    gowhatsapp_message_type_typing_stopped,
-    gowhatsapp_message_type_presence,
-    gowhatsapp_message_type_attachment,
-    gowhatsapp_message_type_log
+    FOREACH_MESSAGE_TYPE(GENERATE_ENUM)
 };
 
 // Structure to communicate go → purple.

@@ -1,15 +1,24 @@
 #include "gowhatsapp.h"
 #include "constants.h"
 
+static const char *gowhatsapp_message_type_string[] = {
+    FOREACH_MESSAGE_TYPE(GENERATE_STRING)
+};
+
 /*
  * Interprets a message received from whatsmeow. Handles login success and failure. Forwards errors.
  */
 void
 gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
 {
+    if (gwamsg->msgtype < 0 || gwamsg->msgtype >= gowhatsapp_message_type_max) {
+        purple_debug_info(GOWHATSAPP_NAME, "recieved invalid message type %d.\n", gwamsg->msgtype);
+        return;
+    }
     purple_debug_info(
-        GOWHATSAPP_NAME, "recieved message type %d for account %p remote %s (isGroup %d) sender %s (alias %s, fromMe %d): %s\n",
-        (int)gwamsg->msgtype,
+        GOWHATSAPP_NAME, "recieved %s (level %d) for account %p remote %s (isGroup %d) sender %s (alias %s, fromMe %d): %s\n",
+        gowhatsapp_message_type_string[gwamsg->msgtype],
+        gwamsg->level,
         gwamsg->account,
         gwamsg->remoteJid,
         gwamsg->isGroup,

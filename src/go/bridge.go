@@ -157,8 +157,9 @@ func purple_display_text_message(account *PurpleAccount, remoteJid string, isGro
 }
 
 /*
- * This will display a text message.
- * Single participants and group chats.
+ * This will update a contact's name.
+ * May add them to the local buddy list.
+ * Does work for individuals, not for groups.
  */
 func purple_update_name(account *PurpleAccount, remoteJid string, pushName string) {
 	cmessage := C.struct_gowhatsapp_message{
