@@ -20,7 +20,7 @@ import (
 /*
  * This is the go part of purple's login() function.
  */
-func login(account *PurpleAccount, password string) {
+func login(account *PurpleAccount, credentials string) {
 	log := PurpleLogger("Handler")
 	_, ok := handlers[account]
 	if ok {
@@ -32,16 +32,17 @@ func login(account *PurpleAccount, password string) {
 	var device *store.Device = nil
 
 	// find device (and session) information in database
-	// expects user-supplied password to be in the form "deviceJid|registrationId".
+	// expects user-supplied credentials to be in the form "deviceJid|registrationId".
+	// also see set_credentials
 	registrationId := uint32(0)
-	credentials := strings.Split(password, "|")
-	if len(credentials) == 2 {
-		deviceJid, err := parseJID(credentials[0])
+	creds := strings.Split(credentials, "|")
+	if len(creds) == 2 {
+		deviceJid, err := parseJID(creds[0])
 		if err != nil {
 			purple_error(account, fmt.Sprintf("Supplied device ID %s is not valid: %#v", err))
 			return
 		}
-		rId, err := strconv.ParseUint(credentials[1], 16, 32)
+		rId, err := strconv.ParseUint(creds[1], 16, 32)
 		if err != nil {
 			purple_error(account, fmt.Sprintf("Unable to parse registration ID: ", err))
 			return
@@ -59,13 +60,16 @@ func login(account *PurpleAccount, password string) {
 	if device == nil {
 		// device == nil happens in case the database contained no appropriate device
 		device = container.NewDevice()
-		// device.RegistrationID has been generated. sync it and continue (so pairing can happen)
+		// device.RegistrationID has been generated. sync it and continue (see next if below)
 		registrationId = device.RegistrationID
 	}
 
 	// check user-supplied registration id against the one stored in the device
 	// this is necessary for multi-user set-ups like spectrum or bitlbee
-	// where we cannot universally trust all local users
+	// where we cannot universally trust all local users.
+	// we must employ a mechanism that checks against some secret
+	// so it is not sufficient to know a person's device ID to hijack their account
+	// there is nothing special about the RegistrationID. any of the fields could be used.
 	if device.RegistrationID != registrationId {
 		purple_error(account, fmt.Sprintf("Incorrect password."))
 		return
@@ -82,11 +86,15 @@ func login(account *PurpleAccount, password string) {
 	go handler.connect()
 }
 
+/*
+ * Store the credentials (deviceJID and a "password").
+ * The credentials are munged into a single string for bitlbee compatibility.
+ */
 func set_credentials(account *PurpleAccount, deviceJid types.JID, registrationId uint32) string {
 	rId := fmt.Sprintf("%x", registrationId)
 	dJ := deviceJid.String()
 	creds := fmt.Sprintf("%s|%s", dJ, rId)
-	purple_set_password(account, creds)
+	purple_set_credentials(account, creds)
 	return creds
 }
 
@@ -163,6 +171,7 @@ func close(account *PurpleAccount) {
 	handler, ok := handlers[account]
 	if ok {
 		handler.httpClient = nil
+		handler.pictureRequests <- ProfilePictureRequest{} // this will allow the background downloader to terminate
 		handler.client.Disconnect()
 		delete(handlers, account)
 	}

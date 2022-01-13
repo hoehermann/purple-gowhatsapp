@@ -18,8 +18,11 @@ gowhatsapp_login(PurpleAccount *account)
     //purple_connection_set_protocol_data(pc, wad);
     
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
-    char *password = (char *)purple_account_get_password(account); // cgo does not suport const
-    gowhatsapp_go_login(account, password);
+    const char *credentials = purple_account_get_string(account, GOWHATSAPP_CREDENTIALS_KEY, NULL);
+    if (credentials == NULL) {
+        credentials = purple_account_get_password(account); // bitlbee stores credentials in password field
+    }
+    gowhatsapp_go_login(account, (char *)credentials); // cgo does not suport const
     
     gowhatsapp_receipts_init(pc);
 }
@@ -31,4 +34,22 @@ gowhatsapp_close(PurpleConnection *pc)
     gowhatsapp_go_close(account);
     
     //g_free(purple_connection_get_protocol_data(pc));
+}
+
+void
+purple_account_set_credentials(PurpleAccount *account, char *credentials)
+{
+    // Pidgin stores the credentials in the account settings
+    // in bitlbee, this has no effect
+    purple_account_set_string(account, GOWHATSAPP_CREDENTIALS_KEY, credentials);
+    
+    // bitlbee stores credentials in password field
+    // in Pidgin, these lines have no effect
+    purple_account_set_password(account, credentials);
+    purple_signal_emit(
+        purple_accounts_get_handle(),
+        "bitlbee-set-account-password",
+        account,
+        credentials
+    );
 }

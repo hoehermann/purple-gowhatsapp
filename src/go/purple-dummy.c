@@ -38,17 +38,10 @@ purple_account_get_string(PurpleAccount *account, const char *name, const char *
 }
 
 void
-purple_account_set_username(PurpleAccount *account, const char *username)
+purple_account_set_credentials(PurpleAccount *account, char *credentials)
 {
     (void) account;
-    (void) username;
-}
-
-void
-purple_account_set_password(PurpleAccount *account, const char *password)
-{
-    (void) account;
-    (void) password;
+    (void) credentials;
 }
 
 /*

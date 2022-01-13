@@ -94,6 +94,7 @@ plugin_init(PurplePlugin *plugin)
 
     info->name = "WhatsApp (whatsmeow)";
     info->extra_info = prpl_info;
+    prpl_info->options = OPT_PROTO_NO_PASSWORD; // with this set, Pidgin will neither ask for a password and also won't store it. Yet storing a password is necessary for compatibility with bitlbee. See login.c for more information.
     prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
     prpl_info->list_icon = list_icon;
     prpl_info->status_types = status_types; // this actually needs to exist, else the protocol cannot be set to "online"

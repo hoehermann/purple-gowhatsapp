@@ -17,7 +17,7 @@ Standard features:
 * Fetching all contacts from account, show friendly names in buddy list.
 * Sending receipts (configurable).
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
-* Under the hood: Reasonable callback mechanism thanks to [Eiron Robb](https://github.com/EionRobb).
+* Under the hood: Reasonable callback mechanism thanks to [Eion Robb](https://github.com/EionRobb).
 
 Major differences from the go-whatsapp vesion:
 
@@ -105,7 +105,6 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   You can enter an arbitrary username. 
   It is recommended to use your own internationalized number, followed by `@s.whatsapp.net`.  
   Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`. This way, Pidgin's logs look sane.  
-  Enter anything but a pipe symbol `|` into the password field. Enable "store password".
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.

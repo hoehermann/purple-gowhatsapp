@@ -299,21 +299,12 @@ func purple_get_string(account *PurpleAccount, key *C.char, default_value string
 }
 
 /*
- * Store password.
+ * Store credential string in purple's account settings (Pidgin) and/or password (bitlbee).
  */
-func purple_set_password(account *PurpleAccount, password string) {
+func purple_set_credentials(account *PurpleAccount, credentials string) {
 	if C.gowhatsapp_account_exists(account) == 1 {
-		C.purple_account_set_password(account, C.CString(password))
+		C.purple_account_set_credentials(account, C.CString(credentials))
 	}
-	/*
-	   TODO: is this necessary for bitlbee compatibility?
-	   purple_signal_emit(
-	   	purple_accounts_get_handle(),
-	   	"bitlbee-set-account-password",
-	   	account,
-	   	password
-	   );
-	*/
 }
 
 func main() {
