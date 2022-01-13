@@ -7,6 +7,7 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
+	"net/http"
 )
 
 /*
@@ -16,7 +17,8 @@ type Handler struct {
 	client          *whatsmeow.Client
 	account         *PurpleAccount
 	log             waLog.Logger
-	pictureRequests chan string
+	pictureRequests chan ProfilePictureRequest
+	httpClient      *http.Client
 }
 
 /*

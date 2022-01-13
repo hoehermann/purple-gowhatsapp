@@ -151,7 +151,7 @@ Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added up
     * "never": never
     
 * `get-icons`  
-  If set to true (default: false), profile pictures are updated after every time the plug-in connects.
+  If set to true (default: false), profile pictures are updated every time the plug-in connects.
 
 ### Notes
 

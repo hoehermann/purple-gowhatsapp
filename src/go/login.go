@@ -75,7 +75,7 @@ func login(account *PurpleAccount, password string) {
 		account:         account,
 		client:          whatsmeow.NewClient(device, PurpleLogger("Client")),
 		log:             log,
-		pictureRequests: make(chan string),
+		pictureRequests: make(chan ProfilePictureRequest),
 	}
 	handlers[account] = &handler
 	handler.client.AddEventHandler(handler.eventHandler)
@@ -162,6 +162,7 @@ func (handler *Handler) connect() {
 func close(account *PurpleAccount) {
 	handler, ok := handlers[account]
 	if ok {
+		handler.httpClient = nil
 		handler.client.Disconnect()
 		delete(handlers, account)
 	}

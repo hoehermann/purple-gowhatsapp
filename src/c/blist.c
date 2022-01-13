@@ -21,9 +21,10 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
     // TODO: move somewhere else so function names are not misleading
     // this is only here because gowhatsapp_assume_buddy_online is alredy being called in all relevant situations
     gowhatsapp_go_subscribe_presence(account, buddy->name);
-    // TODO: maybe do not request an update every time?
+
     if (purple_account_get_bool(account, GOWHATSAPP_GET_ICONS_OPTION, FALSE)) {
-        gowhatsapp_go_request_profile_picture(account, buddy->name);
+        const char *picture_date = purple_blist_node_get_string(&buddy->node, "picture_date");
+        gowhatsapp_go_request_profile_picture(account, buddy->name, (char *)picture_date); // cgo does not suport const
     }
 }
 

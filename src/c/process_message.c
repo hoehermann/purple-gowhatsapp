@@ -71,7 +71,9 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_handle_attachment(pc, gwamsg);
             break;
         case gowhatsapp_message_type_profile_picture:
-            purple_buddy_icons_set_for_user(gwamsg->account, gwamsg->senderJid, gwamsg->blob, gwamsg->blobsize, NULL);
+            purple_buddy_icons_set_for_user(gwamsg->account, gwamsg->remoteJid, gwamsg->blob, gwamsg->blobsize, NULL);
+            PurpleBuddy *buddy = purple_blist_find_buddy(gwamsg->account, gwamsg->remoteJid);
+            purple_blist_node_set_string(&buddy->node, "picture_date", gwamsg->text);
             // no g_free(gwamsg->blob) here – purple takes ownership
             break;
         default:

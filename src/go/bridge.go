@@ -84,7 +84,7 @@ func gowhatsapp_go_mark_read_conversation(account *PurpleAccount, who *C.char) {
 	if ok {
 		handler.mark_read_conversation(C.GoString(who))
 	} else {
-		// fail silently
+		// no connection, fail silently
 	}
 }
 
@@ -94,17 +94,17 @@ func gowhatsapp_go_subscribe_presence(account *PurpleAccount, who *C.char) {
 	if ok {
 		handler.subscribe_presence(C.GoString(who))
 	} else {
-		// fail silently
+		// no connection, fail silently
 	}
 }
 
 //export gowhatsapp_go_request_profile_picture
-func gowhatsapp_go_request_profile_picture(account *PurpleAccount, who *C.char) {
+func gowhatsapp_go_request_profile_picture(account *PurpleAccount, who *C.char, picture_date *C.char) {
 	handler, ok := handlers[account]
 	if ok {
-		go handler.request_profile_picture(C.GoString(who))
+		go handler.request_profile_picture(C.GoString(who), C.GoString(picture_date))
 	} else {
-		// fail silently
+		// no connection, fail silently
 	}
 }
 
@@ -204,11 +204,12 @@ func purple_handle_attachment(account *PurpleAccount, senderJid string, filename
 /*
  * Forwards a downloaded profile picture to purple.
  */
-func purple_set_profile_picture(account *PurpleAccount, who string, data []byte) {
+func purple_set_profile_picture(account *PurpleAccount, who string, data []byte, picture_date string) {
 	cmessage := C.struct_gowhatsapp_message{
 		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_profile_picture),
-		senderJid: C.CString(who),
+		remoteJid: C.CString(who),
+		text:      C.CString(picture_date),
 		blob:      C.CBytes(data),
 		blobsize:  C.size_t(len(data)),
 	}
