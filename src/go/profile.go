@@ -21,9 +21,10 @@ func (handler *Handler) profile_picture_downloader() {
 		return
 	}
 	handler.httpClient = &http.Client{}
+	log := handler.log.Sub("Profile")
 	for pdr := range handler.pictureRequests {
 		if handler.httpClient == nil {
-			handler.log.Infof("Client has been removed, no more profile pictures will be downloaded.")
+			log.Infof("Client has been removed, no more profile pictures will be downloaded.")
 			return
 		}
 		if handler.client == nil && !handler.client.IsConnected() {
@@ -47,7 +48,7 @@ func (handler *Handler) profile_picture_downloader() {
 		}
 		resp, err := handler.httpClient.Do(req)
 		if err != nil {
-			handler.log.Warnf("Error downloading profile picture for %s: %#v", pdr.who, err)
+			log.Warnf("Error downloading profile picture for %s: %#v", pdr.who, err)
 			continue
 		}
 		defer resp.Body.Close()
@@ -57,7 +58,7 @@ func (handler *Handler) profile_picture_downloader() {
 		var b bytes.Buffer
 		_, err = io.Copy(&b, resp.Body)
 		if err != nil {
-			handler.log.Warnf("Error while transferring profile picture for %s: %#v", pdr.who, err)
+			log.Warnf("Error while transferring profile picture for %s: %#v", pdr.who, err)
 			continue
 		}
 		purple_set_profile_picture(handler.account, pdr.who, b.Bytes(), resp.Header.Get("Last-Modified"))
