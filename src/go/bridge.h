@@ -23,6 +23,7 @@ extern const char * purple_account_get_string(PurpleAccount *account, const char
     MESSAGE_TYPE(error) \
     MESSAGE_TYPE(log) \
     MESSAGE_TYPE(login) \
+    MESSAGE_TYPE(pairing_succeeded) \
     MESSAGE_TYPE(connected) \
     MESSAGE_TYPE(disconnected) \
     MESSAGE_TYPE(name) \

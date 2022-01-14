@@ -124,6 +124,17 @@ func purple_display_qrcode(account *PurpleAccount, challenge string, png []byte,
 }
 
 /*
+ * This will close the QR code shown previously.
+ */
+func purple_pairing_succeeded(account *PurpleAccount) {
+	cmessage := C.struct_gowhatsapp_message{
+		account:  account,
+		msgtype:  C.char(C.gowhatsapp_message_type_pairing_succeeded),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
  * This will inform purple that the account has been connected.
  */
 func purple_connected(account *PurpleAccount) {

@@ -36,10 +36,13 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
     switch(gwamsg->msgtype) {
         case gowhatsapp_message_type_error:
             purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg->text);
-            gowhatsapp_close_qrcode(gwamsg->account); // TODO: automatically close all these upon disconnect
+            gowhatsapp_close_qrcode(gwamsg->account);
             break;
         case gowhatsapp_message_type_login:
             gowhatsapp_handle_qrcode(pc, gwamsg->text, gwamsg->name, gwamsg->blob, gwamsg->blobsize);
+            break;
+        case gowhatsapp_message_type_pairing_succeeded:
+            gowhatsapp_close_qrcode(gwamsg->account);
             break;
         case gowhatsapp_message_type_connected:
             gowhatsapp_close_qrcode(gwamsg->account);
@@ -50,7 +53,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             //purple_connection_set_state(pc, PURPLE_CONNECTION_DISCONNECTED);
             // during development, I want this to fail louder
             purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, "Disconnected");
-            gowhatsapp_close_qrcode(gwamsg->account); // TODO: automatically close all these upon disconnect
+            gowhatsapp_close_qrcode(gwamsg->account);
             break;
         case gowhatsapp_message_type_text:
             gowhatsapp_display_text_message(pc, gwamsg);
