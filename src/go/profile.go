@@ -22,13 +22,18 @@ func (handler *Handler) profile_picture_downloader() {
 	}
 	handler.httpClient = &http.Client{}
 	log := handler.log.Sub("Profile")
+	emptyRequest := ProfilePictureRequest{}
 	for pdr := range handler.pictureRequests {
+		if pdr == emptyRequest {
+			log.Infof("WhatsApp session disconnected. Profile picture downloader is shutting down.")
+			return
+		}
 		if handler.httpClient == nil {
-			log.Infof("Client has been removed, no more profile pictures will be downloaded.")
+			log.Infof("Profile picture downloader has been removed.")
 			return
 		}
 		if handler.client == nil && !handler.client.IsConnected() {
-			// drop requests while not connected
+			// drop requests while not connected to WhatsApp
 			continue
 		}
 		jid, err := parseJID(pdr.who)
