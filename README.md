@@ -14,7 +14,7 @@ Standard features:
 * Receiving messages, sending messages.
 * Receiving files (images, videos, voice, document, stickers).
 * Sending images (everything else is considered a document).
-* Fetching all contacts from account, show friendly names in buddy list.
+* Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures (for [Markus "nihilus" Gothe](https://github.com/nihilus)).
 * Sending receipts (configurable).
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
 * Under the hood: Reasonable callback mechanism thanks to [Eion Robb](https://github.com/EionRobb).
@@ -22,7 +22,7 @@ Standard features:
 Major differences from the go-whatsapp vesion:
 
 * Messages are sent asynchronously.
-* Incoming messages are not filtered (whatsmeow keeps track of already received messages internally).
+* Incoming messages are not filtered (formerly by Daniele Rogora, now whatsmeow keeps track of already received messages internally).
 * Note: Under the hood, gowhatsapp and whatsmeow use completely different prototocls. whatsmeow actually uses the same mechanics as Signal. For this reason, one must establish a new session (scan QR-code) when switching. All sessions will be invalidated.
 
 Other improvements:
@@ -36,8 +36,7 @@ Features which are present in the go-whatsapp version but missing here:
 
 * Handling errors consistently (currently logged to console only in some places).
 * Geting list of participants in group chat.
-* Downloading profile pictures.
-* Support for proxy servers.
+* Support for proxy servers (whatsmeow limitation).
 
 Known issues:
 
