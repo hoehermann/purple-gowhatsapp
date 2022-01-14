@@ -98,8 +98,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		if cli.Store.ID == nil {
 			purple_error(handler.account, fmt.Sprintf("Pairing succeded, but device ID is missing."))
 		} else {
-			credentials := set_credentials(handler.account, *cli.Store.ID, cli.Store.RegistrationID)
-			purple_error(handler.account, fmt.Sprintf("Pairing succeeded. Your credentials are %s. Please reconnect.", credentials))
+			set_credentials(handler.account, *cli.Store.ID, cli.Store.RegistrationID)
 			handler.prune_devices(*cli.Store.ID)
 		}
 	case *events.PushName:

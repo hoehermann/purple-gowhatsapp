@@ -170,8 +170,15 @@ func (handler *Handler) connect() {
 func close(account *PurpleAccount) {
 	handler, ok := handlers[account]
 	if ok {
-		handler.httpClient = nil
-		handler.pictureRequests <- ProfilePictureRequest{} // this will allow the background downloader to terminate
+		// tell the background downloader to terminate
+		select {
+		case handler.pictureRequests <- ProfilePictureRequest{}:
+			// termination request sent
+			// nothing to do here
+		default:
+			// termination request not sent
+			// ignore silently and continue
+		}
 		handler.client.Disconnect()
 		delete(handlers, account)
 	}
