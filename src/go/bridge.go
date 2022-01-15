@@ -128,8 +128,8 @@ func purple_display_qrcode(account *PurpleAccount, challenge string, png []byte,
  */
 func purple_pairing_succeeded(account *PurpleAccount) {
 	cmessage := C.struct_gowhatsapp_message{
-		account:  account,
-		msgtype:  C.char(C.gowhatsapp_message_type_pairing_succeeded),
+		account: account,
+		msgtype: C.char(C.gowhatsapp_message_type_pairing_succeeded),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
@@ -255,11 +255,15 @@ func purple_paused(account *PurpleAccount, remoteJid string) {
  * This will inform purple that the remote user's presence (online/offline) changed.
  */
 func purple_update_presence(account *PurpleAccount, remoteJid string, online bool, lastSeen time.Time) {
+	timestamp := C.time_t(0)
+	if !lastSeen.IsZero() {
+		timestamp = C.time_t(lastSeen.Unix())
+	}
 	cmessage := C.struct_gowhatsapp_message{
 		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_presence),
 		remoteJid: C.CString(remoteJid),
-		timestamp: C.time_t(lastSeen.Unix()),
+		timestamp: timestamp,
 		level:     bool_to_Cchar(online),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)

@@ -16,7 +16,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
         return;
     }
     purple_debug_info(
-        GOWHATSAPP_NAME, "recieved %s (level %d) for account %p remote %s (isGroup %d) sender %s (alias %s, fromMe %d): %s\n",
+        GOWHATSAPP_NAME, "recieved %s (level %d) for account %p remote %s (isGroup %d) sender %s (alias %s, fromMe %d) sent %ld: %s\n",
         gowhatsapp_message_type_string[gwamsg->msgtype],
         gwamsg->level,
         gwamsg->account,
@@ -25,6 +25,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
         gwamsg->senderJid,
         gwamsg->name,
         gwamsg->fromMe,
+        gwamsg->timestamp,
         gwamsg->text
     );
 
@@ -74,10 +75,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_handle_attachment(pc, gwamsg);
             break;
         case gowhatsapp_message_type_profile_picture:
-            purple_buddy_icons_set_for_user(gwamsg->account, gwamsg->remoteJid, gwamsg->blob, gwamsg->blobsize, NULL);
-            PurpleBuddy *buddy = purple_blist_find_buddy(gwamsg->account, gwamsg->remoteJid);
-            purple_blist_node_set_string(&buddy->node, "picture_date", gwamsg->text);
-            // no g_free(gwamsg->blob) here – purple takes ownership
+            gowhatsapp_handle_profile_picture(gwamsg);
             break;
         default:
             purple_debug_info(GOWHATSAPP_NAME, "handling this message type is not implemented");

@@ -15,6 +15,9 @@ conversation_updated(PurpleConversation *conv, PurpleConversationUpdateType type
     }
 }
 
+/*
+ * This registers a call-back: This prpl shall be notified every time the user interacts with a(ny) conversation.
+ */
 void
 gowhatsapp_receipts_init(PurpleConnection *pc) {
     if (!conversation_updated_signal) {

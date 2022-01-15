@@ -91,26 +91,30 @@ plugin_init(PurplePlugin *plugin)
     if (info == NULL) {
         plugin->info = info = g_new0(PurplePluginInfo, 1);
     }
-
+    // base protocol information
     info->name = "WhatsApp (whatsmeow)";
     info->extra_info = prpl_info;
     prpl_info->options = OPT_PROTO_NO_PASSWORD; // with this set, Pidgin will neither ask for a password and also won't store it. Yet storing a password is necessary for compatibility with bitlbee. See login.c for more information.
     prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
     prpl_info->list_icon = list_icon;
     prpl_info->status_types = status_types; // this actually needs to exist, else the protocol cannot be set to "online"
-    prpl_info->chat_info = gowhatsapp_chat_info;
-    prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
     prpl_info->login = gowhatsapp_login;
     prpl_info->close = gowhatsapp_close;
     prpl_info->send_im = gowhatsapp_send_im;
+    // group-chat related functions
+    prpl_info->chat_info = gowhatsapp_chat_info;
+    prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
     prpl_info->join_chat = gowhatsapp_join_chat;
     prpl_info->get_chat_name = gowhatsapp_get_chat_name;
     prpl_info->find_blist_chat = gowhatsapp_find_blist_chat;
     prpl_info->chat_send = gowhatsapp_send_chat;
     prpl_info->set_chat_topic = gowhatsapp_set_chat_topic;
-    prpl_info->add_buddy = gowhatsapp_add_buddy;
     prpl_info->roomlist_get_list = gowhatsapp_roomlist_get_list;
     prpl_info->roomlist_room_serialize = gowhatsapp_roomlist_serialize;
+    // managing buddies (contacts)
+    prpl_info->add_buddy = gowhatsapp_add_buddy;
+    prpl_info->tooltip_text = gowhatsapp_tooltip_text;
+    // file transfer
     prpl_info->new_xfer = gowhatsapp_new_xfer;
     prpl_info->send_file = gowhatsapp_send_file;
 }

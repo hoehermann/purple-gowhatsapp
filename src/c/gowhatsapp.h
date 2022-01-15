@@ -63,7 +63,9 @@ PurpleXfer * gowhatsapp_new_xfer(PurpleConnection *pc, const char *who);
 void gowhatsapp_send_file(PurpleConnection *pc, const gchar *who, const gchar *filename);
 
 // presence
-void gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char available, time_t lastseen);
+void gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char available, time_t last_seen);
+void gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean full);
+void gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg);
 
 // receipts
 void gowhatsapp_receipts_init();
