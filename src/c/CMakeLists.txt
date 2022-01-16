@@ -26,7 +26,6 @@ add_dependencies(${TARGET_NAME} purple-go-whatsapp)
 file(READ "${CMAKE_SOURCE_DIR}/VERSION" PLUGIN_VERSION)
 target_compile_definitions(${TARGET_NAME} PRIVATE PLUGIN_VERSION=${PLUGIN_VERSION})
 target_include_directories(${TARGET_NAME} PRIVATE ${GO_WHATSAPP_INCLUDE_DIRS} ${PURPLE_INCLUDE_DIRS})
-target_link_directories(${TARGET_NAME} PRIVATE ${PURPLE_LIBRARY_DIRS})
 target_link_libraries(${TARGET_NAME} PRIVATE ${GO_WHATSAPP_LIBRARIES} ${PURPLE_LIBRARIES})
 set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "lib")
 

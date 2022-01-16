@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.8)
+﻿cmake_minimum_required(VERSION 3.10) # lowest version this was tested with
 
 project("purple-gowhatsapp" LANGUAGES C)
 
@@ -11,9 +11,9 @@ elseif(WIN32)
     message(STATUS "Trying win32 auto-configuration...")
     add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/win32)
 elseif(${Purple_FOUND})
-    message(STATUS "Purple configured manually. Proceeding without checks.")
+    message(STATUS "Purple was configured manually. Proceeding without checks.")
 else()
-    message(FATAL "pkg-config not found. Please configure and set Purple_FOUND manually.")
+    message(FATAL "pkg-config not found. Please configure manually and set Purple_FOUND to YES.")
 endif()
 
 message(STATUS "PURPLE_INCLUDE_DIRS: ${PURPLE_INCLUDE_DIRS}")
