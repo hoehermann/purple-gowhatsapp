@@ -107,10 +107,6 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.
-  
-* After WhatsApp told us the username, the account will disconnect.  
-  The disconnection message contains the password. Pidgin should store it automatically.  
-  Reconnect to finish.
 
 #### Environment Variables:
 
