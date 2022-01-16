@@ -11,10 +11,10 @@ revision="$(git rev-list --count HEAD)"
 
 if [[ -n "${GOPATH}" ]]
 then
-  wmdate="_$(cd src/go && go list -m -f '{{.Dir}}' go.mau.fi/whatsmeow | rev | cut -d'-' -f 2 | rev)"
+  wmdate="$(cd src/go && go list -m -f '{{.Dir}}' go.mau.fi/whatsmeow | rev | cut -d'-' -f 2 | rev)"
 else
-  wmdate="_$(curl --silent -H 'Accept: application/vnd.github.v3+json' https://api.github.com/repos/tulir/whatsmeow/commits?per_page=1 | jq -r '.[].commit.committer.date' | tr -d 'TZ:-')"
+  wmdate="$(curl --silent -H 'Accept: application/vnd.github.v3+json' https://api.github.com/repos/tulir/whatsmeow/commits?per_page=1 | jq -r '.[].commit.committer.date' | tr -d 'TZ:-')"
   echo "Warning: whatsmeow date has been guessed. Get version after build to be sure." >2
-fi
+fi && wmdate=_${wmdate}
 
 printf "%sr%s%s" "${version}" "${revision}" "${wmdate}"

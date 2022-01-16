@@ -19,6 +19,7 @@ sha256sums=('SKIP')
 
 pkgver() {
   export GOPATH="$srcdir/${pkgnam}/build/src/go/go"
+  cd "$srcdir/${pkgnam}"
   bash version.sh "$srcdir/${pkgnam}/build"
 }
 
