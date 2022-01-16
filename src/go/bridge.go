@@ -178,6 +178,22 @@ func purple_display_text_message(account *PurpleAccount, remoteJid string, isGro
 }
 
 /*
+ * This will display a system message.
+ * For soft errors regarding a specific conversation.
+ * Single participants and group chats.
+ */
+func purple_display_system_message(account *PurpleAccount, remoteJid string, isGroup bool, text string) {
+	cmessage := C.struct_gowhatsapp_message{
+		account:   account,
+		msgtype:   C.char(C.gowhatsapp_message_type_system),
+		remoteJid: C.CString(remoteJid),
+		text:      C.CString(text),
+		isGroup:   bool_to_Cchar(isGroup),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
  * This will update a contact's name.
  * May add them to the local buddy list.
  * Does work for individuals, not for groups.
@@ -281,14 +297,24 @@ func purple_debug(loglevel int, message string) {
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
 
+const (
+	ERROR_TRANSIENT = false
+	ERROR_FATAL     = true
+)
+
 /*
  * Forward error to purple. This will cause a disconnect.
  */
-func purple_error(account *PurpleAccount, message string) {
+func purple_error(account *PurpleAccount, message string, fatal bool) {
+	level := 0
+	if fatal {
+		level = 1
+	}
 	cmessage := C.struct_gowhatsapp_message{
 		account: account,
 		msgtype: C.char(C.gowhatsapp_message_type_error),
 		text:    C.CString(message),
+		level:   C.char(level),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }

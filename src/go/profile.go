@@ -38,7 +38,7 @@ func (handler *Handler) profile_picture_downloader() {
 		}
 		jid, err := parseJID(pdr.who)
 		if err != nil {
-			purple_error(handler.account, fmt.Sprintf("%#v", err))
+			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 			continue
 		}
 		preview := true

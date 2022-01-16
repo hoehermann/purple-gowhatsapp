@@ -17,7 +17,7 @@ var container *sqlstore.Container = nil
  * This sets the global container variable.
  */
 func init_(purple_user_dir string) int {
-	dbLog := PurpleLogger("Database")
+	dbLog := PurpleLogger(nil, "Database")
 	dialect := os.Getenv("PURPLE_GOWHATSAPP_DATABASE_DIALECT")
 	if dialect == "" {
 		dialect = "sqlite3"

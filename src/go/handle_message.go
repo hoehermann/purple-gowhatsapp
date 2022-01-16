@@ -72,6 +72,9 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 		filename = ""
 	)
 	message := evt.Message
+	ms := evt.Info.MessageSource
+	chat := ms.Chat.ToNonAD().String()
+
 	im := message.GetImageMessage()
 	if im != nil {
 		data, err = handler.client.Download(im)
@@ -99,12 +102,10 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 		filename = hex.EncodeToString(sm.FileSha256) + extension_from_mimetype(sm.Mimetype)
 	}
 	if err != nil {
-		// TODO: display error in conversation
-		handler.log.Errorf("Download failed: %#v", err)
+		purple_display_system_message(handler.account, chat, ms.IsGroup, fmt.Sprintf("Message contained an attachment, but the download failed: %#v", err))
+		return
 	}
 	if filename != "" {
-		ms := evt.Info.MessageSource
-		chat := ms.Chat.ToNonAD().String()
 		if ms.IsGroup {
 			// put original sender username into file-name
 			// so source is known even when receiving from group chats

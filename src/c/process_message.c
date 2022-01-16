@@ -36,7 +36,11 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
     }
     switch(gwamsg->msgtype) {
         case gowhatsapp_message_type_error:
-            purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg->text);
+            if (gwamsg->level == 0) {
+                purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg->text);
+            } else {
+                purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg->text);
+            }
             gowhatsapp_close_qrcode(gwamsg->account);
             break;
         case gowhatsapp_message_type_login:
@@ -51,13 +55,14 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_assume_all_buddies_online(gwamsg->account);
             break;
         case gowhatsapp_message_type_disconnected:
-            //purple_connection_set_state(pc, PURPLE_CONNECTION_DISCONNECTED);
-            // during development, I want this to fail louder
-            purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, "Disconnected");
+            purple_connection_set_state(pc, PURPLE_CONNECTION_DISCONNECTED);
             gowhatsapp_close_qrcode(gwamsg->account);
             break;
         case gowhatsapp_message_type_text:
-            gowhatsapp_display_text_message(pc, gwamsg);
+            gowhatsapp_display_text_message(pc, gwamsg, FALSE);
+            break;
+        case gowhatsapp_message_type_system:
+            gowhatsapp_display_text_message(pc, gwamsg, TRUE);
             break;
         case gowhatsapp_message_type_name:
             gowhatsapp_ensure_buddy_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);

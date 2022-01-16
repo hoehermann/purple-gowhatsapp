@@ -21,10 +21,10 @@ import (
  * This is the go part of purple's login() function.
  */
 func login(account *PurpleAccount, credentials string) {
-	log := PurpleLogger("Handler")
+	log := PurpleLogger(account, "Handler")
 	_, ok := handlers[account]
 	if ok {
-		purple_error(account, "This connection already exists.")
+		purple_error(account, "This connection already exists.", ERROR_FATAL)
 		return
 	}
 	// TODO: protect against concurrent invocation
@@ -39,12 +39,12 @@ func login(account *PurpleAccount, credentials string) {
 	if len(creds) == 2 {
 		deviceJid, err := parseJID(creds[0])
 		if err != nil {
-			purple_error(account, fmt.Sprintf("Supplied device ID %s is not valid: %#v", err))
+			purple_error(account, fmt.Sprintf("Supplied device ID %s is not valid: %#v", err), ERROR_FATAL)
 			return
 		}
 		rId, err := strconv.ParseUint(creds[1], 16, 32)
 		if err != nil {
-			purple_error(account, fmt.Sprintf("Unable to parse registration ID: ", err))
+			purple_error(account, fmt.Sprintf("Unable to parse registration ID: ", err), ERROR_FATAL)
 			return
 		}
 		registrationId = uint32(rId)
@@ -52,7 +52,7 @@ func login(account *PurpleAccount, credentials string) {
 		device, err = container.GetDevice(deviceJid)
 		if err != nil {
 			// this is in case of database errors, presumably
-			purple_error(account, fmt.Sprintf("Unable to read device from database: %v", err))
+			purple_error(account, fmt.Sprintf("Unable to read device from database: %v", err), ERROR_FATAL)
 			return
 		}
 	}
@@ -71,13 +71,13 @@ func login(account *PurpleAccount, credentials string) {
 	// so it is not sufficient to know a person's device ID to hijack their account
 	// there is nothing special about the RegistrationID. any of the fields could be used.
 	if device.RegistrationID != registrationId {
-		purple_error(account, fmt.Sprintf("Incorrect password."))
+		purple_error(account, fmt.Sprintf("Incorrect credentials."), ERROR_FATAL)
 		return
 	}
 
 	handler := Handler{
 		account:         account,
-		client:          whatsmeow.NewClient(device, PurpleLogger("Client")),
+		client:          whatsmeow.NewClient(device, PurpleLogger(account, "Client")),
 		log:             log,
 		pictureRequests: make(chan ProfilePictureRequest),
 	}
@@ -128,7 +128,7 @@ func (handler *Handler) connect() {
 		qrChan, _ := client.GetQRChannel(context.Background())
 		err := client.Connect()
 		if err != nil {
-			purple_error(handler.account, fmt.Sprintf("%#v", err))
+			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 		}
 		for evt := range qrChan {
 			if !client.IsConnected() {
@@ -141,7 +141,7 @@ func (handler *Handler) connect() {
 				if size > 0 {
 					png, err := qrcode.Encode(evt.Code, qrcode.Medium, size)
 					if err != nil {
-						purple_error(handler.account, fmt.Sprintf("%#v", err))
+						purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 					} else {
 						purple_display_qrcode(handler.account, evt.Code, png, "")
 					}
@@ -159,7 +159,7 @@ func (handler *Handler) connect() {
 		// Already logged in, just connect
 		err := client.Connect()
 		if err != nil {
-			purple_error(handler.account, fmt.Sprintf("%#v", err))
+			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_TRANSIENT)
 		}
 	}
 }

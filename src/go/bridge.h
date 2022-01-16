@@ -26,6 +26,7 @@ extern const char * purple_account_get_string(PurpleAccount *account, const char
     MESSAGE_TYPE(pairing_succeeded) \
     MESSAGE_TYPE(connected) \
     MESSAGE_TYPE(disconnected) \
+    MESSAGE_TYPE(system) \
     MESSAGE_TYPE(name) \
     MESSAGE_TYPE(presence) \
     MESSAGE_TYPE(typing) \

@@ -25,7 +25,7 @@ void gowhatsapp_close_qrcode(PurpleAccount *account);
 void gowhatsapp_process_message(gowhatsapp_message_t *gwamsg);
 
 // display_message
-void gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
+void gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, gboolean system);
 
 // message_filtering
 gboolean gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message_id);

@@ -34,7 +34,6 @@ Other improvements:
 
 Features which are present in the go-whatsapp version but missing here:
 
-* Handling errors consistently (currently logged to console only in some places).
 * Geting list of participants in group chat.
 * Support for proxy servers (whatsmeow limitation).
 
@@ -46,6 +45,7 @@ Known issues:
   * Participant lists are only populated as participants are sending messages.
   * Attachments are downloaded, but link is not shown in group conversation window (Purple limitation?).
   * Cannot send files of any kind to groups (Purple limitation?).
+* When sending a file, progress indicator stays at 0% regardless of progress.
 
 Other planned features:
 
@@ -66,10 +66,10 @@ Dependencies:
 
 * pidgin (libpurple glib gtk)
 * pkg-config
-* cmake
+* cmake (3.8 or later)
 * make
 * go (1.17 or later)
-* gcc
+* gcc (6.3.0 or later)
 
 This project uses CMake.
 
@@ -146,6 +146,9 @@ Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added up
     
 * `get-icons`  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
+  
+* `spectrum-compatibility`  
+  If set to true (default: false), system messages will be treated just like normal messages, allowing them to be logged and forwarded.
 
 ### Notes
 

@@ -62,7 +62,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		}
 	case *events.StreamReplaced:
 		// TODO: test this
-		purple_error(handler.account, fmt.Sprintf("StreamReplaced: %+v", evt))
+		purple_error(handler.account, fmt.Sprintf("StreamReplaced: %+v", evt), ERROR_FATAL)
 	case *events.Message:
 		handler.handle_message(evt)
 	case *events.Receipt:
@@ -88,7 +88,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	case *events.AppState:
 		log.Debugf("App state event: %+v / %+v", evt.Index, evt.SyncActionValue)
 	case *events.LoggedOut:
-		purple_disconnected(handler.account)
+		purple_error(handler.account, "Logged out.", ERROR_TRANSIENT)
 	case *events.QR:
 		// this is handled explicitly in connect()
 		// though maybe I should move it here for consistency
@@ -96,7 +96,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		log.Infof("PairSuccess: %#v", evt)
 		log.Infof("client.Store: %#v", cli.Store)
 		if cli.Store.ID == nil {
-			purple_error(handler.account, fmt.Sprintf("Pairing succeded, but device ID is missing."))
+			purple_error(handler.account, fmt.Sprintf("Pairing succeded, but device ID is missing."), ERROR_FATAL)
 		} else {
 			set_credentials(handler.account, *cli.Store.ID, cli.Store.RegistrationID)
 			purple_pairing_succeeded(handler.account)

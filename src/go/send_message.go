@@ -28,15 +28,16 @@ func parseJID(arg string) (types.JID, error) {
 func (handler *Handler) send_message(who string, message string, isGroup bool) {
 	recipient, err := parseJID(who)
 	if err != nil {
-		purple_error(handler.account, fmt.Sprintf("%#v", err))
+		purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 	} else {
 		msg := &waProto.Message{Conversation: &message}
 		ts, err := handler.client.SendMessage(recipient, "", msg)
 		if err != nil {
 			// TODO: display error in conversation
-			handler.log.Errorf("Error sending message: %v", err)
+			errmsg := fmt.Sprintf("Error sending message: %v", err)
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, errmsg)
 		} else {
-			handler.log.Infof("Message sent (server timestamp: %s)", ts)
+			//handler.log.Infof("Message sent (server timestamp: %s)", ts)
 			// inject message back to self to indicate success
 			ownJid := "" // TODO: find out if this messes up group chats
 			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, ownJid, nil, ts, message)

@@ -15,7 +15,7 @@ import (
 func (handler *Handler) send_file(who string, filename string) int {
 	recipient, err := parseJID(who)
 	if err != nil {
-		purple_error(handler.account, fmt.Sprintf("%#v", err))
+		purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 		return 14 // EFAULT "Bad address"
 	}
 	data, err := os.ReadFile(filename)
