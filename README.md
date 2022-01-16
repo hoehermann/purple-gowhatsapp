@@ -112,14 +112,16 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 whatsmeow stores all session information in a SQL database. These variables are read when the plug-in loads (even before a connection is established):
 
-* `PURPLE_GOWHATSAPP_DATABASE_DIALECT`  
-  default: `sqlite3`  
-  File-based sqlite3 database.
+* `PURPLE_GOWHATSAPP_DATABASE_DIALECT`
+  * `sqlite3` (default)  
+    File-based sqlite3 database. Not recommended for multi-account-applications (e.g. spectrum or bitlbee).  
+    The file-system (see addess option) must support locking and be responsive. Network shares (especially SMB) **do not work**.
+  * `mysql` MySQL
+  * `pgx` PostgreSQL
 
 * `PURPLE_GOWHATSAPP_DATABASE_ADDRESS`  
-  default: `file:purple_user_dir/whatsmeow.db?_foreign_keys=on`  
+  default: `file:<purple_user_dir>/whatsmeow.db?_foreign_keys=on`  
   Folder must exist, `whatsmeow.db` is created automatically.
-  The file-system must support file locking and be responsive, else the database driver will not work. Network shares (NFS, SMB) will probably not work well.
   
 Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added upon request.
 
