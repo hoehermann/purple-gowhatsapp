@@ -23,7 +23,8 @@ Major differences from the go-whatsapp vesion:
 
 * Messages are sent asynchronously.
 * Incoming messages are not filtered (formerly by Daniele Rogora, now whatsmeow keeps track of already received messages internally).
-* Note: Under the hood, gowhatsapp and whatsmeow use completely different prototocls. whatsmeow actually uses the same mechanics as Signal. For this reason, one must establish a new session (scan QR-code) when switching. All sessions will be invalidated.
+* Note: Under the hood, gowhatsapp and whatsmeow use completely different prototocls. For this reason, one must establish a new session (scan QR-code) when switching. All old (non-multi-device) sessions will be invalidated. This is a technical requirement.
+* Note: This is not a perfect drop-in replacement for the plug-in with the gowhatsapp back-end. For this reason, it has a different ID: `prpl-hehoe-whatsmeow`
 
 Other improvements:
 
@@ -114,7 +115,7 @@ whatsmeow stores all session information in a SQL database. These variables are 
 
 * `PURPLE_GOWHATSAPP_DATABASE_DIALECT`
   * `sqlite3` (default)  
-    File-based sqlite3 database. Not recommended for multi-account-applications (e.g. spectrum or bitlbee).  
+    File-based sqlite3 database. Not recommended for multi-account-applications (e.g. spectrum or bitlbee) due to a [limitation in the driver](https://github.com/mattn/go-sqlite3/issues/209).  
     The file-system (see addess option) must support locking and be responsive. Network shares (especially SMB) **do not work**.
   * `mysql` MySQL
   * `pgx` PostgreSQL
