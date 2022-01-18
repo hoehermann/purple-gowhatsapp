@@ -39,7 +39,7 @@ func (l *purpleLogger) Errorf(msg string, args ...interface{}) {
 }
 
 func (l *purpleLogger) Sub(topic string) waLog.Logger {
-	return &purpleLogger{topic: fmt.Sprintf("%s/%s", l.topic, topic)}
+	return &purpleLogger{account: l.account, topic: fmt.Sprintf("%s/%s", l.topic, topic)}
 }
 
 func PurpleLogger(account *PurpleAccount, topic string) waLog.Logger {
