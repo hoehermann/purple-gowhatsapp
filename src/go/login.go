@@ -148,7 +148,11 @@ func (handler *Handler) connect() {
 				} else {
 					var b strings.Builder
 					fmt.Fprintf(&b, "Scan this code to log in:\n%s\n", evt.Code)
-					qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, &b)
+					if size < 0 {
+						qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, &b)
+					} else {
+						qrterminal.Generate(evt.Code, qrterminal.L, &b)
+					}
 					purple_display_qrcode(handler.account, evt.Code, nil, b.String())
 				}
 			} else {

@@ -57,6 +57,6 @@ gowhatsapp_handle_qrcode(PurpleConnection *pc, const char *challenge, const char
     if (image_data_len > 0) {
         gowhatsapp_display_qrcode(pc, challenge, image_data, image_data_len);
     } else {
-        purple_serv_got_im(pc, "login@whatsmeow", terminal, 0, time(NULL));
+        purple_serv_got_im(pc, "login@whatsmeow", terminal, PURPLE_MESSAGE_RECV, time(NULL));
     }
 }

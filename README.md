@@ -131,6 +131,7 @@ Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added up
 * `qrcode-size`  
   The size of the QR code shown for login purposes, in pixels (default: 256).
   If set to 0, QR code will be rendered as a text message (for text-only clients).
+  If set to -1, QR code will be rendered smaller (see [description of 'half blocks'](https://github.com/mdp/qrterminal/#readme)).
   
 * `fetch-contacts`  
   If set to true (default), buddy list will be populated with contacts sent by server. 
