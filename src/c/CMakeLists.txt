@@ -2,7 +2,7 @@ if(WIN32 AND NOT ${CMAKE_SIZEOF_VOID_P} EQUAL 4)
     message(FATAL_ERROR "On Windows, Pidgin is 32 bit only.")
 endif()
 
-set(TARGET_NAME gowhatsapp)
+set(TARGET_NAME whatsmeow)
 add_library(${TARGET_NAME} SHARED 
     "gowhatsapp.h"
     "init.c"
