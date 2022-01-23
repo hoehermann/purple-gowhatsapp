@@ -45,7 +45,7 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
         if (gwamsg->senderJid == NULL) {
             gwamsg->senderJid = "system";
         }
-        gboolean spectrum = purple_account_get_bool(gwamsg->account, GOWHATSAPP_SPECTRUM_COMPATIBILITY, FALSE);
+        gboolean spectrum = purple_account_get_bool(gwamsg->account, GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION, FALSE);
         if (!spectrum) {
             // spectrum "swallows" system messages – that is why these flags can be suppressed
             flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;

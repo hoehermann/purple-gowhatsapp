@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/appstate"
+	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
@@ -14,9 +15,10 @@ import (
  * Holds all data for one connection.
  */
 type Handler struct {
-	client          *whatsmeow.Client
 	account         *PurpleAccount
 	log             waLog.Logger
+	container       *sqlstore.Container
+	client          *whatsmeow.Client
 	pictureRequests chan ProfilePictureRequest
 	httpClient      *http.Client
 }

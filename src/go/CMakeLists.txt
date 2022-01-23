@@ -20,7 +20,6 @@ add_library(purple-dummy STATIC purple-dummy.c constants.c)
 # partly taken from https://github.com/mutse/go-cmake
 set(GO_SRCS
   bridge.go
-  init.go
   login.go
   handler.go
   send_message.go

@@ -22,7 +22,9 @@ gowhatsapp_login(PurpleAccount *account)
     if (credentials == NULL) {
         credentials = purple_account_get_password(account); // bitlbee stores credentials in password field
     }
-    gowhatsapp_go_login(account, (char *)credentials); // cgo does not suport const
+    char *username = (char *)purple_account_get_username(account); // cgo does not suport const
+    char *user_dir = (char *)purple_user_dir(); // cgo does not suport const
+    gowhatsapp_go_login(account, user_dir, username, (char *)credentials); // cgo does not suport const
     
     gowhatsapp_receipts_init(pc);
 }

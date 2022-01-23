@@ -8,10 +8,13 @@ import "C"
 import (
 	"context"
 	"fmt"
+	_ "github.com/jackc/pgx"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store"
+	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"strconv"
 	"strings"
@@ -20,7 +23,7 @@ import (
 /*
  * This is the go part of purple's login() function.
  */
-func login(account *PurpleAccount, credentials string) {
+func login(account *PurpleAccount, purple_user_dir string, username string, credentials string) {
 	log := PurpleLogger(account, "Handler")
 	_, ok := handlers[account]
 	if ok {
@@ -29,11 +32,28 @@ func login(account *PurpleAccount, credentials string) {
 	}
 	// TODO: protect against concurrent invocation
 
-	var device *store.Device = nil
+	// establish connection to database
+	dbLog := PurpleLogger(account, "Database")
+	address := purple_get_string(account, C.GOWHATSAPP_DATABASE_ADDRESS_OPTION, C.GOWHATSAPP_DATABASE_ADDRESS_DEFAULT)
+	address = strings.Replace(address, "$purple_user_dir", purple_user_dir, -1)
+	address = strings.Replace(address, "$username", username, -1)
+	dialect := "pgx" // see https://github.com/jackc/pgx/wiki/Getting-started-with-pgx-through-database-sql
+	if strings.HasPrefix(address, "file:") {
+		dialect = "sqlite3" // see https://github.com/mattn/go-sqlite3/blob/671e666/_example/simple/simple.go#L14
+	} else {
+		// nothing else, see https://github.com/tulir/whatsmeow/blob/b078a9e/store/sqlstore/container.go#L34
+	}
+	dbLog.Infof("%s connecting to %s", dialect, address)
+	container, err := sqlstore.New(dialect, address, dbLog)
+	if err != nil {
+		fmt.Printf("whatsmeow database driver is unable to establish connection to %s due to %v.\n", address, err)
+		return
+	}
 
 	// find device (and session) information in database
 	// expects user-supplied credentials to be in the form "deviceJid|registrationId".
 	// also see set_credentials
+	var device *store.Device = nil
 	registrationId := uint32(0)
 	creds := strings.Split(credentials, "|")
 	if len(creds) == 2 {
@@ -77,8 +97,9 @@ func login(account *PurpleAccount, credentials string) {
 
 	handler := Handler{
 		account:         account,
-		client:          whatsmeow.NewClient(device, PurpleLogger(account, "Client")),
+		container:       container,
 		log:             log,
+		client:          whatsmeow.NewClient(device, PurpleLogger(account, "Client")),
 		pictureRequests: make(chan ProfilePictureRequest),
 	}
 	handlers[account] = &handler
@@ -99,7 +120,11 @@ func set_credentials(account *PurpleAccount, deviceJid types.JID, registrationId
 }
 
 func (handler *Handler) prune_devices(deviceJid types.JID) {
-	devices, err := container.GetAllDevices()
+	if handler.container == nil {
+		purple_error(handler.account, "prune_devices called without a database connection", ERROR_FATAL)
+		return
+	}
+	devices, err := handler.container.GetAllDevices()
 	if err == nil {
 		for _, device := range devices {
 			if device.ID == nil {

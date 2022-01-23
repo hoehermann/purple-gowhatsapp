@@ -69,8 +69,7 @@ actions(PurplePlugin *plugin, gpointer context)
 static gboolean
 libpurple2_plugin_load(PurplePlugin *plugin)
 {
-    char * user_dir = (char *)purple_user_dir(); // cgo does not suport const
-    return gowhatsapp_go_init(user_dir);
+    return TRUE;
 }
 
 static gboolean

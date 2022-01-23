@@ -57,8 +57,15 @@ gowhatsapp_add_account_options(GList *account_options)
     
     option = purple_account_option_bool_new(
         "Treat system messages like normal messages (spectrum2 compatibility)",
-        GOWHATSAPP_SPECTRUM_COMPATIBILITY,
+        GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION,
         FALSE
+        );
+    account_options = g_list_append(account_options, option);
+    
+    option = purple_account_option_string_new(
+        "Database address (expert option, see readme)",
+        GOWHATSAPP_DATABASE_ADDRESS_OPTION,
+        GOWHATSAPP_DATABASE_ADDRESS_DEFAULT
         );
     account_options = g_list_append(account_options, option);
 

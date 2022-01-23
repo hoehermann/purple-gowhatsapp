@@ -109,23 +109,6 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.
 
-#### Environment Variables:
-
-whatsmeow stores all session information in a SQL database. These variables are read when the plug-in loads (even before a connection is established):
-
-* `PURPLE_GOWHATSAPP_DATABASE_DIALECT`
-  * `sqlite3` (default)  
-    File-based sqlite3 database. Not recommended for multi-account-applications (e.g. spectrum or bitlbee) due to a [limitation in the driver](https://github.com/mattn/go-sqlite3/issues/209).  
-    The file-system (see addess option) must support locking and be responsive. Network shares (especially SMB) **do not work**.
-  * `mysql` MySQL
-  * `pgx` PostgreSQL
-
-* `PURPLE_GOWHATSAPP_DATABASE_ADDRESS`  
-  default: `file:<purple_user_dir>/whatsmeow.db?_foreign_keys=on`  
-  Folder must exist, `whatsmeow.db` is created automatically.
-  
-Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added upon request.
-
 #### Purple Settings
 
 * `qrcode-size`  
@@ -153,6 +136,21 @@ Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added up
   
 * `spectrum-compatibility`  
   If set to true (default: false), system messages will be treated just like normal messages, allowing them to be logged and forwarded.
+  
+* `database-address`  
+  whatsmeow stores all session information in a SQL database. This string will be passed to [database/sql.Open](https://pkg.go.dev/database/sql#Open) as `dataSourceName`.
+  
+  This setting can have place-holders:
+  
+  * `$purple_user_dir` – will be replaced by the user directory, e.g. `~/.purple`.
+  * `$username` – will be replaced by the username as entered in the account details.
+  
+  default: `file:$purple_user_dir/whatsmeow.db?_foreign_keys=on&_busy_timeout=3000`  
+  Folder must exist, `whatsmeow.db` is created automatically.
+  
+  If the address starts with `file:`, the driver will be `sqlite3` for a file-backed SQLite database. This is not recommended for multi-account-applications (e.g. spectrum or bitlbee) due to a [limitation in the driver](https://github.com/mattn/go-sqlite3/issues/209). The file-system (see addess option) must support locking and be responsive. Network shares (especially SMB) **do not work**.
+  
+  Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added upon request. As of writing, `pgx` for PostgreSQL is the only other option [supported by whatsmeow](https://github.com/tulir/whatsmeow/blob/b078a9e/store/sqlstore/container.go#L34).
 
 ### Notes
 

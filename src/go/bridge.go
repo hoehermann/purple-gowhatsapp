@@ -44,14 +44,9 @@ func Cint_to_bool(i C.int) bool {
 	return i != 0
 }
 
-//export gowhatsapp_go_init
-func gowhatsapp_go_init(purple_user_dir *C.char) C.int {
-	return C.int(init_(C.GoString(purple_user_dir)))
-}
-
 //export gowhatsapp_go_login
-func gowhatsapp_go_login(account *PurpleAccount, password *C.char) {
-	login(account, C.GoString(password))
+func gowhatsapp_go_login(account *PurpleAccount, purple_user_dir *C.char, username *C.char, password *C.char) {
+	login(account, C.GoString(purple_user_dir), C.GoString(username), C.GoString(password))
 }
 
 //export gowhatsapp_go_close
@@ -332,11 +327,11 @@ func purple_get_int(account *PurpleAccount, key *C.char, default_value int) int 
 /*
  * Get string from the purple account's settings.
  */
-func purple_get_string(account *PurpleAccount, key *C.char, default_value string) string {
+func purple_get_string(account *PurpleAccount, key *C.char, default_value *C.char) string {
 	if C.gowhatsapp_account_exists(account) == 1 {
-		return C.GoString(C.purple_account_get_string(account, key, C.CString(default_value)))
+		return C.GoString(C.purple_account_get_string(account, key, default_value))
 	}
-	return default_value
+	return C.GoString(default_value)
 }
 
 /*
