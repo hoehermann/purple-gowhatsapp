@@ -1,11 +1,13 @@
 #include "gowhatsapp.h"
+#include "constants.h"
 
 static void
-null_cb(PurpleConnection *pc, PurpleRequestFields *fields) {
+null_cb(PurpleAccount *account, PurpleRequestFields *fields) {
 }
 
 static void
-dismiss_cb(PurpleConnection *pc, PurpleRequestFields *fields) {
+dismiss_cb(PurpleAccount *account, PurpleRequestFields *fields) {
+    PurpleConnection *pc = purple_account_get_connection(account);
     purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, "QR code was dismissed.");
 }
 
@@ -16,10 +18,9 @@ gowhatsapp_close_qrcode(PurpleAccount *account)
 }
 
 static void
-gowhatsapp_display_qrcode(PurpleConnection *pc, const char * challenge, void * image_data, size_t image_data_len)
+gowhatsapp_display_qrcode(PurpleAccount *account, const char * challenge, void * image_data, size_t image_data_len)
 {
-    g_return_if_fail(pc != NULL);
-    PurpleAccount *account = purple_connection_get_account(pc);
+    g_return_if_fail(account != NULL);
 
     PurpleRequestFields *fields = purple_request_fields_new();
     PurpleRequestFieldGroup *group = purple_request_field_group_new(NULL);
@@ -47,16 +48,18 @@ gowhatsapp_display_qrcode(PurpleConnection *pc, const char * challenge, void * i
         NULL, /*account*/
         username, /*username*/
         NULL, /*conversation*/
-        pc /*data*/
+        account /*data*/
     );
 }
 
 void
-gowhatsapp_handle_qrcode(PurpleConnection *pc, const char *challenge, const char *terminal, void *image_data, size_t image_data_len)
+gowhatsapp_handle_qrcode(PurpleAccount *account, const char *challenge, const char *terminal, void *image_data, size_t image_data_len)
 {
     if (image_data_len > 0) {
-        gowhatsapp_display_qrcode(pc, challenge, image_data, image_data_len);
-    } else {
+        gowhatsapp_display_qrcode(account, challenge, image_data, image_data_len);
+    }
+    if (purple_account_get_bool(account, GOWHATSAPP_PLAIN_TEXT_LOGIN_OPTION, FALSE)) {
+        PurpleConnection *pc = purple_account_get_connection(account);
         purple_serv_got_im(pc, "login@whatsmeow", terminal, PURPLE_MESSAGE_RECV, time(NULL));
     }
 }

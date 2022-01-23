@@ -44,7 +44,7 @@ Known issues:
 * Group Chats:
   * Topic (friendly name) is not set.
   * Participant lists are only populated as participants are sending messages.
-  * Attachments are downloaded, but link is not shown in group conversation window (Purple limitation?).
+  * Attachments are downloaded, but link is not shown in group conversation window (not Purple limitation, tdlib can do it).
   * Cannot send files of any kind to groups (Purple limitation?).
 * When sending a file, progress indicator stays at 0% regardless of progress.
 
@@ -113,8 +113,9 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 * `qrcode-size`  
   The size of the QR code shown for login purposes, in pixels (default: 256).
-  If set to 0, QR code will be rendered as a text message (for text-only clients).
-  If set to -1, QR code will be rendered smaller (see [description of 'half blocks'](https://github.com/mdp/qrterminal/#readme)).
+  
+* `plain-text-login`  
+  If set to true (default: false), QR code will be delivered as a text message (for text-only clients).
   
 * `fetch-contacts`  
   If set to true (default), buddy list will be populated with contacts sent by server. 

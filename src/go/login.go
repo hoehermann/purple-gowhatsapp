@@ -162,24 +162,18 @@ func (handler *Handler) connect() {
 			}
 			if evt.Event == "code" {
 				// Render the QR code here
+				var png []byte
+				var b strings.Builder
+				fmt.Fprintf(&b, "Scan this code to log in:\n%s\n", evt.Code)
+				qrterminal.Generate(evt.Code, qrterminal.L, &b)
 				size := purple_get_int(handler.account, C.GOWHATSAPP_QRCODE_SIZE_OPTION, 256)
 				if size > 0 {
-					png, err := qrcode.Encode(evt.Code, qrcode.Medium, size)
+					png, err = qrcode.Encode(evt.Code, qrcode.Medium, size)
 					if err != nil {
 						purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
-					} else {
-						purple_display_qrcode(handler.account, evt.Code, png, "")
 					}
-				} else {
-					var b strings.Builder
-					fmt.Fprintf(&b, "Scan this code to log in:\n%s\n", evt.Code)
-					if size < 0 {
-						qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, &b)
-					} else {
-						qrterminal.Generate(evt.Code, qrterminal.L, &b)
-					}
-					purple_display_qrcode(handler.account, evt.Code, nil, b.String())
 				}
+				purple_display_qrcode(handler.account, b.String(), evt.Code, png)
 			} else {
 				clientLog.Infof("Login event:", evt.Event)
 			}

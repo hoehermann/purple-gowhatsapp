@@ -106,7 +106,7 @@ func gowhatsapp_go_request_profile_picture(account *PurpleAccount, who *C.char, 
 /*
  * This will display a QR code via PurpleRequest API.
  */
-func purple_display_qrcode(account *PurpleAccount, challenge string, png []byte, terminal string) {
+func purple_display_qrcode(account *PurpleAccount, terminal string, challenge string, png []byte) {
 	cmessage := C.struct_gowhatsapp_message{
 		account:  account,
 		msgtype:  C.char(C.gowhatsapp_message_type_login),

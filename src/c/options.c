@@ -15,13 +15,13 @@ gowhatsapp_add_account_options(GList *account_options)
 {
     PurpleAccountOption *option;
     
-    option = purple_account_option_int_new(
-        "QR code size (pixels), set to 0 for plain-text login",
-        GOWHATSAPP_QRCODE_SIZE_OPTION,
-        256
+    option = purple_account_option_string_new(
+        "Database address",
+        GOWHATSAPP_DATABASE_ADDRESS_OPTION,
+        GOWHATSAPP_DATABASE_ADDRESS_DEFAULT
         );
     account_options = g_list_append(account_options, option);
-
+    
     GList *choices = NULL;
     choices = add_choice(choices, "Immediately", GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY);
     choices = add_choice(choices, "When interacting with conversation (buggy)", GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_INTERACT);
@@ -34,6 +34,20 @@ gowhatsapp_add_account_options(GList *account_options)
     );
     account_options = g_list_append(account_options, option);
     
+    option = purple_account_option_int_new(
+        "QR code size (pixels)",
+        GOWHATSAPP_QRCODE_SIZE_OPTION,
+        256
+        );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
+        "Plain-text login",
+        GOWHATSAPP_PLAIN_TEXT_LOGIN_OPTION,
+        FALSE
+        );
+    account_options = g_list_append(account_options, option);
+
     option = purple_account_option_bool_new(
         "Display offline contacts as away",
         GOWHATSAPP_FAKE_ONLINE_OPTION,
@@ -59,13 +73,6 @@ gowhatsapp_add_account_options(GList *account_options)
         "Treat system messages like normal messages (spectrum2 compatibility)",
         GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION,
         FALSE
-        );
-    account_options = g_list_append(account_options, option);
-    
-    option = purple_account_option_string_new(
-        "Database address (expert option, see readme)",
-        GOWHATSAPP_DATABASE_ADDRESS_OPTION,
-        GOWHATSAPP_DATABASE_ADDRESS_DEFAULT
         );
     account_options = g_list_append(account_options, option);
 

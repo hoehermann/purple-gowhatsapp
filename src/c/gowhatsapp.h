@@ -18,7 +18,7 @@ void gowhatsapp_login(PurpleAccount *account);
 void gowhatsapp_close(PurpleConnection *pc);
 
 // qrcode
-void gowhatsapp_handle_qrcode(PurpleConnection *pc, const char *challenge, const char *terminal, void *image_data, size_t image_data_len);
+void gowhatsapp_handle_qrcode(PurpleAccount *account, const char *challenge, const char *terminal, void *image_data, size_t image_data_len);
 void gowhatsapp_close_qrcode(PurpleAccount *account);
 
 // process_message
