@@ -53,13 +53,25 @@ gowhatsapp_display_qrcode(PurpleAccount *account, const char * challenge, void *
 }
 
 void
-gowhatsapp_handle_qrcode(PurpleAccount *account, const char *challenge, const char *terminal, void *image_data, size_t image_data_len)
+gowhatsapp_handle_qrcode(PurpleConnection *pc, const char *challenge, const char *terminal, void *image_data, size_t image_data_len)
 {
-    if (image_data_len > 0) {
+    PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
+    PurpleRequestUiOps *ui_ops = purple_request_get_ui_ops();
+    if (!ui_ops->request_fields || image_data_len <= 0) {
+        // The UI hasn't implemented the func we want, just output as a message instead
+        gchar *msg_out;
+        gpointer img_data = g_memdup(image_data, image_data_len);
+        int img_id = purple_imgstore_add_with_id(img_data, image_data_len, NULL);
+        if (img_id >= 0) {
+            msg_out = g_strdup_printf("%s: <img id=\"%u\" alt=\"%s\"/><br />%s", "Please scan this QR code with your phone", img_id, challenge, terminal);
+            flags |= PURPLE_MESSAGE_IMAGES;
+        } else {
+            msg_out = g_strdup_printf("%s: %s<br />%s", "Please scan this QR code with your phone", challenge, terminal);
+        }
+        purple_serv_got_im(pc, "Logon QR Code", msg_out, flags, time(NULL));
+        g_free(msg_out);
+    } else {
+        PurpleAccount *account = purple_connection_get_account(pc);
         gowhatsapp_display_qrcode(account, challenge, image_data, image_data_len);
-    }
-    if (purple_account_get_bool(account, GOWHATSAPP_PLAIN_TEXT_LOGIN_OPTION, FALSE)) {
-        PurpleConnection *pc = purple_account_get_connection(account);
-        purple_serv_got_im(pc, "login@whatsmeow", terminal, PURPLE_MESSAGE_RECV, time(NULL));
     }
 }

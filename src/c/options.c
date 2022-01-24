@@ -42,13 +42,6 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
 
     option = purple_account_option_bool_new(
-        "Plain-text login",
-        GOWHATSAPP_PLAIN_TEXT_LOGIN_OPTION,
-        FALSE
-        );
-    account_options = g_list_append(account_options, option);
-
-    option = purple_account_option_bool_new(
         "Display offline contacts as away",
         GOWHATSAPP_FAKE_ONLINE_OPTION,
         TRUE

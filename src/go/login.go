@@ -165,7 +165,7 @@ func (handler *Handler) connect() {
 				var png []byte
 				var b strings.Builder
 				fmt.Fprintf(&b, "Scan this code to log in:\n%s\n", evt.Code)
-				qrterminal.Generate(evt.Code, qrterminal.L, &b)
+				qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, &b)
 				size := purple_get_int(handler.account, C.GOWHATSAPP_QRCODE_SIZE_OPTION, 256)
 				if size > 0 {
 					png, err = qrcode.Encode(evt.Code, qrcode.Medium, size)
