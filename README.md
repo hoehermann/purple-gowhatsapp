@@ -35,6 +35,7 @@ Other improvements:
 
 Features which are present in the go-whatsapp version but missing here:
 
+* Embedding images in the conversation window.
 * Geting list of participants in group chat.
 * Support for proxy servers (whatsmeow limitation).
 
