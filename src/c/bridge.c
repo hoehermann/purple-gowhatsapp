@@ -15,8 +15,18 @@ int
 gowhatsapp_account_exists(PurpleAccount *account)
 {
     int account_exists = 0;
-    for (GList *iter = purple_accounts_get_all(); iter != NULL && account_exists == 0; iter = iter->next) {
-        PurpleAccount * acc = (PurpleAccount *)iter->data;
+    // this would be more elegant, but bitlbee does not implement purple_accounts_get_all()
+    // see https://github.com/hoehermann/purple-gowhatsapp/issues/102
+    // for (GList *iter = purple_accounts_get_all(); iter != NULL && account_exists == 0; iter = iter->next) {
+    //     PurpleAccount * acc = (PurpleAccount *)iter->data;
+    //     account_exists = acc == account;
+    // }
+    for (GList *iter = purple_connections_get_connecting(); iter != NULL && account_exists == 0; iter = iter->next) {
+        PurpleAccount * acc = purple_connection_get_account(iter->data);
+        account_exists = acc == account;
+    }
+    for (GList *iter = purple_connections_get_all(); iter != NULL && account_exists == 0; iter = iter->next) {
+        PurpleAccount * acc = purple_connection_get_account(iter->data);
         account_exists = acc == account;
     }
     return account_exists;
