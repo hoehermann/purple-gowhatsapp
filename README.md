@@ -45,8 +45,10 @@ Known issues:
 * Group Chats:
   * Topic (friendly name) is not set.
   * Participant lists are only populated as participants are sending messages.
-  * Attachments are downloaded, but link is not shown in group conversation window (not Purple limitation, tdlib can do it).
-  * Cannot send files of any kind to groups (Purple limitation?).
+  * Attachments are downloaded, but link is not shown in group conversation window (not a Purple limitation, tdlib can do it).
+  * Cannot send files of any kind to groups (Purple limitation? tdlib can embed images).
+  * Group chats are not listed in spectrum.
+  * No notification when being added to a group directly.
 * When sending a file, progress indicator stays at 0% regardless of progress.
 
 Other planned features:
