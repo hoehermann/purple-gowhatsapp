@@ -43,7 +43,7 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
     PurpleMessageFlags flags = 0;
     if (system) {
         if (gwamsg->senderJid == NULL) {
-            gwamsg->senderJid = "system";
+            gwamsg->senderJid = g_strdup("system"); // senderJid is freed by caller
         }
         gboolean spectrum = purple_account_get_bool(gwamsg->account, GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION, FALSE);
         if (!spectrum) {
