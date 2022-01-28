@@ -28,6 +28,15 @@ purple_account_get_int(PurpleAccount *account, const char *name, int default_val
     return 0;
 }
 
+int 
+purple_account_get_bool(PurpleAccount *account, const char *name, int default_value)
+{
+    (void) account;
+    (void) name;
+    (void) default_value;
+    return 0;
+}
+
 const char * 
 purple_account_get_string(PurpleAccount *account, const char *name, const char *default_value)
 {

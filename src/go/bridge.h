@@ -13,6 +13,7 @@ struct _PurpleAccount;
 typedef struct _PurpleAccount PurpleAccount;
 extern int gowhatsapp_account_exists(PurpleAccount *account);
 extern int purple_account_get_int(PurpleAccount *account, const char *name, int default_value);
+extern int purple_account_get_bool(PurpleAccount *account, const char *name, int default_value); // assumes gboolean is int
 extern const char * purple_account_get_string(PurpleAccount *account, const char *name, const char *default_value);
 #endif
 

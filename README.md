@@ -139,7 +139,9 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
   
 * `spectrum-compatibility`  
-  If set to true (default: false), system messages will be treated just like normal messages, allowing them to be logged and forwarded. Currently, this only affects "message could not be sent" errors.
+  Setting this to true (default: false) will have the following effects:
+    * System messages will be treated just like normal messages, allowing them to be logged and forwarded. This only affects soft errors regarding a specific conversation, e.g. "message could not be sent".
+    * After a message has been sent successfully, it is not explicitly echoed locally.
   
 * `database-address`  
   whatsmeow stores all session information in a SQL database. This string will be passed to [database/sql.Open](https://pkg.go.dev/database/sql#Open) as `dataSourceName`.

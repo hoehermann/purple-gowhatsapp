@@ -63,7 +63,7 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
     
     option = purple_account_option_bool_new(
-        "Treat system messages like normal messages (spectrum2 compatibility)",
+        "Spectrum2 compatibility mode",
         GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION,
         FALSE
         );

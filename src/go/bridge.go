@@ -325,6 +325,16 @@ func purple_get_int(account *PurpleAccount, key *C.char, default_value int) int 
 }
 
 /*
+ * Get bool from the purple account's settings.
+ */
+func purple_get_bool(account *PurpleAccount, key *C.char, default_value bool) bool {
+	if C.gowhatsapp_account_exists(account) == 1 {
+		return Cint_to_bool(C.purple_account_get_bool(account, key, C.int(bool_to_Cchar(default_value))))
+	}
+	return default_value
+}
+
+/*
  * Get string from the purple account's settings.
  */
 func purple_get_string(account *PurpleAccount, key *C.char, default_value *C.char) string {
