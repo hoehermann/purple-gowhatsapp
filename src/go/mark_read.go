@@ -21,7 +21,7 @@ var deferredReceipts = make(map[types.JID]map[types.JID][]types.MessageID)
  * Except if the purple setting is "never send receipts". Then it does nothing.
  */
 func (handler *Handler) mark_read_defer(id types.MessageID, chat types.JID, sender types.JID) {
-	default_setting := C.GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY
+	default_setting := C.GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_ANSWER
 	never := C.GoString(C.GOWHATSAPP_SEND_RECEIPT_CHOICE_NEVER)
 	setting := purple_get_string(handler.account, C.GOWHATSAPP_SEND_RECEIPT_OPTION, default_setting)
 	if never == setting {
@@ -56,7 +56,7 @@ func (handler *Handler) mark_read_defer(id types.MessageID, chat types.JID, send
  * mark_read_defer(…) should have been called before.
  */
 func (handler *Handler) mark_read_if(chat types.JID, choice *C.char) {
-	default_setting := C.GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY
+	default_setting := C.GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_ANSWER
 	setting := purple_get_string(handler.account, C.GOWHATSAPP_SEND_RECEIPT_OPTION, default_setting)
 	if C.GoString(choice) == setting {
 		handler.log.Infof("Sending read receipt due to setting %s...", C.GoString(choice))
@@ -65,14 +65,14 @@ func (handler *Handler) mark_read_if(chat types.JID, choice *C.char) {
 }
 
 /*
- * Shorthand
+ * Shorthand for handler.mark_read_if(chat, C.GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_ANSWER)
  */
 func (handler *Handler) mark_read_if_on_answer(chat types.JID) {
 	handler.mark_read_if(chat, C.GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_ANSWER)
 }
 
 /*
- * Shorthand
+ * Shorthand for handler.mark_read_if(chat, C.GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY)
  */
 func (handler *Handler) mark_read_if_on_receival(chat types.JID) {
 	handler.mark_read_if(chat, C.GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY)

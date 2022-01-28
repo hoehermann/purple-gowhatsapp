@@ -87,7 +87,7 @@ CMake will try to set-up a development environment automatically.
 
 Additional dependencies:
 
-* [go (32 bit)](https://go.dev/dl/go1.17.5.windows-386.msi)
+* [go 1.17 or newer (32 bit)](https://go.dev/dl/go1.17.5.windows-386.msi)
 * [gcc (32 bit)](https://osdn.net/projects/mingw/)
 
 go and gcc must be in `%PATH%`.
@@ -128,16 +128,16 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 * `send-receipt`  
   Selects when to send receipts "double blue tick" notifications:
-    * "immediately": immediately upon message receival (default)
+    * "immediately": immediately upon message receival
     * "on-interact": as the user interacts with the conversation window (currently buggy)
-    * "on-answer": as soon as the user sends an answer
+    * "on-answer": as soon as the user sends an answer (default)
     * "never": never
     
 * `get-icons`  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
   
 * `spectrum-compatibility`  
-  If set to true (default: false), system messages will be treated just like normal messages, allowing them to be logged and forwarded.
+  If set to true (default: false), system messages will be treated just like normal messages, allowing them to be logged and forwarded. Currently, this only affects "message could not be sent" errors.
   
 * `database-address`  
   whatsmeow stores all session information in a SQL database. This string will be passed to [database/sql.Open](https://pkg.go.dev/database/sql#Open) as `dataSourceName`.
