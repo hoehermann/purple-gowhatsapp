@@ -14,9 +14,6 @@ gowhatsapp_login(PurpleAccount *account)
     pc_flags |= PURPLE_CONNECTION_NO_BGCOLOR;
     purple_connection_set_flags(pc, pc_flags);
 
-    //WhatsappAccountData *wad = g_new0(WhatsappAccountData, 1);
-    //purple_connection_set_protocol_data(pc, wad);
-    
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
     const char *credentials = purple_account_get_string(account, GOWHATSAPP_CREDENTIALS_KEY, NULL);
     if (credentials == NULL) {
@@ -34,8 +31,6 @@ gowhatsapp_close(PurpleConnection *pc)
 {
     PurpleAccount * account = purple_connection_get_account(pc);
     gowhatsapp_go_close(account);
-    
-    //g_free(purple_connection_get_protocol_data(pc));
 }
 
 void

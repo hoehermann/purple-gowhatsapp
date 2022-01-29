@@ -6,11 +6,7 @@
 #define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
 #define GOWHATSAPP_STATUS_STR_AWAY     "away"
 
-typedef struct {
-} WhatsappAccountData;
-
 // options
-
 GList *gowhatsapp_add_account_options(GList *account_options);
 
 // login
@@ -68,4 +64,4 @@ void gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gbo
 void gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg);
 
 // receipts
-void gowhatsapp_receipts_init();
+void gowhatsapp_receipts_init(PurpleConnection *pc);
