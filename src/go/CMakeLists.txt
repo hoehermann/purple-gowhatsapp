@@ -14,7 +14,7 @@ add_custom_command(
 )
 
 # perpare a stub so cgo can determine our custom function signatures
-add_library(purple-dummy STATIC purple-dummy.c constants.c)
+add_library(purple-dummy STATIC purple-dummy.c ../c/constants.c)
 
 # build cgo library
 # partly taken from https://github.com/mutse/go-cmake
@@ -29,6 +29,7 @@ set(GO_SRCS
   mark_read.go
   presence.go
   profile.go
+  oggreader.go
 )
 set(OUTPUT_PREFIX purple-go-whatsapp)
 add_custom_command(

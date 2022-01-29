@@ -3,7 +3,6 @@ module github.com/hoehermann/purple-gowhatsapp/src/go
 go 1.17
 
 require (
-	github.com/go-sql-driver/mysql v1.6.0
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/mattn/go-sqlite3 v1.14.10
 	github.com/mdp/qrterminal/v3 v3.0.0

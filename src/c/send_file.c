@@ -12,13 +12,15 @@ gowhatsapp_xfer_send_init(PurpleXfer *xfer)
     PurpleAccount *account = purple_xfer_get_account(xfer);
     const char *who = purple_xfer_get_remote_user(xfer);
     const char *filename = purple_xfer_get_local_filename(xfer);
-    int error = gowhatsapp_go_send_file(account, (char *)who, (char *)filename);
-    if (error) {
-        purple_xfer_error(purple_xfer_get_type(xfer), account, who, "Sending file failed."); 
+    char *error = gowhatsapp_go_send_file(account, (char *)who, (char *)filename);
+    if (error && error[0]) {
+        purple_xfer_error(purple_xfer_get_type(xfer), account, who, error); 
         purple_xfer_cancel_local(xfer);
     } else {
+        purple_xfer_set_bytes_sent(xfer, purple_xfer_get_size(xfer));
         purple_xfer_set_completed(xfer, TRUE);
     }
+g_free(error);
 }
 
 PurpleXfer *

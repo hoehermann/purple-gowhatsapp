@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "bridge.h"
+#include "../c/bridge.h"
 
 /*
  * This module implements dummy bodies for C functions to be called by cgo.

@@ -22,8 +22,8 @@
 package main
 
 /*
-#include "constants.h"
-#include "bridge.h"
+#include "../c/constants.h"
+#include "../c/bridge.h"
 */
 import "C"
 
@@ -65,12 +65,13 @@ func gowhatsapp_go_send_message(account *PurpleAccount, who *C.char, message *C.
 }
 
 //export gowhatsapp_go_send_file
-func gowhatsapp_go_send_file(account *PurpleAccount, who *C.char, filename *C.char) int {
+func gowhatsapp_go_send_file(account *PurpleAccount, who *C.char, filename *C.char) *C.char {
+	err := "Not connected."
 	handler, ok := handlers[account]
 	if ok {
-		return handler.send_file(C.GoString(who), C.GoString(filename))
+		err = handler.send_file(C.GoString(who), C.GoString(filename))
 	}
-	return -107 // ENOTCONN, see libpurple/prpl.h
+	return C.CString(err)
 }
 
 //export gowhatsapp_go_mark_read_conversation

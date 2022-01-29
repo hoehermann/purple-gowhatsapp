@@ -1,7 +1,7 @@
 package main
 
 /*
-#include "constants.h"
+#include "../c/constants.h"
 */
 import "C"
 
