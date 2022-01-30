@@ -1,4 +1,5 @@
 #include "gowhatsapp.h"
+#include "constants.h"
 
 static
 void xfer_init_fnc(PurpleXfer *xfer) {
@@ -26,7 +27,8 @@ void xfer_release_blob(PurpleXfer * xfer) {
     xfer->data = NULL;
 }
 
-void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
+static
+void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
     g_return_if_fail(pc != NULL);
     PurpleAccount *account = purple_connection_get_account(pc);
     PurpleXfer * xfer = purple_xfer_new(account, PURPLE_XFER_RECEIVE, gwamsg->senderJid);
@@ -45,4 +47,20 @@ void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gw
     purple_xfer_set_cancel_recv_fnc(xfer, xfer_release_blob);
     
     purple_xfer_request(xfer);
+}
+
+void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
+    const gboolean is_image = gwamsg->subtype == gowhatsapp_attachment_type_image;
+    const gboolean inline_images = purple_account_get_bool(gwamsg->account, GOWHATSAPP_INLINE_IMAGES_OPTION, TRUE);
+    int img_id = -1;
+    if (is_image && inline_images) {
+        img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL);
+        if (img_id >= 0) {
+            gwamsg->text = g_strdup_printf("<img id=\"%u\"/>", img_id);
+            gowhatsapp_display_text_message(pc, gwamsg, PURPLE_MESSAGE_IMAGES);
+        }
+    }
+    if (img_id < 0) {
+        xfer_download_attachment(pc, gwamsg);
+    }
 }

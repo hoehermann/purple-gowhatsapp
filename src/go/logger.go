@@ -14,7 +14,7 @@ func (l *purpleLogger) formatf(msg string, args ...interface{}) string {
 	return fmt.Sprintf("[%s] %s\n", l.topic, fmt.Sprintf(msg, args...))
 }
 
-// numieric level values corresponding to PurpleDebugLevel defined in libpurple/debug.h.
+// numeric error level values corresponding to PurpleDebugLevel defined in libpurple/debug.h.
 
 func (l *purpleLogger) Debugf(msg string, args ...interface{}) {
 	purple_debug(1, l.formatf(msg, args...))

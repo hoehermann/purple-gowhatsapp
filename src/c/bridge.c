@@ -38,6 +38,7 @@ gowhatsapp_account_exists(PurpleAccount *account)
  */
 static void
 error_all_accounts(char level, char *text) {
+    // note: this will have no effect in bitlbee as bitlbee does not implement purple_accounts_get_all()
     for (GList *iter = purple_accounts_get_all(); iter != NULL; iter = iter->next) {
         PurpleAccount * account = (PurpleAccount *)iter->data;
         const char *protocol_id = purple_account_get_protocol_id(account);
@@ -64,12 +65,12 @@ static void
 process_message(gowhatsapp_message_t * gwamsg) {
     if (gwamsg->msgtype == gowhatsapp_message_type_log) {
         // log messages do not need an active connection
-        purple_debug(gwamsg->level, GOWHATSAPP_NAME, "%s", gwamsg->text);
+        purple_debug(gwamsg->subtype, GOWHATSAPP_NAME, "%s", gwamsg->text);
         return;
     }
     if (gwamsg->msgtype == gowhatsapp_message_type_error && gwamsg->account == NULL) {
         // error message affecting all accounts
-        error_all_accounts(gwamsg->level, gwamsg->text);
+        error_all_accounts(gwamsg->subtype, gwamsg->text);
         return;
     }
     int account_exists = gowhatsapp_account_exists(gwamsg->account);

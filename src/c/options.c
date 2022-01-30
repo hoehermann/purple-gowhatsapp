@@ -42,6 +42,13 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
 
     option = purple_account_option_bool_new(
+        "Inline images",
+        GOWHATSAPP_INLINE_IMAGES_OPTION,
+        TRUE
+        );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new(
         "Display offline contacts as away",
         GOWHATSAPP_FAKE_ONLINE_OPTION,
         TRUE

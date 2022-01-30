@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"go.mau.fi/whatsmeow"
@@ -9,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"bytes"
 )
 
 // based on https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go

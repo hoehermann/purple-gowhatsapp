@@ -1,5 +1,10 @@
 package main
 
+/*
+#include "../c/bridge.h"
+*/
+import "C"
+
 import (
 	"encoding/hex"
 	"fmt"
@@ -67,9 +72,10 @@ func extension_from_mimetype(mimeType *string) string {
 // based on https://github.com/FKLC/WhatsAppToDiscord/blob/master/WA2DC.go
 func (handler *Handler) handle_attachment(evt *events.Message) {
 	var (
-		data     []byte
-		err      error
-		filename = ""
+		data      []byte
+		err       error
+		filename  = ""
+		data_type C.int
 	)
 	message := evt.Message
 	ms := evt.Info.MessageSource
@@ -79,39 +85,44 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 	if im != nil {
 		data, err = handler.client.Download(im)
 		filename = hex.EncodeToString(im.FileSha256) + extension_from_mimetype(im.Mimetype)
+		data_type = C.gowhatsapp_attachment_type_image
 	}
 	vm := message.GetVideoMessage()
 	if vm != nil {
 		data, err = handler.client.Download(vm)
 		filename = hex.EncodeToString(vm.FileSha256) + extension_from_mimetype(vm.Mimetype)
+		data_type = C.gowhatsapp_attachment_type_video
 	}
 	am := message.GetAudioMessage()
 	if am != nil {
 		data, err = handler.client.Download(am)
 		filename = hex.EncodeToString(am.FileSha256) + extension_from_mimetype(am.Mimetype)
+		data_type = C.gowhatsapp_attachment_type_audio
 	}
 	dm := message.GetDocumentMessage()
 	if dm != nil {
 		data, err = handler.client.Download(dm)
 		filename = *message.GetDocumentMessage().Title
 		// TODO: sanitize filename
+		data_type = C.gowhatsapp_attachment_type_document
 	}
 	sm := message.GetStickerMessage()
 	if sm != nil {
 		data, err = handler.client.Download(sm)
 		filename = hex.EncodeToString(sm.FileSha256) + extension_from_mimetype(sm.Mimetype)
+		data_type = C.gowhatsapp_attachment_type_sticker
 	}
 	if err != nil {
 		purple_display_system_message(handler.account, chat, ms.IsGroup, fmt.Sprintf("Message contained an attachment, but the download failed: %#v", err))
 		return
 	}
 	if filename != "" {
+		sender := ms.Sender.ToNonAD()
 		if ms.IsGroup {
 			// put original sender username into file-name
 			// so source is known even when receiving from group chats
-			sender := ms.Sender.ToNonAD().User
-			filename = fmt.Sprintf("%s_%s", sender, filename)
+			filename = fmt.Sprintf("%s_%s", sender.User, filename)
 		}
-		purple_handle_attachment(handler.account, chat, filename, data)
+		purple_handle_attachment(handler.account, chat, ms.IsGroup, sender.String(), data_type, filename, data)
 	}
 }

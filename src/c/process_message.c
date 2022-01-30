@@ -16,9 +16,9 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
         return;
     }
     purple_debug_info(
-        GOWHATSAPP_NAME, "recieved %s (level %d) for account %p remote %s (isGroup %d) sender %s (alias %s, fromMe %d) sent %ld: %s\n",
+        GOWHATSAPP_NAME, "recieved %s (subtype %d) for account %p remote %s (isGroup %d) sender %s (alias %s, fromMe %d) sent %ld: %s\n",
         gowhatsapp_message_type_string[gwamsg->msgtype],
-        gwamsg->level,
+        gwamsg->subtype,
         gwamsg->account,
         gwamsg->remoteJid,
         gwamsg->isGroup,
@@ -36,7 +36,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
     }
     switch(gwamsg->msgtype) {
         case gowhatsapp_message_type_error:
-            if (gwamsg->level == 0) {
+            if (gwamsg->subtype == 0) {
                 purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, gwamsg->text);
             } else {
                 purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, gwamsg->text);
@@ -59,10 +59,10 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_close_qrcode(gwamsg->account);
             break;
         case gowhatsapp_message_type_text:
-            gowhatsapp_display_text_message(pc, gwamsg, FALSE);
+            gowhatsapp_display_text_message(pc, gwamsg, 0);
             break;
         case gowhatsapp_message_type_system:
-            gowhatsapp_display_text_message(pc, gwamsg, TRUE);
+            gowhatsapp_display_text_message(pc, gwamsg, PURPLE_MESSAGE_SYSTEM);
             break;
         case gowhatsapp_message_type_name:
             gowhatsapp_ensure_buddy_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
@@ -74,7 +74,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             serv_got_typing_stopped(pc, gwamsg->remoteJid);
             break;
         case gowhatsapp_message_type_presence:
-            gowhatsapp_handle_presence(gwamsg->account, gwamsg->remoteJid, gwamsg->level, gwamsg->timestamp);
+            gowhatsapp_handle_presence(gwamsg->account, gwamsg->remoteJid, gwamsg->subtype, gwamsg->timestamp);
             break;
         case gowhatsapp_message_type_attachment:
             gowhatsapp_handle_attachment(pc, gwamsg);

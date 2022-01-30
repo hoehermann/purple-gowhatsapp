@@ -212,10 +212,13 @@ func purple_update_name(account *PurpleAccount, remoteJid string, pushName strin
  * while in fact the file has already been received and they may only chose
  * where to store it.
  */
-func purple_handle_attachment(account *PurpleAccount, senderJid string, filename string, data []byte) {
+func purple_handle_attachment(account *PurpleAccount, remoteJid string, isGroup bool, senderJid string, data_type C.int, filename string, data []byte) {
 	cmessage := C.struct_gowhatsapp_message{
 		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_attachment),
+		subtype:   C.char(data_type),
+		remoteJid: C.CString(remoteJid),
+		isGroup:   bool_to_Cchar(isGroup),
 		senderJid: C.CString(senderJid),
 		name:      C.CString(filename),
 		blob:      C.CBytes(data),
@@ -276,7 +279,7 @@ func purple_update_presence(account *PurpleAccount, remoteJid string, online boo
 		msgtype:   C.char(C.gowhatsapp_message_type_presence),
 		remoteJid: C.CString(remoteJid),
 		timestamp: timestamp,
-		level:     bool_to_Cchar(online),
+		subtype:   bool_to_Cchar(online),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
@@ -287,7 +290,7 @@ func purple_update_presence(account *PurpleAccount, remoteJid string, online boo
 func purple_debug(loglevel int, message string) {
 	cmessage := C.struct_gowhatsapp_message{
 		msgtype: C.char(C.gowhatsapp_message_type_log),
-		level:   C.char(loglevel),
+		subtype: C.char(loglevel),
 		text:    C.CString(message),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
@@ -302,15 +305,15 @@ const (
  * Forward error to purple. This will cause a disconnect.
  */
 func purple_error(account *PurpleAccount, message string, fatal bool) {
-	level := 0
+	fatality := 0
 	if fatal {
-		level = 1
+		fatality = 1
 	}
 	cmessage := C.struct_gowhatsapp_message{
 		account: account,
 		msgtype: C.char(C.gowhatsapp_message_type_error),
 		text:    C.CString(message),
-		level:   C.char(level),
+		subtype: C.char(fatality),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }

@@ -1,9 +1,6 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define GOWHATSAPP_NAME "whatsmeow"  // name to refer to this plug-in (in logs)
-#define GOWHATSAPP_PRPL_ID "prpl-hehoe-whatsmeow"
-
 /*
  * Problem: CGO reads object files to determine the type of constants.
  * It does not understand preprocessor defines.
@@ -24,10 +21,11 @@ CHARCONSTANT(GOWHATSAPP_FAKE_ONLINE_OPTION, "fake-online");
 CHARCONSTANT(GOWHATSAPP_QRCODE_SIZE_OPTION, "qrcode-size");
 CHARCONSTANT(GOWHATSAPP_SEND_RECEIPT_OPTION, "send-receipt");
 CHARCONSTANT(GOWHATSAPP_GET_ICONS_OPTION, "get-icons");
+CHARCONSTANT(GOWHATSAPP_INLINE_IMAGES_OPTION, "inline-images");
 CHARCONSTANT(GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION, "spectrum-compatibility");
 CHARCONSTANT(GOWHATSAPP_DATABASE_ADDRESS_OPTION, "database-address");
-
 CHARCONSTANT(GOWHATSAPP_DATABASE_ADDRESS_DEFAULT, "file:$purple_user_dir/whatsmeow.db?_foreign_keys=on&_busy_timeout=3000");
+
 /*
  * Choices for GOWHATSAPP_SEND_RECEIPT_OPTION.
  */

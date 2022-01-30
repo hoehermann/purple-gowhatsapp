@@ -36,19 +36,21 @@ gowhatsapp_display_group_message(PurpleConnection *pc, gowhatsapp_message_t *gwa
 }
 
 void
-gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, gboolean system)
+gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags)
 {
     g_return_if_fail(pc != NULL);
     
-    PurpleMessageFlags flags = 0;
-    if (system) {
+    if (flags & PURPLE_MESSAGE_SYSTEM) {
         if (gwamsg->senderJid == NULL) {
-            gwamsg->senderJid = g_strdup("system"); // senderJid is freed by caller
+            gwamsg->senderJid = g_strdup("system"); // g_strdup needed since senderJid is freed by caller
         }
         gboolean spectrum = purple_account_get_bool(gwamsg->account, GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION, FALSE);
-        if (!spectrum) {
-            // spectrum "swallows" system messages – that is why these flags can be suppressed
-            flags |= PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LOG;
+        if (spectrum) {
+            // spectrum ignores system messages: strip the system flag
+            flags &= ~PURPLE_MESSAGE_SYSTEM;
+        } else {
+            // normal Procedure: keep system flag, do not log message
+            flags |= PURPLE_MESSAGE_NO_LOG;
         }
     }
 

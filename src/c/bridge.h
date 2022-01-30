@@ -19,6 +19,8 @@ extern const char * purple_account_get_string(PurpleAccount *account, const char
 
 // no real reason to do this, I just think it is cool
 // https://stackoverflow.com/questions/9907160/how-to-convert-enum-names-to-string-in-c
+#define GENERATE_STRING(STRING) #STRING,
+
 #define FOREACH_MESSAGE_TYPE(MESSAGE_TYPE) \
     MESSAGE_TYPE(none) \
     MESSAGE_TYPE(error) \
@@ -37,11 +39,25 @@ extern const char * purple_account_get_string(PurpleAccount *account, const char
     MESSAGE_TYPE(profile_picture) \
     MESSAGE_TYPE(max) \
 
-#define GENERATE_ENUM(ENUM) gowhatsapp_message_type_##ENUM,
-#define GENERATE_STRING(STRING) #STRING,
+#define GENERATE_MESSAGE_ENUM(ENUM) gowhatsapp_message_type_##ENUM,
 
 enum gowhatsapp_message_type {
-    FOREACH_MESSAGE_TYPE(GENERATE_ENUM)
+    FOREACH_MESSAGE_TYPE(GENERATE_MESSAGE_ENUM)
+};
+
+#define FOREACH_ATTACHMENT_TYPE(ATTACHMENT_TYPE) \
+    ATTACHMENT_TYPE(none) \
+    ATTACHMENT_TYPE(image) \
+    ATTACHMENT_TYPE(video) \
+    ATTACHMENT_TYPE(audio) \
+    ATTACHMENT_TYPE(document) \
+    ATTACHMENT_TYPE(sticker) \
+    ATTACHMENT_TYPE(max) \
+
+#define GENERATE_ATTACHMENT_ENUM(ENUM) gowhatsapp_attachment_type_##ENUM,
+
+enum gowhatsapp_attachment_type {
+    FOREACH_ATTACHMENT_TYPE(GENERATE_ATTACHMENT_ENUM)
 };
 
 // Structure to communicate go → purple.
@@ -57,8 +73,8 @@ struct gowhatsapp_message {
     size_t blobsize; /// size of binary payload in bytes
     time_t timestamp; /// timestamp the message was sent(?)
     char msgtype; /// message type – see above
+    char subtype; /// loglevel, error severity, or online-state
     char isGroup; /// this is a group chat message
-    char level; /// loglevel, error severity, or online-state
     char fromMe; /// this is (a copy of) an outgoing message
     char system; /// this is a system-message, not user-generated
 };

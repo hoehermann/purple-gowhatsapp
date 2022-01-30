@@ -1,6 +1,9 @@
 #include "purple_compat.h"
 #include "bridge.h"
 
+#define GOWHATSAPP_NAME "whatsmeow"  // name to refer to this plug-in (in logs)
+#define GOWHATSAPP_PRPL_ID "prpl-hehoe-whatsmeow"
+
 #define GOWHATSAPP_STATUS_STR_ONLINE   "online"
 #define GOWHATSAPP_STATUS_STR_OFFLINE  "offline"
 #define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
@@ -21,7 +24,7 @@ void gowhatsapp_close_qrcode(PurpleAccount *account);
 void gowhatsapp_process_message(gowhatsapp_message_t *gwamsg);
 
 // display_message
-void gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, gboolean system);
+void gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags);
 
 // message_filtering
 gboolean gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message_id);

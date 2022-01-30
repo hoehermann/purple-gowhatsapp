@@ -13,7 +13,10 @@ Standard features:
 * Connecting to existing account via QR-code.
 * Receiving messages, sending messages.
 * Receiving files (images, videos, voice, document, stickers).
-* Sending images (everything else is considered a document).
+* Received images are displayed in the conversation window (optional).
+* Sending images.
+* Sending audio files as voice messages.
+* Sending other files as documents.
 * Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures (for [Markus "nihilus" Gothe](https://github.com/nihilus)).
 * Sending receipts (configurable).
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
@@ -35,7 +38,6 @@ Other improvements:
 
 Features which are present in the go-whatsapp version but missing here:
 
-* Embedding images in the conversation window.
 * Geting list of participants in group chat.
 * Support for proxy servers (whatsmeow limitation).
 
@@ -49,14 +51,17 @@ Known issues:
   * Cannot send files of any kind to groups (Purple limitation? tdlib can embed images).
   * Group chats are not listed in spectrum.
   * No notification when being added to a group directly.
-* When sending a file, progress indicator stays at 0% regardless of progress.
 
 Other planned features:
 
-* Sending proper voice and video messages.
-* Join group chat via link.
 * Display receipts in conversation window.
+* Join group chat via link.
+* Sending proper video messages.
 * Option to terminate session explicitly.
+
+These features will not be worked on:
+
+* Accessing microphone and camera for recording voice or video messages.
 
 ### Building
 
@@ -135,6 +140,9 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
     * "on-answer": as soon as the user sends an answer (default)
     * "never": never
     
+* `inline-images`:
+  If set to true (default), images will automatically be downloaded and embedded in the conversation window.
+  
 * `get-icons`  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
   
