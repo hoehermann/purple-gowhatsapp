@@ -33,29 +33,6 @@ gowhatsapp_account_exists(PurpleAccount *account)
 }
 
 /*
- * This forwards an error to all connections to all accounts of this prpl.
- * Useful for global problems e.g. database error.
- */
-static void
-error_all_accounts(char level, char *text) {
-    // note: this will have no effect in bitlbee as bitlbee does not implement purple_accounts_get_all()
-    for (GList *iter = purple_accounts_get_all(); iter != NULL; iter = iter->next) {
-        PurpleAccount * account = (PurpleAccount *)iter->data;
-        const char *protocol_id = purple_account_get_protocol_id(account);
-        if (purple_strequal(protocol_id, GOWHATSAPP_PRPL_ID)) {
-            PurpleConnection *pc = purple_account_get_connection(account);
-            if (pc != NULL) {
-                if (level == 0) {
-                    purple_connection_error(pc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, text);
-                } else {
-                    purple_connection_error(pc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, text);
-                }
-            }
-        }
-    }
-}
-
-/*
  * Basic message processing.
  * Log messages are always processed.
  * Queries Pidgin for a list of all accounts.
@@ -66,11 +43,6 @@ process_message(gowhatsapp_message_t * gwamsg) {
     if (gwamsg->msgtype == gowhatsapp_message_type_log) {
         // log messages do not need an active connection
         purple_debug(gwamsg->subtype, GOWHATSAPP_NAME, "%s", gwamsg->text);
-        return;
-    }
-    if (gwamsg->msgtype == gowhatsapp_message_type_error && gwamsg->account == NULL) {
-        // error message affecting all accounts
-        error_all_accounts(gwamsg->subtype, gwamsg->text);
         return;
     }
     int account_exists = gowhatsapp_account_exists(gwamsg->account);
