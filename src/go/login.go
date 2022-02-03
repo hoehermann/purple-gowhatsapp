@@ -10,6 +10,7 @@ import (
 	"fmt"
 	_ "github.com/jackc/pgx"
 	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
@@ -40,6 +41,9 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	dialect := "pgx" // see https://github.com/jackc/pgx/wiki/Getting-started-with-pgx-through-database-sql
 	if strings.HasPrefix(address, "file:") {
 		dialect = "sqlite3" // see https://github.com/mattn/go-sqlite3/blob/671e666/_example/simple/simple.go#L14
+	} else if strings.HasPrefix(address, "mysql:") {
+		dialect = "mysql"
+		address = strings.Replace(address, "mysql:", "", -1)
 	} else {
 		// nothing else, see https://github.com/tulir/whatsmeow/blob/b078a9e/store/sqlstore/container.go#L34
 	}
