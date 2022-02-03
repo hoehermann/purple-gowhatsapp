@@ -43,7 +43,6 @@ Features which are present in the go-whatsapp version but missing here:
 
 Known issues:
 
-* If the buddy was not given a local alias or the alias does not match the remote user's friendly name, the notification about them changing their friendly name is shown every time it is received.
 * Group Chats:
   * Topic (friendly name) is not set.
   * Participant lists are only populated as participants are sending messages.
