@@ -105,6 +105,10 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	// TODO
 	// received when being added to a group directly
 	// &events.JoinedGroup{Reason:"", GroupInfo:types.GroupInfo{JID:types.JID{User:"REDACTED", Agent:0x0, Device:0x0, Server:"g.us", AD:false}, OwnerJID:types.JID{User:"", Agent:0x0, Device:0x0, Server:"", AD:false}, GroupName:types.GroupName{Name:"Testgruppe", NameSetAt:time.Date(2020, time.July, 18, 22, 14, 30, 0, time.Local), NameSetBy:types.JID{User:"", Agent:0x0, Device:0x0, Server:"", AD:false}}, GroupTopic:types.GroupTopic{Topic:"", TopicID:"", TopicSetAt:time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), TopicSetBy:types.JID{User:"", Agent:0x0, Device:0x0, Server:"", AD:false}}, GroupLocked:types.GroupLocked{IsLocked:false}, GroupAnnounce:types.GroupAnnounce{IsAnnounce:false, AnnounceVersionID:"REDACTED"}, GroupEphemeral:types.GroupEphemeral{IsEphemeral:false, DisappearingTimer:0x0}, GroupCreated:time.Date(2020, time.July, 18, 22, 14, 30, 0, time.Local), ParticipantVersionID:"REDACTED", Participants:[]types.GroupParticipant{types.GroupParticipant{JID:types.JID{User:"REDACTED", Agent:0x0, Device:0x0, Server:"s.whatsapp.net", AD:false}, IsAdmin:false, IsSuperAdmin:false}, types.GroupParticipant{JID:types.JID{User:"REDACTED", Agent:0x0, Device:0x0, Server:"s.whatsapp.net", AD:false}, IsAdmin:true, IsSuperAdmin:false}}}}
+	case *events.OfflineSyncCompleted:
+	// TODO
+	// no idea what this does
+	// &events.OfflineSyncCompleted{Count:0}
 	default:
 		log.Warnf("Event type not handled: %#v", rawEvt)
 	}

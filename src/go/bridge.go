@@ -28,6 +28,8 @@ package main
 import "C"
 
 import "time"
+import "fmt"
+import "unsafe"
 
 type PurpleAccount = C.PurpleAccount
 
@@ -102,6 +104,37 @@ func gowhatsapp_go_subscribe_presence(account *PurpleAccount, who *C.char) {
 	} else {
 		// no connection, fail silently
 	}
+}
+
+const MAX_GROUP_COUNT = 1024
+
+//export gowhatsapp_go_get_joined_groups
+func gowhatsapp_go_get_joined_groups(account *PurpleAccount) *C.gowhatsapp_group_info_t {
+	var output unsafe.Pointer = nil
+	handler, ok := handlers[account]
+	if ok {
+		groups, err := handler.client.GetJoinedGroups()
+		if err != nil {
+			purple_error(account, fmt.Sprintf("Unable to get list of groups: %#v", err), ERROR_FATAL)
+		} else {
+			groups_size := len(groups)
+			if groups_size > 0 {
+				// one extra all-zero element in output to denote end of C array
+				output = C.calloc(C.size_t(groups_size+1), C.size_t(unsafe.Sizeof(C.gowhatsapp_group_info_t{})))
+				// https://stackoverflow.com/questions/51525876/use-go-slice-in-c
+				group_infos := (*[MAX_GROUP_COUNT]C.gowhatsapp_group_info_t)(output)[:groups_size:groups_size]
+				for i, group := range groups {
+					group_infos[i].remoteJid = C.CString(group.JID.ToNonAD().String())
+					group_infos[i].ownerJid = C.CString(group.OwnerJID.ToNonAD().String())
+					group_infos[i].name = C.CString(group.Name)
+					group_infos[i].topic = C.CString(group.Topic)
+				}
+			}
+		}
+	} else {
+		purple_error(account, "Cannot get list of groups: Not connected.", ERROR_TRANSIENT)
+	}
+	return (*C.gowhatsapp_group_info_t)(output)
 }
 
 //export gowhatsapp_go_request_profile_picture

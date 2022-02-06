@@ -17,24 +17,6 @@ PurpleConversation *gowhatsapp_find_conversation(char *username, PurpleAccount *
     return conv;
 }
 
-static void
-gowhatsapp_display_group_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags) {
-    if (gwamsg->fromMe) {
-        PurpleConvChat *chat = gowhatsapp_find_group_chat(gwamsg->remoteJid, NULL, NULL, pc);
-        if (chat != NULL) {
-            // display message sent from own account (but other device) here
-            purple_conv_chat_write(chat, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
-        }
-    } else {
-        // don't create chat if not joined
-        PurpleConvChat *chat = gowhatsapp_find_group_chat(gwamsg->remoteJid, gwamsg->senderJid, NULL, pc);
-        if (chat != NULL) {
-            // participants in group chats have their senderJid supplied
-            purple_conv_chat_write(chat, gwamsg->senderJid, gwamsg->text, flags, gwamsg->timestamp);
-        }
-    }
-}
-
 void
 gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags)
 {
@@ -62,8 +44,12 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
         flags |= PURPLE_MESSAGE_RECV;
     }
     if (gwamsg->isGroup) {
-        // TODO: find out why messes from status@broadcast produce a crash
-        gowhatsapp_display_group_message(pc, gwamsg, flags);
+        PurpleConvChat *chat = gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid);
+        if (chat != NULL) {
+            // participants in group chats have their senderJid supplied
+            // TODO: test with fromMe
+            purple_conv_chat_write(chat, gwamsg->senderJid, gwamsg->text, flags, gwamsg->timestamp);
+        }
     } else {
         if (gwamsg->fromMe) {
             PurpleConversation *conv = gowhatsapp_find_conversation(gwamsg->remoteJid, gwamsg->account);

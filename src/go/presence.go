@@ -27,8 +27,6 @@ func (handler *Handler) send_presence(presence_str string) {
 		err := handler.client.SendPresence(presence)
 		if err != nil {
 			purple_error(handler.account, fmt.Sprintf("Failed to send presence: %v", err), ERROR_FATAL)
-		} else {
-			handler.log.Infof("Set presence to %v", presence)
 		}
 	} else {
 		purple_error(handler.account, fmt.Sprintf("Unknown presence %s (this is a bug).", presence_str), ERROR_FATAL)

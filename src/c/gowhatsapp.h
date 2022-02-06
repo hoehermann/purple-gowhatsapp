@@ -31,16 +31,14 @@ gboolean gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char
 gboolean gowhatsapp_message_is_new_enough(PurpleAccount *account, const time_t ts);
 
 // groups
-PurpleConvChat *gowhatsapp_find_group_chat(const char *remoteJid, const char *senderJid, const char *topic, PurpleConnection *pc);
+PurpleConvChat *gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid);
 int gowhatsapp_user_in_conv_chat(PurpleConvChat *conv_chat, const char *userJid);
-int gowhatsapp_remotejid_is_group_chat(char *remoteJid);
 void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data);
 char *gowhatsapp_get_chat_name(GHashTable *components);
 PurpleRoomlist *gowhatsapp_roomlist_get_list(PurpleConnection *pc);
 void gowhatsapp_set_chat_topic(PurpleConnection *pc, int id, const char *topic);
 gchar *gowhatsapp_roomlist_serialize(PurpleRoomlistRoom *room);
 GList * gowhatsapp_chat_info(PurpleConnection *pc);
-GHashTable * gowhatsapp_chat_info_defaults(PurpleConnection *pc, const char *remoteJid);
 
 // blist
 void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, char *remoteJid, char *display_name);

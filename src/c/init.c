@@ -103,7 +103,6 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->send_im = gowhatsapp_send_im;
     // group-chat related functions
     prpl_info->chat_info = gowhatsapp_chat_info;
-    prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
     prpl_info->join_chat = gowhatsapp_join_chat;
     prpl_info->get_chat_name = gowhatsapp_get_chat_name;
     prpl_info->find_blist_chat = gowhatsapp_find_blist_chat;

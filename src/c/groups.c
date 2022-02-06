@@ -1,13 +1,13 @@
 #include "gowhatsapp.h"
+#include "purple-go-whatsapp.h" // for gowhatsapp_go_get_joined_groups
 
 /*
  * I do not actually know what this does.
  */
 void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data) {
     const char *remoteJid = g_hash_table_lookup(data, "remoteJid");
-    const char *topic = g_hash_table_lookup(data, "topic");
     if (remoteJid != NULL) {
-        gowhatsapp_find_group_chat(remoteJid, NULL, topic, pc);
+        gowhatsapp_enter_group_chat(pc, remoteJid);
     }
 }
 
@@ -41,44 +41,20 @@ int gowhatsapp_user_in_conv_chat(PurpleConvChat *conv_chat, const char *userJid)
     return FALSE;
 }
 
-/*
- * Topic is the topic of the chat if not already known (may be null),
- * senderJid may be null, but else is used to add users sending messages
- * to the chats.
- */
-PurpleConvChat *gowhatsapp_find_group_chat(
-    const char *remoteJid,
-    const char *senderJid,
-    const char *topic,
-    PurpleConnection *pc
-) {
+PurpleConvChat *
+gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid) 
+{
     PurpleAccount *account = purple_connection_get_account(pc);
-    PurpleConvChat *conv_chat =
-        purple_conversations_find_chat_with_account(remoteJid, account);
-
+    // TODO: call gowhatsapp_ensure_group_chat_in_blist somewhere
+    PurpleConvChat *conv_chat = purple_conversations_find_chat_with_account(remoteJid, account);
     if (conv_chat == NULL) {
-        gowhatsapp_ensure_group_chat_in_blist(account, remoteJid, topic);
-
         // use hash of jid for chat id number
-        PurpleConversation *conv = serv_got_joined_chat(
-            pc, g_str_hash(remoteJid), remoteJid
-        );
-
+        PurpleConversation *conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);
         if (conv != NULL) {
             purple_conversation_set_data(conv, "remoteJid", g_strdup(remoteJid));
         }
-
         conv_chat = PURPLE_CONV_CHAT(conv);
     }
-
-    if (conv_chat != NULL && senderJid != NULL) {
-        if (!gowhatsapp_user_in_conv_chat(conv_chat, senderJid)) {
-            purple_chat_conversation_add_user(
-                conv_chat, senderJid, NULL, PURPLE_CBFLAGS_NONE, FALSE
-            );
-        }
-    }
-
     return conv_chat;
 }
 
@@ -86,58 +62,50 @@ PurpleConvChat *gowhatsapp_find_group_chat(
  * This represents all group chats as a list of rooms.
  * Each room also has two fields:
  * 0. remoteJid (WhatsApp identifier)
- * 1. topic (Human readable topic)
+ * 1. topic (group name)
  * Order is important, see gowhatsapp_roomlist_serialize.
  */
 PurpleRoomlist *
 gowhatsapp_roomlist_get_list(PurpleConnection *pc) {
     PurpleAccount *account = purple_connection_get_account(pc);
     PurpleRoomlist *roomlist = purple_roomlist_new(account);
-
-    // TODO: free list?
+    purple_roomlist_set_in_progress(roomlist, TRUE);
+    
     GList *fields = NULL;
     // order is important (see description)
     fields = g_list_append(fields, purple_roomlist_field_new(
-        PURPLE_ROOMLIST_FIELD_STRING, "Remote JID", "remoteJid", FALSE
+        PURPLE_ROOMLIST_FIELD_STRING, "JID", "remoteJid", FALSE
     ));
+    /*
+     * BEWARE: 
+     * In Pidgin, the roomlist field "name" might actually denote the group chat identifier.
+     * It gets overwritten in purple_roomlist_room_join, see libpurple/roomlist.c.
+     * Also, some services like spectrum expect the human readable group name to be "topic", 
+     * see RoomlistProgress in https://github.com/SpectrumIM/spectrum2/blob/518ba5a/backends/libpurple/main.cpp#L1997
+     */ 
     fields = g_list_append(fields, purple_roomlist_field_new(
-        PURPLE_ROOMLIST_FIELD_STRING, "Topic", "topic", FALSE
+        PURPLE_ROOMLIST_FIELD_STRING, "Group Name", "topic", FALSE
     ));
-
     purple_roomlist_set_fields(roomlist, fields);
+    
+    gowhatsapp_group_info_t *group_infos = gowhatsapp_go_get_joined_groups(account);
+    for (gowhatsapp_group_info_t *group_info = group_infos; group_info->remoteJid != NULL; group_info++) {
+        //purple_debug_info(GOWHATSAPP_NAME, "group_info: remoteJid: %s, name: %s, topic: %s", group_info->remoteJid, group_info->name, group_info->topic);
+        PurpleRoomlistRoom *room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM, group_info->remoteJid, NULL);
 
-    PurpleBuddyList *bl = purple_get_blist();
-    PurpleBlistNode *group;
+        // order is important (see description)
+        purple_roomlist_room_add_field(roomlist, room, group_info->remoteJid);
+        purple_roomlist_room_add_field(roomlist, room, group_info->name);
+        purple_roomlist_room_add_field(roomlist, room, group_info->topic);
 
-    // loop outline borrowed from
-    // https://github.com/hoehermann/libpurple-signald/blob/master/groups.c
-    for (group = bl->root; group != NULL; group = group->next) {
-        PurpleBlistNode *node;
-        for (node = group->child; node != NULL; node = node->next) {
-            if (PURPLE_BLIST_NODE_IS_CHAT(node)) {
-                PurpleChat *chat = (PurpleChat *)node;
-
-                if (account != purple_chat_get_account(chat)) {
-                    continue;
-                }
-
-                char *jid = g_hash_table_lookup(chat->components, "remoteJid");
-                char *topic = g_hash_table_lookup(chat->components, "topic");
-
-                PurpleRoomlistRoom *room = purple_roomlist_room_new(
-                    PURPLE_ROOMLIST_ROOMTYPE_ROOM,
-                    jid,
-                    NULL
-                );
-
-                // order is important (see description)
-                purple_roomlist_room_add_field(roomlist, room, jid);
-                purple_roomlist_room_add_field(roomlist, room, topic);
-
-                purple_roomlist_room_add(roomlist, room);
-            }
-        }
+        purple_roomlist_room_add(roomlist, room);
+        
+        // purple_roomlist_room_add_field does a strdup, free strings here
+        g_free(group_info->remoteJid);
+        g_free(group_info->name);
+        g_free(group_info->topic);
     }
+    g_free(group_infos);
 
     purple_roomlist_set_in_progress(roomlist, FALSE);
 
@@ -166,47 +134,18 @@ GList * gowhatsapp_chat_info(PurpleConnection *pc)
     struct proto_chat_entry *pce;
 
     pce = g_new0(struct proto_chat_entry, 1);
-    pce->label = "Group JID:";
+    pce->label = "JID";
     pce->identifier = "remoteJid";
     pce->required = TRUE;
     infos = g_list_append(infos, pce);
 
     pce = g_new0(struct proto_chat_entry, 1);
-    pce->label = "Topic";
-    pce->identifier = "topic";
+    pce->label = "Name";
+    pce->identifier = "name";
     pce->required = TRUE;
     infos = g_list_append(infos, pce);
 
     return infos;
-}
-
-/*
- * This provides the default values for extended group chat info.
- * I have no idea if this also declares/defines the structure (see gowhatsapp_roomlist_get_list).
- */
-GHashTable * gowhatsapp_chat_info_defaults(PurpleConnection *pc, const char *remoteJid) 
-{
-    GHashTable *defaults = g_hash_table_new_full(
-        g_str_hash, g_str_equal, NULL, g_free
-    );
-
-    if (remoteJid != NULL) {
-        // don't really understand this chat name, assume it's just the remoteJid
-        g_hash_table_insert(defaults, "remoteJid", g_strdup(remoteJid));
-        g_hash_table_insert(defaults, "topic", g_strdup(""));
-
-        PurpleAccount *account = purple_connection_get_account(pc);
-        PurpleChat *chat = purple_blist_find_chat(account, remoteJid);
-        if (chat != NULL) {
-            GHashTable *components = purple_chat_get_components(chat);
-            const gchar *topic = g_hash_table_lookup(components, "topic");
-            if (topic != NULL) {
-                g_hash_table_insert(defaults, "topic", g_strdup(topic));
-            }
-        }
-    }
-
-    return defaults;
 }
 
 /*

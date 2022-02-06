@@ -3,6 +3,7 @@
 
 #include <stdint.h> // for int64_t
 #include <time.h> // for time_t
+#include <stdlib.h> // for calloc
 
 // for querying current settings
 // these signatures are redefinitions taken from purple.h
@@ -85,4 +86,13 @@ extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
 
 // for storing the credentials
 extern void purple_account_set_credentials(PurpleAccount *account, char *credentials);
+
+struct gowhatsapp_group_info {
+    char *remoteJid; // should be groupJid or just jid, but remoteJid is consistent with identifier in gowhatsapp_message
+    char *ownerJid;
+    char *name;
+    char *topic;
+    char **participants;
+};
+typedef struct gowhatsapp_group_info gowhatsapp_group_info_t;
 #endif

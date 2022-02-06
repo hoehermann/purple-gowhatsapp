@@ -42,33 +42,32 @@ gowhatsapp_assume_all_buddies_online(PurpleAccount *account)
 }
 
 /*
- * Ensure buddy in the buddy list. Only if fetch contacts is enabled.
+ * Ensure buddy in the buddy list.
+ * Only has effect if "fetch contacts" is enabled.
  * Updates alias non-destructively.
  */
 void gowhatsapp_ensure_buddy_in_blist(
     PurpleAccount *account, char *remoteJid, char *display_name
 ) {
-    gboolean fetch_contacts = purple_account_get_bool(
-        account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE
-    );
+    if (!purple_account_get_bool(account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE)) {
+        return;
+    }
 
     PurpleBuddy *buddy = purple_blist_find_buddy(account, remoteJid);
 
-    if (!buddy && fetch_contacts) {
+    if (!buddy) {
         PurpleGroup *group = gowhatsapp_get_purple_group();
         buddy = purple_buddy_new(account, remoteJid, display_name);
         purple_blist_add_buddy(buddy, NULL, group, NULL);
         gowhatsapp_assume_buddy_online(account, buddy);
     }
 
-    if (fetch_contacts) {
-        // checking against local alias and persisted name
-        const char *local_alias = purple_buddy_get_alias(buddy);
-        const char *published_name = purple_blist_node_get_string(&buddy->node, "published_name");
-        if (!purple_strequal(local_alias, display_name) && !purple_strequal(published_name, display_name)) {
-            serv_got_alias(purple_account_get_connection(account), remoteJid, display_name); // it seems buddy->server_alias is not persisted
-            purple_blist_node_set_string(&buddy->node, "published_name", display_name); // explicitly persisting the new name
-        }
+    // update name after checking against local alias and persisted name
+    const char *local_alias = purple_buddy_get_alias(buddy);
+    const char *published_name = purple_blist_node_get_string(&buddy->node, "published_name");
+    if (!purple_strequal(local_alias, display_name) && !purple_strequal(published_name, display_name)) {
+        serv_got_alias(purple_account_get_connection(account), remoteJid, display_name); // it seems buddy->server_alias is not persisted
+        purple_blist_node_set_string(&buddy->node, "published_name", display_name); // explicitly persisting the new name
     }
 }
 
@@ -86,10 +85,7 @@ PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
     PurpleChat *chat = purple_blist_find_chat(account, remoteJid);
 
     if (chat == NULL && fetch_contacts) {
-        GHashTable *comp = g_hash_table_new_full(
-            g_str_hash, g_str_equal, NULL, g_free
-        );
-
+        GHashTable *comp = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
         g_hash_table_insert(comp, "remoteJid", g_strdup(remoteJid));
         chat = purple_chat_new(account, remoteJid, comp);
 
@@ -99,9 +95,7 @@ PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
 
     if (topic != NULL && fetch_contacts) {
         // components uses free on key (unlike above)
-        g_hash_table_insert(
-            purple_chat_get_components(chat), g_strdup("topic"), g_strdup(topic)
-        );
+        g_hash_table_insert(purple_chat_get_components(chat), g_strdup("topic"), g_strdup(topic));
         purple_blist_alias_chat(chat, topic);
     }
 
