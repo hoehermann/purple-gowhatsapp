@@ -84,6 +84,16 @@ func gowhatsapp_go_mark_read_conversation(account *PurpleAccount, who *C.char) {
 	}
 }
 
+//export gowhatsapp_go_send_presence
+func gowhatsapp_go_send_presence(account *PurpleAccount, presence *C.char) {
+	handler, ok := handlers[account]
+	if ok {
+		handler.send_presence(C.GoString(presence))
+	} else {
+		purple_error(account, "Cannot set presence: Not connected.", ERROR_TRANSIENT)
+	}
+}
+
 //export gowhatsapp_go_subscribe_presence
 func gowhatsapp_go_subscribe_presence(account *PurpleAccount, who *C.char) {
 	handler, ok := handlers[account]

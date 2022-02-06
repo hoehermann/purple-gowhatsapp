@@ -1,19 +1,28 @@
 package main
 
 import (
+	"fmt"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	"time"
 )
 
-func (handler *Handler) send_presence(presence types.Presence) error {
-	err := handler.client.SendPresence(presence)
-	if err != nil {
-		handler.log.Warnf("Failed to send presence: %v", err)
-	} else {
-		handler.log.Infof("Set presence to %v", presence)
+func (handler *Handler) send_presence(presence_str string) {
+	presenceMap := map[string]types.Presence{
+		"available":   types.PresenceAvailable,
+		"unavailable": types.PresenceUnavailable,
 	}
-	return err
+	presence, ok := presenceMap[presence_str]
+	if ok {
+		err := handler.client.SendPresence(presence)
+		if err != nil {
+			purple_error(handler.account, fmt.Sprintf("Failed to send presence: %v", err), ERROR_FATAL)
+		} else {
+			handler.log.Infof("Set presence to %v", presence)
+		}
+	} else {
+		purple_error(handler.account, fmt.Sprintf("Unknown presence %s (this is a bug).", presence_str), ERROR_FATAL)
+	}
 }
 
 func (handler *Handler) handle_chat_presence(evt *events.ChatPresence) {

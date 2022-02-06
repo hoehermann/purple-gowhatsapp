@@ -5,7 +5,6 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/appstate"
 	"go.mau.fi/whatsmeow/store/sqlstore"
-	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"net/http"
@@ -41,27 +40,23 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// this happens after initial logon via QR code (before HistorySync)
 		if len(cli.Store.PushName) > 0 && evt.Name == appstate.WAPatchCriticalBlock {
 			log.Infof("AppStateSyncComplete")
-			err := handler.send_presence(types.PresenceAvailable)
-			if err == nil {
-				purple_connected(handler.account)
-				// connected – start downloading profile pictures now.
-				go handler.profile_picture_downloader()
-			}
+			purple_connected(handler.account)
+			// connected – start downloading profile pictures now.
+			go handler.profile_picture_downloader()
 		}
 	case *events.PushNameSetting:
 		if len(cli.Store.PushName) == 0 {
 			return
 		}
-		// Send presence "available" when the pushname is changed remotely.
+		// Send presence when the pushname is changed remotely.
 		// This makes sure that outgoing messages always have the right pushname.
-		handler.send_presence(types.PresenceAvailable)
+		// This is making a round-trip through purple so user can decide to
+		// opt out of this feature by being "away" instead of "online"
+		purple_connected(handler.account)
 	case *events.Connected:
-		err := handler.send_presence(types.PresenceAvailable)
-		if err == nil {
-			purple_connected(handler.account)
-			// connected – start downloading profile pictures now.
-			go handler.profile_picture_downloader()
-		}
+		purple_connected(handler.account)
+		// connected – start downloading profile pictures now.
+		go handler.profile_picture_downloader()
 	case *events.StreamReplaced:
 		// TODO: test this
 		purple_error(handler.account, fmt.Sprintf("StreamReplaced: %+v", evt), ERROR_FATAL)

@@ -43,14 +43,14 @@ status_types(PurpleAccount *account)
     GList *types = NULL;
     PurpleStatusType *status;
 
-    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE, GOWHATSAPP_STATUS_STR_ONLINE, NULL, TRUE, TRUE, FALSE);
-    types = g_list_append(types, status);
-
-    status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, GOWHATSAPP_STATUS_STR_OFFLINE, NULL, TRUE, TRUE, FALSE);
+    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE, GOWHATSAPP_STATUS_STR_AVAILABLE, NULL, TRUE, TRUE, FALSE);
     types = g_list_append(types, status);
 
     status = purple_status_type_new_full(PURPLE_STATUS_AWAY, GOWHATSAPP_STATUS_STR_AWAY, NULL, TRUE, TRUE, FALSE);
     types = g_list_prepend(types, status);
+
+    status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, GOWHATSAPP_STATUS_STR_OFFLINE, NULL, TRUE, TRUE, FALSE);
+    types = g_list_append(types, status);
 
     status = purple_status_type_new_full(PURPLE_STATUS_MOBILE, GOWHATSAPP_STATUS_STR_MOBILE, NULL, FALSE, FALSE, TRUE);
     types = g_list_prepend(types, status);
@@ -97,6 +97,7 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
     prpl_info->list_icon = list_icon;
     prpl_info->status_types = status_types; // this actually needs to exist, else the protocol cannot be set to "online"
+    prpl_info->set_status = gowhatsapp_set_presence;
     prpl_info->login = gowhatsapp_login;
     prpl_info->close = gowhatsapp_close;
     prpl_info->send_im = gowhatsapp_send_im;

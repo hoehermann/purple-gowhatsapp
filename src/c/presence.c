@@ -1,9 +1,10 @@
 #include "gowhatsapp.h"
 #include "constants.h"
+#include "purple-go-whatsapp.h" // for gowhatsapp_go_send_presence
 
 void
 gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char online, time_t last_seen) {
-    char *status = GOWHATSAPP_STATUS_STR_ONLINE;
+    char *status = GOWHATSAPP_STATUS_STR_AVAILABLE;
     if (online == 0) {
         if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
             status = GOWHATSAPP_STATUS_STR_AWAY;
@@ -51,4 +52,10 @@ gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean
     if (published_name != NULL) {
         purple_notify_user_info_add_pair(info, "Published name", published_name);
     }
+}
+
+void
+gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
+    const char *status_id = purple_status_get_id(status);
+    gowhatsapp_go_send_presence(account, (char *)status_id); // cgo does not support const
 }

@@ -33,8 +33,11 @@ Other improvements:
 
 * Contact presence is regarded (buddies are online and offline).
 * Typing notifications are handled.
-* There is an "away" state.
 * Logging happens via purple.
+* There is an "away" state.
+  * WhatsApp does not send contact presence updates while being "away".
+  * Other devices (i.e. the main phone) display notifications while plug-in connection is "away".
+  * Caveat emptor: Other side-effects may occur while using "away" state.
 
 Features which are present in the go-whatsapp version but missing here:
 

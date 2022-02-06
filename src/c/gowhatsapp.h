@@ -4,10 +4,10 @@
 #define GOWHATSAPP_NAME "whatsmeow"  // name to refer to this plug-in (in logs)
 #define GOWHATSAPP_PRPL_ID "prpl-hehoe-whatsmeow"
 
-#define GOWHATSAPP_STATUS_STR_ONLINE   "online"
-#define GOWHATSAPP_STATUS_STR_OFFLINE  "offline"
-#define GOWHATSAPP_STATUS_STR_MOBILE   "mobile"
-#define GOWHATSAPP_STATUS_STR_AWAY     "away"
+#define GOWHATSAPP_STATUS_STR_AVAILABLE "available" // this must match whatsmeow's types.PresenceAvailable
+#define GOWHATSAPP_STATUS_STR_AWAY      "unavailable" // this must match whatsmeow's types.PresenceUnavailable
+#define GOWHATSAPP_STATUS_STR_OFFLINE   "offline"
+#define GOWHATSAPP_STATUS_STR_MOBILE    "mobile"
 
 // options
 GList *gowhatsapp_add_account_options(GList *account_options);
@@ -65,6 +65,7 @@ void gowhatsapp_send_file(PurpleConnection *pc, const gchar *who, const gchar *f
 void gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char available, time_t last_seen);
 void gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean full);
 void gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg);
+void gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status);
 
 // receipts
 void gowhatsapp_receipts_init(PurpleConnection *pc);

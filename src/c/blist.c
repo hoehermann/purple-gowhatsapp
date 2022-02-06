@@ -20,6 +20,8 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
     }
     // TODO: move somewhere else so function names are not misleading
     // this is only here because gowhatsapp_assume_buddy_online is alredy being called in all relevant situations
+    // NOTE: subscriptions are valid while unavailable
+    // but WhatsApp requires you to be available to receive presence updates
     gowhatsapp_go_subscribe_presence(account, buddy->name);
 
     if (purple_account_get_bool(account, GOWHATSAPP_GET_ICONS_OPTION, FALSE)) {
