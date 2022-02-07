@@ -8,16 +8,22 @@ import (
 )
 
 type ProfilePictureRequest struct {
-	who          string
-	picture_date string
+	who          string // JID of the contact whos profile picture is being requested
+	picture_date string // age of profile picture currently being displaye (may be "" in case of no picture)
 }
 
 func (handler *Handler) request_profile_picture(who string, picture_date string) {
 	handler.pictureRequests <- ProfilePictureRequest{who: who, picture_date: picture_date}
 }
 
+/*
+ * Background worker for downloading contact profile pictures
+ */
 func (handler *Handler) profile_picture_downloader() {
 	if handler.httpClient != nil {
+		// there already is a httpClient on this connection
+		// do not start another downloader
+		// TODO: protect against concurrent invocation
 		return
 	}
 	handler.httpClient = &http.Client{}
@@ -25,6 +31,7 @@ func (handler *Handler) profile_picture_downloader() {
 	emptyRequest := ProfilePictureRequest{}
 	for pdr := range handler.pictureRequests {
 		if pdr == emptyRequest {
+			// an emptyRequest may be put into the queue to signal clean exit
 			log.Infof("WhatsApp session disconnected. Profile picture downloader is shutting down.")
 			return
 		}
@@ -44,11 +51,12 @@ func (handler *Handler) profile_picture_downloader() {
 		preview := true
 		ppi, _ := handler.client.GetProfilePictureInfo(jid, preview)
 		if ppi == nil {
-			// no picture set
+			// contact has no picture set
 			continue
 		}
 		req, err := http.NewRequest("GET", ppi.URL, nil)
 		if pdr.picture_date != "" {
+			// include date of local picture in request
 			req.Header.Add("If-Modified-Since", pdr.picture_date)
 		}
 		resp, err := handler.httpClient.Do(req)
@@ -57,7 +65,7 @@ func (handler *Handler) profile_picture_downloader() {
 			continue
 		}
 		defer resp.Body.Close()
-		if resp.StatusCode == 304 {
+		if resp.StatusCode == 304 { // not modified
 			continue
 		}
 		var b bytes.Buffer
