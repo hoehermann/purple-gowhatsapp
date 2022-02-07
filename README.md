@@ -41,14 +41,11 @@ Other improvements:
 
 Features which are present in the go-whatsapp version but missing here:
 
-* Geting list of participants in group chat.
 * Support for proxy servers (whatsmeow limitation).
 
 Known issues:
 
 * Group Chats:
-  * Topic (friendly name) is not set.
-  * Participant lists are not populated.
   * Attachments are downloaded, but link is not shown in group conversation window (not a Purple limitation, tdlib can do it).
   * Cannot send files of any kind to groups (Purple limitation? tdlib can embed images).
   * Group chats are not listed in spectrum.
@@ -114,7 +111,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 * Create a new account  
   You can enter an arbitrary username. 
   It is recommended to use your own internationalized number, followed by `@s.whatsapp.net`.  
-  Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`. This way, Pidgin's logs look sane.  
+  Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`. This way, you recognize yourself in group chats and Pidgin's logs look sane.  
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.

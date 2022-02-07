@@ -63,6 +63,35 @@ GHashTable * gowhatsapp_chat_info_defaults(PurpleConnection *pc, const char *cha
 }
 
 /*
+ * Queries the WhatsApp server and populates a chat's participant list.
+ * 
+ * TODO: Use a non-blocking approach.
+ * 
+ * TODO: Think about where to strategically call this so I do not query
+ * the WhatsApp servers all the time.
+ */
+static
+void gowhatsapp_fill_participants(PurpleConvChat *chat) {
+    const char * name = chat->conv->name; // TODO: use accessors instead
+    gowhatsapp_group_info_t *group_infos = gowhatsapp_go_get_joined_groups(chat->conv->account);
+    for (gowhatsapp_group_info_t *group_info = group_infos; group_info->remoteJid != NULL; group_info++) {
+        for(char **iter = group_info->participants; *iter != NULL; iter++) {
+            if (purple_strequal(name, group_info->remoteJid)) {
+                PurpleConvChatBuddyFlags flags = 0;
+                purple_conv_chat_add_user(chat, *iter, NULL, flags, FALSE);
+            }
+            g_free(*iter);
+        }
+        // even though we did not use them all, all fields have been provided and we need to free them here
+        g_free(group_info->remoteJid);
+        g_free(group_info->name);
+        g_free(group_info->topic);
+        g_free(group_info->participants);
+    }
+    g_free(group_infos);
+}
+
+/*
  * The user wants to join a chat.
  * 
  * data is a table filled with the information needed to join the chat
@@ -82,7 +111,8 @@ void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data) {
         const char *topic = g_hash_table_lookup(data, "topic");
         gowhatsapp_ensure_group_chat_in_blist(account, remoteJid, topic);
         // create conversation (important)
-        gowhatsapp_enter_group_chat(pc, remoteJid);
+        PurpleConvChat *chat = gowhatsapp_enter_group_chat(pc, remoteJid);
+        gowhatsapp_fill_participants(chat);
     }
 }
 
@@ -97,6 +127,8 @@ void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data) {
  * Some services like spectrum expect the human readable group name field key to be "topic", 
  * see RoomlistProgress in https://github.com/SpectrumIM/spectrum2/blob/518ba5a/backends/libpurple/main.cpp#L1997
  * In purple, the roomlist field "name" gets overwritten in purple_roomlist_room_join, see libpurple/roomlist.c.
+ * 
+ * TODO: Use a non-blocking approach.
  */
 PurpleRoomlist *
 gowhatsapp_roomlist_get_list(PurpleConnection *pc) {
@@ -112,16 +144,19 @@ gowhatsapp_roomlist_get_list(PurpleConnection *pc) {
     
     gowhatsapp_group_info_t *group_infos = gowhatsapp_go_get_joined_groups(account);
     for (gowhatsapp_group_info_t *group_info = group_infos; group_info->remoteJid != NULL; group_info++) {
-        //purple_debug_info(GOWHATSAPP_NAME, "group_info: remoteJid: %s, name: %s, topic: %s", group_info->remoteJid, group_info->name, group_info->topic);
         PurpleRoomlistRoom *room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM, group_info->remoteJid, NULL);
-
         purple_roomlist_room_add_field(roomlist, room, group_info->name);
         purple_roomlist_room_add(roomlist, room);
         
         // purple_roomlist_room_add_field does a strdup, free strings here
         g_free(group_info->remoteJid);
         g_free(group_info->name);
+        // free unused field, too
         g_free(group_info->topic);
+        for(char **iter = group_info->participants; *iter != NULL; iter++) {
+            g_free(*iter);
+        }
+        g_free(group_info->participants);
     }
     g_free(group_infos);
 
