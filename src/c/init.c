@@ -103,13 +103,14 @@ plugin_init(PurplePlugin *plugin)
     prpl_info->send_im = gowhatsapp_send_im;
     // group-chat related functions
     prpl_info->chat_info = gowhatsapp_chat_info;
+    prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
     prpl_info->join_chat = gowhatsapp_join_chat;
     prpl_info->get_chat_name = gowhatsapp_get_chat_name;
     prpl_info->find_blist_chat = gowhatsapp_find_blist_chat;
     prpl_info->chat_send = gowhatsapp_send_chat;
     prpl_info->set_chat_topic = gowhatsapp_set_chat_topic;
     prpl_info->roomlist_get_list = gowhatsapp_roomlist_get_list;
-    prpl_info->roomlist_room_serialize = gowhatsapp_roomlist_serialize;
+    //prpl_info->roomlist_room_serialize = gowhatsapp_roomlist_serialize; // not necessary – we store the JID in room->name
     // managing buddies (contacts)
     prpl_info->add_buddy = gowhatsapp_add_buddy;
     prpl_info->tooltip_text = gowhatsapp_tooltip_text;

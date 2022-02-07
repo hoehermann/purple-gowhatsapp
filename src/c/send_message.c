@@ -23,7 +23,7 @@ gowhatsapp_send_chat(
 ) {
     PurpleConversation *conv = purple_find_chat(pc, id);
     if (conv != NULL) {
-        gchar *who = (gchar *)purple_conversation_get_data(conv, "remoteJid");
+        gchar *who = (gchar *)purple_conversation_get_data(conv, "name");
         if (who != NULL) {
             return send_message(pc, who, message, TRUE);
         }

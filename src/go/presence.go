@@ -17,6 +17,7 @@ func (handler *Handler) handle_connected() {
 	}
 }
 
+// TODO: investigate if https://godocs.io/go.mau.fi/whatsmeow#Client.SetPassive is something we want to use
 func (handler *Handler) send_presence(presence_str string) {
 	presenceMap := map[string]types.Presence{
 		"available":   types.PresenceAvailable,

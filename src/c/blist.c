@@ -72,8 +72,21 @@ void gowhatsapp_ensure_buddy_in_blist(
 }
 
 /*
- * Add group chat to blist. Updates existing group chat if found. Only
- * changes blist if fetch contacts is set.
+ * This is called after a buddy has been added to the buddy list 
+ * (i.e. by manual user interaction).
+ */
+void
+gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group)
+{
+    PurpleAccount *account = purple_connection_get_account(pc);
+    gowhatsapp_assume_buddy_online(account, buddy);
+}
+
+// Group chat related functions
+
+/*
+ * Add group chat to blist. Updates existing group chat if found. 
+ * Only changes blist if fetch contacts is set.
  */
 PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
     PurpleAccount *account, const char *remoteJid, const char *topic
@@ -86,16 +99,14 @@ PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
 
     if (chat == NULL && fetch_contacts) {
         GHashTable *comp = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
-        g_hash_table_insert(comp, "remoteJid", g_strdup(remoteJid));
+        g_hash_table_insert(comp, "name", g_strdup(remoteJid));
         chat = purple_chat_new(account, remoteJid, comp);
-
         PurpleGroup *group = gowhatsapp_get_purple_group();
         purple_blist_add_chat(chat, group, NULL);
     }
 
     if (topic != NULL && fetch_contacts) {
         // components uses free on key (unlike above)
-        g_hash_table_insert(purple_chat_get_components(chat), g_strdup("topic"), g_strdup(topic));
         purple_blist_alias_chat(chat, topic);
     }
 
@@ -103,17 +114,22 @@ PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
 }
 
 /*
+ * Find group chat in blist.
+ * 
+ * This reimplements the default behaviour of purple_blist_find_chat 
+ * in libpurple/blist.c and could be removed from here.
+ * 
  * Largely borrowed from:
  * https://github.com/EionRobb/purple-discord/blob/master/libdiscord.c
  */
-PurpleChat * gowhatsapp_find_blist_chat(
-    PurpleAccount *account, const char *jid
-) {
+PurpleChat * 
+gowhatsapp_find_blist_chat(PurpleAccount *account, const char *jid) 
+{
     PurpleBlistNode *node;
 
     for (node = purple_blist_get_root();
-         node != NULL;
-         node = purple_blist_node_next(node, TRUE)) {
+        node != NULL;
+        node = purple_blist_node_next(node, TRUE)) {
         if (PURPLE_IS_CHAT(node)) {
             PurpleChat *chat = PURPLE_CHAT(node);
 
@@ -122,9 +138,7 @@ PurpleChat * gowhatsapp_find_blist_chat(
             }
 
             GHashTable *components = purple_chat_get_components(chat);
-            const gchar *chat_jid = g_hash_table_lookup(
-                components, "remoteJid"
-            );
+            const gchar *chat_jid = g_hash_table_lookup(components, "name");
 
             if (purple_strequal(chat_jid, jid)) {
                 return chat;
@@ -133,12 +147,4 @@ PurpleChat * gowhatsapp_find_blist_chat(
     }
 
     return NULL;
-}
-
-void
-gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group)
-{
-    // does not actually do anything. buddy is added to pidgin's local list and is usable from there.
-    PurpleAccount *account = purple_connection_get_account(pc);
-    gowhatsapp_assume_buddy_online(account, buddy);
 }
