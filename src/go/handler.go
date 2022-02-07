@@ -37,26 +37,28 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	cli := handler.client
 	switch evt := rawEvt.(type) {
 	case *events.AppStateSyncComplete:
-		// this happens after initial logon via QR code (before HistorySync)
-		if len(cli.Store.PushName) > 0 && evt.Name == appstate.WAPatchCriticalBlock {
-			log.Infof("AppStateSyncComplete")
-			purple_connected(handler.account)
-			// connected – start downloading profile pictures now.
-			go handler.profile_picture_downloader()
+		// this happens after initial logon via QR code (after Connected, but before HistorySync event)
+		if evt.Name == appstate.WAPatchCriticalBlock {
+			log.Infof("AppStateSyncComplete and WAPatchCriticalBlock")
+			handler.handle_connected()
 		}
 	case *events.PushNameSetting:
-		if len(cli.Store.PushName) == 0 {
-			return
-		}
+		log.Infof("%#v", evt)
 		// Send presence when the pushname is changed remotely.
 		// This makes sure that outgoing messages always have the right pushname.
 		// This is making a round-trip through purple so user can decide to
-		// opt out of this feature by being "away" instead of "online"
-		purple_connected(handler.account)
+		// be "away" instead of "online"
+		handler.handle_connected()
+	case *events.PushName:
+		log.Infof("%#v", evt)
+		// other device changed our friendly name
+		// setting is regarded by whatsmeow internally
+		// no need to forward to purple
+		// TODO: find out how this is related to the PushNameSetting event
 	case *events.Connected:
-		purple_connected(handler.account)
 		// connected – start downloading profile pictures now.
 		go handler.profile_picture_downloader()
+		handler.handle_connected()
 	case *events.StreamReplaced:
 		// TODO: test this
 		purple_error(handler.account, fmt.Sprintf("StreamReplaced: %+v", evt), ERROR_FATAL)
@@ -85,7 +87,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	case *events.AppState:
 		log.Debugf("App state event: %+v / %+v", evt.Index, evt.SyncActionValue)
 	case *events.LoggedOut:
-		purple_error(handler.account, "Logged out.", ERROR_TRANSIENT)
+		purple_error(handler.account, "Logged out. Please link again.", ERROR_FATAL)
 	case *events.QR:
 		// this is handled explicitly in connect()
 		// though maybe I should move it here for consistency
@@ -99,10 +101,6 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			purple_pairing_succeeded(handler.account)
 			handler.prune_devices(*cli.Store.ID)
 		}
-	case *events.PushName:
-		// other device changed our friendly name
-		// setting is regarded by whatsmeow internally
-		// no need to forward to purple
 	//case *events.JoinedGroup:
 	// TODO
 	// received when being added to a group directly

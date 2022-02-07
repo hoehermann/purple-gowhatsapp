@@ -7,6 +7,16 @@ import (
 	"time"
 )
 
+/*
+ * Forward whatsmeow connection event to purple.
+ * In case the PushName is not set, the connection is not (yet) actually usable.
+ */
+func (handler *Handler) handle_connected() {
+	if len(handler.client.Store.PushName) > 0 {
+		purple_connected(handler.account)
+	}
+}
+
 func (handler *Handler) send_presence(presence_str string) {
 	presenceMap := map[string]types.Presence{
 		"available":   types.PresenceAvailable,
