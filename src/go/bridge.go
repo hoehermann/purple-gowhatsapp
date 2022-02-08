@@ -106,11 +106,6 @@ func gowhatsapp_go_subscribe_presence(account *PurpleAccount, who *C.char) {
 	}
 }
 
-// these are total guesses
-// they are not important for the logic, only for the type
-const MAX_GROUP_COUNT = 1 << 24
-const MAX_GROUP_PARTICIPANT_COUNT = 1 << 24
-
 //export gowhatsapp_go_get_joined_groups
 func gowhatsapp_go_get_joined_groups(account *PurpleAccount) *C.gowhatsapp_group_info_t {
 	var output unsafe.Pointer = nil
@@ -125,7 +120,7 @@ func gowhatsapp_go_get_joined_groups(account *PurpleAccount) *C.gowhatsapp_group
 				// allocate one extra all-zero element in output to denote end of C array
 				output = C.calloc(C.size_t(groups_size+1), C.size_t(unsafe.Sizeof(C.gowhatsapp_group_info_t{})))
 				// https://stackoverflow.com/questions/51525876/use-go-slice-in-c
-				group_infos := (*[MAX_GROUP_COUNT]C.gowhatsapp_group_info_t)(output)[:groups_size:groups_size]
+				group_infos := unsafe.Slice((*C.gowhatsapp_group_info_t)(output), groups_size)
 				for gi, group := range groups {
 					group_infos[gi].remoteJid = C.CString(group.JID.ToNonAD().String())
 					group_infos[gi].ownerJid = C.CString(group.OwnerJID.ToNonAD().String())
