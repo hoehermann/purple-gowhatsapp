@@ -1,5 +1,6 @@
 #include "gowhatsapp.h"
 #include "constants.h"
+#include "purple-go-whatsapp.h" // for gowhatsapp_go_query_contacts
 
 static const char *gowhatsapp_message_type_string[] = {
     FOREACH_MESSAGE_TYPE(GENERATE_STRING)
@@ -56,6 +57,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_assume_all_buddies_online(gwamsg->account);
             if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE)) {
                 gowhatsapp_roomlist_get_list(pc);
+                gowhatsapp_go_get_contacts(gwamsg->account);
             }
             break;
         case gowhatsapp_message_type_disconnected:

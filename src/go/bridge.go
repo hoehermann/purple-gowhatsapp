@@ -27,9 +27,12 @@ package main
 */
 import "C"
 
-import "time"
-import "fmt"
-import "unsafe"
+import (
+	"fmt"
+	"go.mau.fi/whatsmeow/appstate"
+	"time"
+	"unsafe"
+)
 
 type PurpleAccount = C.PurpleAccount
 
@@ -137,6 +140,36 @@ func gowhatsapp_go_query_groups(account *PurpleAccount) {
 					account: account,
 					msgtype: C.char(C.gowhatsapp_message_type_group),
 				})
+			}
+		}()
+	} else {
+		purple_error(account, "Cannot get list of groups: Not connected.", ERROR_TRANSIENT)
+	}
+}
+
+//export gowhatsapp_go_get_contacts
+func gowhatsapp_go_get_contacts(account *PurpleAccount) {
+	handler, ok := handlers[account]
+	if ok {
+		go func() {
+			err := handler.client.FetchAppState(appstate.WAPatchCriticalUnblockLow, false, false)
+			if err != nil {
+				handler.log.Warnf("Could not fetch contacts from server: %#v", err)
+			}
+			// even in case of error, continue with locally stored contacts
+			contacts, err := handler.client.Store.Contacts.GetAllContacts()
+			if err != nil {
+				handler.log.Warnf("Could not get contacts from store: %#v", err)
+			} else {
+				for jid, info := range contacts {
+					cmessage := C.struct_gowhatsapp_message{
+						account:   account,
+						msgtype:   C.char(C.gowhatsapp_message_type_name),
+						remoteJid: C.CString(jid.ToNonAD().String()),
+						name:      C.CString(info.PushName),
+					}
+					C.gowhatsapp_process_message_bridge(cmessage)
+				}
 			}
 		}()
 	} else {
