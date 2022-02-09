@@ -26,8 +26,8 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
         if (gwamsg->senderJid == NULL) {
             gwamsg->senderJid = g_strdup("system"); // g_strdup needed since senderJid is freed by caller
         }
-        gboolean spectrum = purple_account_get_bool(gwamsg->account, GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION, FALSE);
-        if (spectrum) {
+        gboolean bridge = purple_account_get_bool(gwamsg->account, GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION, FALSE);
+        if (bridge) {
             // spectrum ignores system messages: strip the system flag
             flags &= ~PURPLE_MESSAGE_SYSTEM;
         } else {

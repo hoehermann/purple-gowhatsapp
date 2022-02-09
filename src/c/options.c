@@ -70,8 +70,8 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
     
     option = purple_account_option_bool_new(
-        "Spectrum2 compatibility mode",
-        GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION,
+        "Protocol bridge compatibility mode",
+        GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION,
         FALSE
         );
     account_options = g_list_append(account_options, option);

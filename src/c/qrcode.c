@@ -34,7 +34,7 @@ gowhatsapp_display_qrcode(PurpleAccount *account, const char * challenge, void *
     g_free(image_data); // purple_request_field_image_new maintains an internal copy
 
     const char *username = g_strdup(purple_account_get_username(account));
-    const char *secondary = g_strdup_printf("WhatsApp account %s", username);
+    const char *secondary = g_strdup_printf("WhatsApp account %s (multi-device mode must be enabled)", username);
 
     gowhatsapp_close_qrcode(account);
     purple_request_fields(
@@ -62,11 +62,11 @@ gowhatsapp_handle_qrcode(PurpleConnection *pc, const char *challenge, const char
         gchar *msg_out;
         int img_id = purple_imgstore_add_with_id(image_data, image_data_len, NULL);
         if (img_id >= 0) {
-            msg_out = g_strdup_printf("%s: <img id=\"%u\" alt=\"%s\"/><br />%s", "Please scan this QR code with your phone", img_id, challenge, terminal);
+            msg_out = g_strdup_printf("%s<br /><img id=\"%u\" alt=\"%s\"/><br />%s", "Please scan this QR code with your phone and WhatsApp multi-device mode enabled:", img_id, challenge, terminal);
             flags |= PURPLE_MESSAGE_IMAGES;
         } else {
             g_free(image_data); // image data not handled by imgstore – needs to be deleted here
-            msg_out = g_strdup_printf("%s: %s<br />%s", "Please scan this QR code with your phone", challenge, terminal);
+            msg_out = g_strdup_printf("%s<br />%s<br />%s", "Please scan this QR code with your phone and WhatsApp multi-device mode enabled:", challenge, terminal);
         }
         purple_serv_got_im(pc, "Logon QR Code", msg_out, flags, time(NULL));
         g_free(msg_out);

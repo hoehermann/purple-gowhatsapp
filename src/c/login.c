@@ -37,16 +37,19 @@ void
 purple_account_set_credentials(PurpleAccount *account, char *credentials)
 {
     // Pidgin stores the credentials in the account settings
+    // spectrum included special handling for this case
     // in bitlbee, this has no effect
     purple_account_set_string(account, GOWHATSAPP_CREDENTIALS_KEY, credentials);
     
     // bitlbee stores credentials in password field
-    // in Pidgin, these lines have no effect
-    purple_account_set_password(account, credentials);
-    purple_signal_emit(
-        purple_accounts_get_handle(),
-        "bitlbee-set-account-password",
-        account,
-        credentials
-    );
+    // in Pidgin, purple_signal_emit causes the GTK debug view to crash
+    if (purple_account_get_bool(account, GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION, FALSE)) {
+        purple_account_set_password(account, credentials);
+        purple_signal_emit(
+            purple_accounts_get_handle(),
+            "bitlbee-set-account-password",
+            account,
+            credentials
+        );
+    }
 }

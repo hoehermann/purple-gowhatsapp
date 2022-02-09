@@ -43,7 +43,7 @@ func (handler *Handler) send_message(who string, message string, isGroup bool) {
 		} else {
 			// inject message back to self to indicate success
 			// spectrum users do not want this
-			if !purple_get_bool(handler.account, C.GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION, false) {
+			if !purple_get_bool(handler.account, C.GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION, false) {
 				ownJid := "" // TODO: find out if this messes up group chats
 				purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, ownJid, nil, ts, message)
 			}

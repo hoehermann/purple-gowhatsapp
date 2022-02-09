@@ -93,7 +93,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             if (gwamsg->remoteJid != NULL) {
                 // adds the group to the buddy list (if fetching contacts is enabled, useful for human-readable title)
                 gowhatsapp_ensure_group_chat_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name); 
-                if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_SPECTRUM_COMPATIBILITY_OPTION, FALSE)) {
+                if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION, FALSE)) {
                     // automatically join all chats
                     gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid); 
                 }

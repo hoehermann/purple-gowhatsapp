@@ -126,7 +126,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   
 * `fetch-contacts`  
   If set to true (default), buddy list will be populated with contacts sent by server. 
-  This is useful for the first login, especially.
+  This is useful for the first login in particular. If enabled while connecting, it will also fetch the current list of WhatsApp groups.
   
 * `fake-online`  
   If set to true (default), contacts currently not online will be regarded as "away" (so they still appear in the buddy list).
@@ -145,10 +145,12 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 * `get-icons`  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
   
-* `spectrum-compatibility`  
-  Setting this to true (default: false) will have the following effects:
+* `bridge-compatibility`  
+  Special compatibility setting for protocol bridges like Spectrum or bitlbee. Setting this to true (default: false) will have the following effects:
     * System messages will be treated just like normal messages, allowing them to be logged and forwarded. This only affects soft errors regarding a specific conversation, e.g. "message could not be sent".
     * After a message has been sent successfully, it is not explicitly echoed locally.
+    * Account credentials are not only stored in the account data store, but also in its password store.
+    * After connecting, the account automatically joins all chats representing the WhatsApp groups.
   
 * `database-address`  
   whatsmeow stores all session information in a SQL database. This string will be passed to [database/sql.Open](https://pkg.go.dev/database/sql#Open) as `dataSourceName`.
