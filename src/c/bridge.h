@@ -38,6 +38,7 @@ extern const char * purple_account_get_string(PurpleAccount *account, const char
     MESSAGE_TYPE(text) \
     MESSAGE_TYPE(attachment) \
     MESSAGE_TYPE(profile_picture) \
+    MESSAGE_TYPE(group) \
     MESSAGE_TYPE(max) \
 
 #define GENERATE_MESSAGE_ENUM(ENUM) gowhatsapp_message_type_##ENUM,
@@ -71,6 +72,7 @@ struct gowhatsapp_message {
     char *text; /// the message payload (interpretation depends on type)
     char *name; /// remote user's name (chosen by them) or filename (in case of attachment)
     void *blob; /// binary payload (used for inlining images)
+    char **participants; /// list of participants (for group chats)
     size_t blobsize; /// size of binary payload in bytes
     time_t timestamp; /// timestamp the message was sent(?)
     char msgtype; /// message type – see above
@@ -86,13 +88,4 @@ extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
 
 // for storing the credentials
 extern void purple_account_set_credentials(PurpleAccount *account, char *credentials);
-
-struct gowhatsapp_group_info {
-    char *remoteJid; // should be groupJid or just jid, but remoteJid is consistent with identifier in gowhatsapp_message
-    char *ownerJid;
-    char *name;
-    char *topic;
-    char **participants;
-};
-typedef struct gowhatsapp_group_info gowhatsapp_group_info_t;
 #endif

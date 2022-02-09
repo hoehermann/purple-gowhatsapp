@@ -76,6 +76,10 @@ process_message_bridge(gpointer data)
     g_free(gwamsg->text);
     g_free(gwamsg->name);
     //g_free(gwamsg->blob); this is cleared after handling the attachment / qrcode
+    for(char **iter = gwamsg->participants; iter != NULL && *iter != NULL; iter++) {
+        g_free(*iter);
+    }
+    g_free(gwamsg->participants);
     g_free(gwamsg);
     return FALSE;
 }
