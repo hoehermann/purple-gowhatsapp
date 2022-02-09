@@ -83,7 +83,6 @@ void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data) {
         gowhatsapp_ensure_group_chat_in_blist(account, remoteJid, topic);
         // create conversation (important)
         PurpleConvChat *chat = gowhatsapp_enter_group_chat(pc, remoteJid);
-        gowhatsapp_go_query_groups(account); // TODO: query this specific group
     }
 }
 
@@ -180,6 +179,7 @@ gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid)
         PurpleConversation *conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);
         if (conv != NULL) {
             purple_conversation_set_data(conv, "name", g_strdup(remoteJid));
+            gowhatsapp_go_query_groups(account); // TODO: query this specific group
         }
         conv_chat = PURPLE_CONV_CHAT(conv);
     }

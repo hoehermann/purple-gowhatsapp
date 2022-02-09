@@ -47,8 +47,11 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
         PurpleConvChat *chat = gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid);
         if (chat != NULL) {
             // participants in group chats have their senderJid supplied
-            // TODO: test with fromMe
-            purple_conv_chat_write(chat, gwamsg->senderJid, gwamsg->text, flags, gwamsg->timestamp);
+            const char *who = gwamsg->senderJid;
+            if (gwamsg->fromMe) {
+                who = purple_account_get_username(gwamsg->account);
+            }
+            purple_conv_chat_write(chat, who, gwamsg->text, flags, gwamsg->timestamp);
         }
     } else {
         if (gwamsg->fromMe) {
