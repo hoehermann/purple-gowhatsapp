@@ -89,19 +89,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_handle_profile_picture(gwamsg);
             break;
         case gowhatsapp_message_type_group:
-            // list the group in the roomlist (if it is currently being queried)
-            gowhatsapp_roomlist_add_room(pc, gwamsg);
-            // ignore group list end marker
-            if (gwamsg->remoteJid != NULL) {
-                // adds the group to the buddy list (if fetching contacts is enabled, useful for human-readable title)
-                gowhatsapp_ensure_group_chat_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name); 
-                if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION, FALSE)) {
-                    // automatically join all chats
-                    gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid); 
-                }
-                // update participant lists
-                gowhatsapp_chat_add_participants(gwamsg);
-            }
+            gowhatsapp_handle_group(pc, gwamsg);
             break;
         default:
             purple_debug_info(GOWHATSAPP_NAME, "handling this message type is not implemented");

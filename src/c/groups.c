@@ -126,18 +126,46 @@ gowhatsapp_roomlist_get_list(PurpleConnection *pc) {
  * In case there currently is no roomlist to populate, this does nothing.
  */
 void
-gowhatsapp_roomlist_add_room(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
+gowhatsapp_roomlist_add_room(PurpleConnection *pc, char *remoteJid, char *name) {
     PurpleRoomlist *roomlist = (PurpleRoomlist *)purple_connection_get_protocol_data(pc);
     if (roomlist != NULL) {
-        if (gwamsg->remoteJid == NULL) {
+        if (remoteJid == NULL) {
+            // list end marker, room-listing is finished and ready
             purple_roomlist_set_in_progress(roomlist, FALSE);
-            purple_roomlist_unref(roomlist);
+            purple_roomlist_unref(roomlist); // unref here, roomlist may remain in ui
             purple_connection_set_protocol_data(pc, NULL);
         } else {
-            PurpleRoomlistRoom *room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM, gwamsg->remoteJid, NULL);
-            purple_roomlist_room_add_field(roomlist, room, gwamsg->name);
+            PurpleRoomlistRoom *room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM, remoteJid, NULL); // this sets the room's name
+            purple_roomlist_room_add_field(roomlist, room, name); // this sets the room'S title
             purple_roomlist_room_add(roomlist, room);
         }
+    }
+}
+
+/*
+ * Handle incoming group information.
+ * 
+ * Group information can have been requested asynchronously for these reasons:
+ * * roomlist
+ * * populating the buddy list
+ * * re-establishing all chats
+ * * list of participants for a specific chat
+ * This function handles all of that.
+ */
+void 
+gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
+    // list the group in the roomlist (if it is currently being queried)
+    gowhatsapp_roomlist_add_room(pc, gwamsg->remoteJid, gwamsg->name);
+    // these all cannot handle the group list end marker
+    if (gwamsg->remoteJid != NULL) {
+        // adds the group to the buddy list (if fetching contacts is enabled, useful for human-readable titles)
+        gowhatsapp_ensure_group_chat_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name); 
+        if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_AUTO_JOIN_CHAT_OPTION, FALSE)) {
+            // automatically join all chats
+            gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid); 
+        }
+        // update participant lists (they are queried asynchronously every time the user joins a chat)
+        gowhatsapp_chat_add_participants(gwamsg->account, gwamsg->remoteJid, gwamsg->participants);
     }
 }
 
@@ -148,10 +176,10 @@ gowhatsapp_roomlist_add_room(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
  * adding participants to all chats currently active.
  */
 void 
-gowhatsapp_chat_add_participants(gowhatsapp_message_t *gwamsg) {
-    PurpleConvChat *conv_chat = purple_conversations_find_chat_with_account(gwamsg->remoteJid, gwamsg->account);
+gowhatsapp_chat_add_participants(PurpleAccount *account, char *remoteJid, char **participants) {
+    PurpleConvChat *conv_chat = purple_conversations_find_chat_with_account(remoteJid, account);
     if (conv_chat != NULL) { // only consider active chats
-        for(char **iter = gwamsg->participants; iter != NULL && *iter != NULL; iter++) {
+        for(char **iter = participants; iter != NULL && *iter != NULL; iter++) {
             PurpleConvChatBuddyFlags flags = 0;
             purple_conv_chat_add_user(conv_chat, *iter, NULL, flags, FALSE);
         }

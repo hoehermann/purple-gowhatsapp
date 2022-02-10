@@ -40,8 +40,9 @@ void gowhatsapp_set_chat_topic(PurpleConnection *pc, int id, const char *topic);
 gchar *gowhatsapp_roomlist_serialize(PurpleRoomlistRoom *room);
 GList * gowhatsapp_chat_info(PurpleConnection *pc);
 GHashTable * gowhatsapp_chat_info_defaults(PurpleConnection *pc, const char *chat_name);
-void gowhatsapp_chat_add_participants(gowhatsapp_message_t *gwamsg);
-void gowhatsapp_roomlist_add_room(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
+void gowhatsapp_chat_add_participants(PurpleAccount *account, char *remoteJid, char **participants);
+void gowhatsapp_roomlist_add_room(PurpleConnection *pc, char *remoteJid, char *name);
+void gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
 
 // blist
 void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, char *remoteJid, char *display_name);
