@@ -37,3 +37,14 @@ if (WIN32)
 else()
     install(TARGETS ${TARGET_NAME} DESTINATION "${PURPLE_PLUGIN_DIR}")
 endif()
+
+add_executable(purple-whatsmeow-cli 
+    "cli.c"
+    "constants.c"
+    "bridge.h"
+)
+add_dependencies(purple-whatsmeow-cli purple-go-whatsapp)
+# this target does not actually need purple, only glib
+# but I do not want to introduce another set of variables
+target_include_directories(purple-whatsmeow-cli PRIVATE ${GO_WHATSAPP_INCLUDE_DIRS} ${PURPLE_INCLUDE_DIRS})
+target_link_libraries(purple-whatsmeow-cli PRIVATE ${GO_WHATSAPP_LIBRARIES} ${PURPLE_LIBRARIES} pthread dl)
