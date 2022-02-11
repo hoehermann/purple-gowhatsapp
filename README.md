@@ -48,8 +48,7 @@ Known issues:
 * Group Chats:
   * Attachments are downloaded, but link is not shown in group conversation window (not a Purple limitation, tdlib can do it).
   * Cannot send files of any kind to groups (Purple limitation? tdlib can embed images).
-  * Group chats are not listed in spectrum.
-  * No notification when being added to a group directly.
+  * No notification when being added to a group (the chat will be entered upon receiving a message).
 
 Other planned features:
 
@@ -169,6 +168,16 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 ### Notes
 
+#### Acknowledgements
+
+* [Peter "XP-Fan"](https://github.com/XP-Fan) for initiating the re-write
+* [yourealwaysbe](https://github.com/yourealwaysbe) for proper group chats, support and tests against [bitlee](https://github.com/bitlbee/bitlbee)
+* [vitalyster](https://github.com/vitalyster) for support, packaging and adjustments for [spectrum2](https://github.com/SpectrumIM/spectrum2)
+* Martin Sebald from [https://jabber.hot-chilli.net/](hot-chilli.net) for extensive stress-testing 
+* [JimB](https://stackoverflow.com/users/32880/jimb) for golang insights
+* [Eion Robb](https://github.com/EionRobb/) for sharing his invaluable purple advice
+* [HVV](https://www.hvv.de/) for providing free wifi at their stations
+
 #### Attachment Handling and Memory Consumption
 
 Attachments (images, videos, voice messages, stickers, document) are *always* downloaded as *soon as the message is processed*. The user is then asked where they want the file to be written. During this time, the file data is residing in memory multiple times:
@@ -178,6 +187,6 @@ Attachments (images, videos, voice messages, stickers, document) are *always* do
 * in the go → C message buffer
 * in the output buffer
 
-On systems with many concurrent connection, this could exhaust memory.
+On systems with many concurrent connections, this could exhaust memory.
 
 As of writing, whatsmeow does not offer an interface to read the file in chunks.
