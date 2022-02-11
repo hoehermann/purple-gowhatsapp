@@ -71,7 +71,7 @@ void
 purple_account_set_credentials(PurpleAccount *account, char *credentials)
 {
     (void) account;
-    (void) credentials;
+    printf("recieved credentials %s\n", credentials);
 }
 
 
