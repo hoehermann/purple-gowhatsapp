@@ -154,7 +154,7 @@ func gowhatsapp_go_get_contacts(account *PurpleAccount) {
 		go func() {
 			err := handler.client.FetchAppState(appstate.WAPatchCriticalUnblockLow, false, false)
 			if err != nil {
-				handler.log.Warnf("Could not fetch contacts from server: %#v", err)
+				handler.log.Warnf("Could not fetch app state from server: %#v", err)
 			}
 			// even in case of error, continue with locally stored contacts
 			contacts, err := handler.client.Store.Contacts.GetAllContacts()
@@ -162,18 +162,28 @@ func gowhatsapp_go_get_contacts(account *PurpleAccount) {
 				handler.log.Warnf("Could not get contacts from store: %#v", err)
 			} else {
 				for jid, info := range contacts {
+					name := info.FullName
+					if name == "" {
+						name = info.FirstName
+					}
+					if name == "" {
+						name = info.PushName
+					}
+					if name == "" {
+						name = info.BusinessName
+					}
 					cmessage := C.struct_gowhatsapp_message{
 						account:   account,
 						msgtype:   C.char(C.gowhatsapp_message_type_name),
 						remoteJid: C.CString(jid.ToNonAD().String()),
-						name:      C.CString(info.PushName),
+						name:      C.CString(name),
 					}
 					C.gowhatsapp_process_message_bridge(cmessage)
 				}
 			}
 		}()
 	} else {
-		purple_error(account, "Cannot get list of groups: Not connected.", ERROR_TRANSIENT)
+		purple_error(account, "Cannot get contacts: Not connected.", ERROR_TRANSIENT)
 	}
 }
 

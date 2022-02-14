@@ -48,9 +48,9 @@ gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean
     if (picture_date != NULL) {
         purple_notify_user_info_add_pair(info, "Picture date", picture_date);
     }
-    const char *published_name = purple_blist_node_get_string(&buddy->node, "published_name");
-    if (published_name != NULL) {
-        purple_notify_user_info_add_pair(info, "Published name", published_name);
+    const char *server_alias = purple_blist_node_get_string(&buddy->node, "server_alias");
+    if (server_alias != NULL) {
+        purple_notify_user_info_add_pair(info, "Pushname", server_alias);
     }
 }
 
