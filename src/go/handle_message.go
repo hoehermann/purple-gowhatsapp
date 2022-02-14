@@ -123,6 +123,6 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 			// so source is known even when receiving from group chats
 			filename = fmt.Sprintf("%s_%s", sender.User, filename)
 		}
-		purple_handle_attachment(handler.account, chat, ms.IsGroup, sender.String(), data_type, filename, data)
+		purple_handle_attachment(handler.account, chat, ms.IsGroup, sender.String(), ms.IsFromMe, data_type, filename, data)
 	}
 }
