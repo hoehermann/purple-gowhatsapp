@@ -52,11 +52,6 @@ void gowhatsapp_ensure_buddy_in_blist(
     if (!purple_account_get_bool(account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE)) {
         return;
     }
-    
-    if (display_name != NULL && *display_name == '\0') {
-        // treat empty string like an unknown name denoted by NULL
-        display_name = NULL;
-    }
 
     PurpleBuddy *buddy = purple_blist_find_buddy(account, remoteJid);
 

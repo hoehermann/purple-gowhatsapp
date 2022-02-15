@@ -162,21 +162,23 @@ func gowhatsapp_go_get_contacts(account *PurpleAccount) {
 				handler.log.Warnf("Could not get contacts from store: %#v", err)
 			} else {
 				for jid, info := range contacts {
+					cmessage := C.struct_gowhatsapp_message{
+						account:   account,
+						msgtype:   C.char(C.gowhatsapp_message_type_name),
+						remoteJid: C.CString(jid.ToNonAD().String()),
+					}
 					name := info.FullName
 					if name == "" {
 						name = info.FirstName
 					}
 					if name == "" {
-						name = info.PushName
-					}
-					if name == "" {
 						name = info.BusinessName
 					}
-					cmessage := C.struct_gowhatsapp_message{
-						account:   account,
-						msgtype:   C.char(C.gowhatsapp_message_type_name),
-						remoteJid: C.CString(jid.ToNonAD().String()),
-						name:      C.CString(name),
+					if name == "" {
+						name = info.PushName
+					}
+					if name != "" {
+						cmessage.name = C.CString(name)
 					}
 					C.gowhatsapp_process_message_bridge(cmessage)
 				}
