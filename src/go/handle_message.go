@@ -51,8 +51,10 @@ func (handler *Handler) handle_message(evt *events.Message) {
 	} else {
 		// note: info.PushName always denotes the sender (not the chat)
 		purple_display_text_message(handler.account, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, info.MessageSource.IsFromMe, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text)
-		handler.mark_read_defer(info.ID, info.MessageSource.Chat, info.MessageSource.Sender)
-		handler.mark_read_if_on_receival(info.MessageSource.Chat)
+		if !info.MessageSource.IsFromMe { // do not send receipt for own messages
+			handler.mark_read_defer(info.ID, info.MessageSource.Chat, info.MessageSource.Sender)
+			handler.mark_read_if_on_receival(info.MessageSource.Chat)
+		}
 	}
 
 	handler.handle_attachment(evt)

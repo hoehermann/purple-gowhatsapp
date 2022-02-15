@@ -100,11 +100,12 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	}
 
 	handler := Handler{
-		account:         account,
-		container:       container,
-		log:             log,
-		client:          whatsmeow.NewClient(device, PurpleLogger(account, "Client")),
-		pictureRequests: make(chan ProfilePictureRequest),
+		account:          account,
+		container:        container,
+		log:              log,
+		client:           whatsmeow.NewClient(device, PurpleLogger(account, "Client")),
+		deferredReceipts: make(map[types.JID]map[types.JID][]types.MessageID),
+		pictureRequests:  make(chan ProfilePictureRequest),
 	}
 	handlers[account] = &handler
 	handler.client.AddEventHandler(handler.eventHandler)

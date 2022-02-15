@@ -11,11 +11,6 @@ import (
 )
 
 /*
- * Holds ID and sender of a received message so the receipt can be sent later.
- */
-var deferredReceipts = make(map[types.JID]map[types.JID][]types.MessageID)
-
-/*
  * Puts ID and sender of a received message in the store.
  *
  * Except if the purple setting is "never send receipts". Then it does nothing.
@@ -30,7 +25,7 @@ func (handler *Handler) mark_read_defer(id types.MessageID, chat types.JID, send
 
 	// append to map of map of ids
 	// I really could go for a python defaultdict here
-	senders, ok := deferredReceipts[chat]
+	senders, ok := handler.deferredReceipts[chat]
 	if !ok {
 		// first sender in this chat
 		senders = make(map[types.JID][]types.MessageID)
@@ -47,7 +42,7 @@ func (handler *Handler) mark_read_defer(id types.MessageID, chat types.JID, send
 		}
 		senders[sender] = ids
 	}
-	deferredReceipts[chat] = senders
+	handler.deferredReceipts[chat] = senders
 }
 
 /*
@@ -97,7 +92,7 @@ func (handler *Handler) mark_read_conversation(chat string) {
  * mark_read_defer(…) should have been called before.
  */
 func (handler *Handler) mark_read_unconditionally(chat types.JID) {
-	senders, ok := deferredReceipts[chat]
+	senders, ok := handler.deferredReceipts[chat]
 	if ok {
 		for sender, ids := range senders {
 			handler.mark_read(ids, chat, sender)
