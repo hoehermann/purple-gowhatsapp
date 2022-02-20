@@ -54,7 +54,6 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_close_qrcode(gwamsg->account);
             purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
             gowhatsapp_set_presence(gwamsg->account, purple_account_get_active_status(gwamsg->account));
-            gowhatsapp_assume_all_buddies_online(gwamsg->account);
             break;
         case gowhatsapp_message_type_disconnected:
             purple_connection_set_state(pc, PURPLE_CONNECTION_DISCONNECTED);

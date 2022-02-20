@@ -18,11 +18,15 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_AWAY, NULL);
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_MOBILE, NULL);
     }
-    // TODO: move somewhere else so function names are not misleading
+    // TODO: move presence subscription somewhere else so function names are not misleading
     // this is only here because gowhatsapp_assume_buddy_online is alredy being called in all relevant situations
-    // NOTE: subscriptions are valid while unavailable
-    // but WhatsApp requires you to be available to receive presence updates
-    gowhatsapp_go_subscribe_presence(account, buddy->name);
+    const PurpleStatus *status = purple_account_get_active_status(account);
+    const char *status_id = purple_status_get_id(status);
+    if (purple_strequal(status_id, GOWHATSAPP_STATUS_STR_AVAILABLE)) {
+        // NOTE: WhatsApp requires you to be available to receive presence updates
+        // subscribing for presence updates might implicitly set own presence to available
+        gowhatsapp_go_subscribe_presence(account, buddy->name);
+    }
 
     if (purple_account_get_bool(account, GOWHATSAPP_GET_ICONS_OPTION, FALSE)) {
         const char *picture_date = purple_blist_node_get_string(&buddy->node, "picture_date");
