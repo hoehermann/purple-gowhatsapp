@@ -56,6 +56,9 @@ void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gw
     if (is_image && inline_images) {
         img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL);
         if (img_id >= 0) {
+            // gowhatsapp_display_text_message should not mistake the file name for a push name 
+            g_free(gwamsg->name); 
+            gwamsg->name = NULL; 
             gwamsg->text = g_strdup_printf("<img id=\"%u\"/>", img_id);
             gowhatsapp_display_text_message(pc, gwamsg, PURPLE_MESSAGE_IMAGES);
         }
