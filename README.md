@@ -17,7 +17,7 @@ Standard features:
 * Sending images.
 * Sending audio files as voice messages.
 * Sending other files as documents.
-* Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures (for [Markus "nihilus" Gothe](https://github.com/nihilus)).
+* Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures ([Markus "nihilus" Gothe](https://github.com/nihilus) for [Peter "XP-Fan"](https://github.com/XP-Fan)).
 * Sending receipts (configurable).
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
 * Under the hood: Reasonable callback mechanism thanks to [Eion Robb](https://github.com/EionRobb).
@@ -35,8 +35,9 @@ Other improvements:
 * Typing notifications are handled.
 * Logging happens via purple.
 * There is an "away" state.
-  * WhatsApp does not send contact presence updates while being "away".
+  * For compatibility with the auto-responder plug-in.
   * Other devices (i.e. the main phone) display notifications while plug-in connection is "away".
+  * WhatsApp does not send contact presence updates while being "away".
   * Caveat emptor: Other side-effects may occur while using "away" state.
 
 Features which are present in the go-whatsapp version but missing here:
@@ -45,6 +46,8 @@ Features which are present in the go-whatsapp version but missing here:
 
 Known issues:
 
+* Contacts:
+  * If someone adds you to their contacts and sends you the very first message, the message will not be received. WhatsApp Web shows a notice "message has been delayed – check your phone". This notice is not shown by the plug-in.
 * Group Chats:
   * Attachments are downloaded, but link is not shown in group conversation window (not a Purple limitation, tdlib can do it).
   * Cannot send files of any kind to groups (Purple limitation? tdlib can embed images).
@@ -55,7 +58,9 @@ Other planned features:
 * Display receipts in conversation window.
 * Join group chat via link.
 * Sending proper video messages.
-* Option to terminate session explicitly.
+* Option to log out explicitly.
+* After download succeeds, write link to chat (for bitlbee).
+* When message consists of a link, send file instead of displaying the link (maybe, configurable).
 
 These features will not be worked on:
 
