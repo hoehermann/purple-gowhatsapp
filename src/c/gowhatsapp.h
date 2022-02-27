@@ -68,6 +68,8 @@ void gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char av
 void gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean full);
 void gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg);
 void gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status);
+void gowhatsapp_subscribe_all_presence_updates(PurpleAccount *account);
+void gowhatsapp_subscribe_presence_updates(PurpleAccount *account, PurpleBuddy *buddy);
 
 // receipts
 void gowhatsapp_receipts_init(PurpleConnection *pc);

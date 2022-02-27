@@ -2,8 +2,13 @@
 #include "constants.h"
 #include "purple-go-whatsapp.h" // for gowhatsapp_go_send_presence
 
+/*
+ * WhatsApp informed us that a contact is now online or offline.
+ * Time last seen is provided optionally.
+ */
 void
-gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char online, time_t last_seen) {
+gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char online, time_t last_seen)
+{
     char *status = GOWHATSAPP_STATUS_STR_AVAILABLE;
     if (online == 0) {
         if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
@@ -24,6 +29,10 @@ gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char online,
     }
 }
 
+/*
+ * A profile picture has been downloaded.
+ * Set icon and store date for caching.
+ */
 void
 gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg)
 {
@@ -34,8 +43,7 @@ gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg)
 }
 
 void 
-gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean full)
-{
+gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean full){
     int last_seen = purple_blist_node_get_int(&buddy->node, "last_seen");
     if (last_seen != 0) {
         time_t t = last_seen;
@@ -54,6 +62,11 @@ gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean
     }
 }
 
+/*
+ * Set own presence.
+ * 
+ * NOTE: Receiving contact presence updates may only be sent by WhatsApp when being "available".
+ */
 void
 gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
     const char *status_id = purple_status_get_id(status);
@@ -64,9 +77,41 @@ gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
             gowhatsapp_roomlist_get_list(pc);
             gowhatsapp_go_get_contacts(account);
         }
-    }
-    // (re-)subscribe for presence updates (will check status_id again)
-    gowhatsapp_assume_all_buddies_online(account);
-    
+    }    
     gowhatsapp_go_send_presence(account, (char *)status_id); // cgo does not support const
+    // (re-)subscribe for presence updates (will check status_id again)
+    gowhatsapp_subscribe_all_presence_updates(account);
+}
+
+/*
+ * Subscribe for presence updates for all contacts currently in the buddy list.
+ * 
+ * NOTE: Receiving contact presence updates may only be sent by WhatsApp when being "available".
+ */
+void
+gowhatsapp_subscribe_presence_updates(PurpleAccount *account, PurpleBuddy *buddy)
+{
+    const PurpleStatus *status = purple_account_get_active_status(account);
+    const char *status_id = purple_status_get_id(status);
+    if (purple_strequal(status_id, GOWHATSAPP_STATUS_STR_AVAILABLE)) {
+        // NOTE: WhatsApp requires you to be available to receive presence updates
+        // subscribing for presence updates might implicitly set own presence to available
+        gowhatsapp_go_subscribe_presence(account, buddy->name);
+    }
+}
+
+/*
+ * Subscribe for presence updates for a specific buddy.
+ * 
+ * NOTE: Receiving contact presence updates may only be sent by WhatsApp when being "available".
+ */
+void
+gowhatsapp_subscribe_all_presence_updates(PurpleAccount *account)
+{
+    g_return_if_fail(account != NULL);
+    GSList *buddies = purple_find_buddies(account, NULL);
+    while (buddies != NULL) {
+        gowhatsapp_subscribe_presence_updates(account, buddies->data);
+        buddies = g_slist_delete_link(buddies, buddies);
+    }
 }
