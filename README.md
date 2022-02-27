@@ -1,11 +1,10 @@
-# purple-gowhatsapp
+﻿# purple-gowhatsapp
 
 A libpurple/Pidgin plugin for WhatsApp **Web**.
 
 Powered by [go-whatsapp](https://github.com/Rhymen/go-whatsapp), which is written by Lucas Engelke.
 
-Being developed on Ubuntu 20.04.  
-Last seen working with [go-whatsapp 9b4bc38](https://github.com/Rhymen/go-whatsapp/commit/9b4bc38).
+**IMPORTANT: This branch has been deprecated and will not be maintained. Please switch to the whatsmeow branch.**
 
 ### Building
 
