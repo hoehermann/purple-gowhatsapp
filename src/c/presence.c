@@ -57,7 +57,6 @@ gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean
 void
 gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
     const char *status_id = purple_status_get_id(status);
-    
     if (purple_strequal(status_id, GOWHATSAPP_STATUS_STR_AVAILABLE)) {
         if (purple_account_get_bool(account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE)) {
             // update contacts when switching to available
@@ -65,9 +64,9 @@ gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
             gowhatsapp_roomlist_get_list(pc);
             gowhatsapp_go_get_contacts(account);
         }
-        // subscribe for presence updates
-        gowhatsapp_assume_all_buddies_online(account);
     }
+    // (re-)subscribe for presence updates (will check status_id again)
+    gowhatsapp_assume_all_buddies_online(account);
     
     gowhatsapp_go_send_presence(account, (char *)status_id); // cgo does not support const
 }
