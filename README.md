@@ -61,6 +61,7 @@ Other planned features:
 * Option to log out explicitly.
 * After download succeeds, write link to chat (for bitlbee).
 * When message consists of a link, send file instead of displaying the link (maybe, configurable).
+* Embed stickers into conversation (maybe, WebP support in GDK would be ideal).
 
 These features will not be worked on:
 
