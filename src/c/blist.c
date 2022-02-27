@@ -69,7 +69,7 @@ void gowhatsapp_ensure_buddy_in_blist(
     // update name after checking against local alias and persisted name
     const char *local_alias = purple_buddy_get_alias(buddy);
     const char *server_alias = purple_blist_node_get_string(&buddy->node, "server_alias");
-    if (!purple_strequal(local_alias, display_name) && !purple_strequal(server_alias, display_name)) {
+    if (display_name != NULL && !purple_strequal(local_alias, display_name) && !purple_strequal(server_alias, display_name)) {
         serv_got_alias(purple_account_get_connection(account), remoteJid, display_name); // it seems buddy->server_alias is not persisted
         purple_blist_node_set_string(&buddy->node, "server_alias", display_name); // explicitly persisting the new name
     }
