@@ -30,6 +30,7 @@ set(GO_SRCS
   presence.go
   profile.go
   oggreader.go
+  file_checkers.go
 )
 set(OUTPUT_PREFIX purple-go-whatsapp)
 add_custom_command(
