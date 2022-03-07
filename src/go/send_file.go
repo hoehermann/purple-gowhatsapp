@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/proto"
 	"net/http"
 	"os"
@@ -22,40 +23,50 @@ func (handler *Handler) send_file(who string, filename string) string {
 	if err != nil {
 		return fmt.Sprintf("Failed to open %s: %v", filename, err)
 	}
-	var msg *waProto.Message
+	err = handler.send_file_bytes(recipient, isGroup, data, filename)
+	if err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
+func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data []byte, filename string) error {
+	var err error = nil
+	var msg *waProto.Message = nil
 	mimetype := http.DetectContentType(data)
 	handler.log.Infof("Attachment mime type is %s.", mimetype)
-	if mimetype == "image/jpeg" {
+	switch mimetype {
+	case "image/jpeg":
 		msg, err = handler.send_file_image(data, mimetype)
-	}
-	if mimetype == "application/ogg" {
-		errmsg := check_ogg(data)
-		if errmsg == "" {
+	case "application/ogg", "audio/ogg":
+		err = check_ogg(data)
+		if err == nil {
 			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus")
 		} else {
-			purple_display_system_message(handler.account, who, isGroup, errmsg+"\nSending file as document...")
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s\nSending file as document...", err))
 		}
-	}
-	if mimetype == "video/mp4" {
-		errmsg := check_mp4(data)
-		if errmsg == "" {
+	case "video/mp4":
+		err = check_mp4(data)
+		if err == nil {
 			msg, err = handler.send_file_video(data, "video/mp4")
 		} else {
-			purple_display_system_message(handler.account, who, isGroup, errmsg+"\nSending file as document...")
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s\nSending file as document...", err))
 		}
+	default:
+		err = fmt.Errorf("Mimetype %s not supported.", mimetype)
 	}
 	if msg == nil && err == nil {
 		basename := path.Base(filename) // TODO: find out whether this should be with or without extension. WhatsApp server seems to add extention.
 		msg, err = handler.send_file_document(data, mimetype, basename)
 	}
 	if err != nil {
-		return fmt.Sprintf("Failed to upload file: %v", err)
+		return fmt.Errorf("Failed to upload file: %v", err)
 	}
 	_, err = handler.client.SendMessage(recipient, "", msg)
 	if err != nil {
-		return fmt.Sprintf("Error sending file: %v", err)
+		return fmt.Errorf("Error sending file: %v", err)
 	} else {
-		return ""
+		return nil
 	}
 }
 

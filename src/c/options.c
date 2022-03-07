@@ -83,5 +83,12 @@ gowhatsapp_add_account_options(GList *account_options)
         );
     account_options = g_list_append(account_options, option);
 
+    option = purple_account_option_int_new(
+        "Maximum file-size (MB) for link-only message convertion",
+        GOWHATSAPP_EMBED_MAX_FILE_SIZE_OPTION,
+        0
+        );
+    account_options = g_list_append(account_options, option);
+
     return account_options;
 }

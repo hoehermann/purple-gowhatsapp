@@ -35,6 +35,7 @@ Other improvements:
 * Contact presence is regarded (buddies are online and offline).
 * Typing notifications are handled.
 * Logging happens via purple.
+* Messages which only consist of a single URL may be sent as media messages (disabled by default).
 * There is an "away" state.
   * For compatibility with the auto-responder plug-in.
   * Other devices (i.e. the main phone) display notifications while plug-in connection is "away".
@@ -58,15 +59,16 @@ Other planned features:
 
 * Display receipts in conversation window.
 * Join group chat via link.
-* Sending proper video messages.
 * Option to log out explicitly.
 * After download succeeds, write link to chat (for bitlbee).
-* When message consists of a link, send file instead of displaying the link (maybe, configurable).
 * Embed stickers into conversation (maybe, WebP support in GDK would be ideal).
 
 These features will not be worked on:
 
-* Accessing microphone and camera for recording voice or video messages.
+* Accessing microphone and camera for recording voice or video messages.  
+  To prepare a voice message, you can use other tools for recording. I like to use [ffmpeg](https://ffmpeg.org/download.html):
+  
+      ffmpeg -f pulse -i default -ac 1 -ar 16000 -c:a libopus -y voicemessage.ogg # on Linux with PulseAudio
 
 ### Building
 
@@ -173,17 +175,41 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   
   Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added upon request. As of writing, `pgx` for PostgreSQL is the only other option [supported by whatsmeow](https://github.com/tulir/whatsmeow/blob/b078a9e/store/sqlstore/container.go#L34).
 
+* `embed-max-file-size`  
+  When set to a value greater than 0 (default, in megabytes), the plug-in tries to detect link-only messages such as `https://example.com/voicemessage.oga` for forwarding.
+  
+  If enabled, this plug-in tries to download and forward the linked file, choosing the appropriate media type automatically. This way, your contacts do not see a link to an image, video or a voice message, but instead can play the content directly in their app. The message must consist of one URL exactly, including whitespace. For this reason, this mode is incompatbile with Pidgin's OTR plug-in, see [this bug report](https://developer.pidgin.im/ticket/10280). 
+  
+  At time of writing, the maximum file-size supported by WhatsApp is 16 MB. Further conditions need to be met, see below. 
+
 ### Notes
 
-#### Acknowledgements
+#### Conditions for Sending Media Messages
 
-* [Peter "XP-Fan"](https://github.com/XP-Fan) for initiating the re-write
-* [yourealwaysbe](https://github.com/yourealwaysbe) for proper group chats, support and tests against [bitlee](https://github.com/bitlbee/bitlbee)
-* [vitalyster](https://github.com/vitalyster) for support, packaging and adjustments for [spectrum2](https://github.com/SpectrumIM/spectrum2)
-* Martin Sebald from [https://jabber.hot-chilli.net/](hot-chilli.net) for extensive stress-testing 
-* [JimB](https://stackoverflow.com/users/32880/jimb) for golang insights
-* [Eion Robb](https://github.com/EionRobb/) for sharing his invaluable purple advice
-* [HVV](https://www.hvv.de/) for providing free wifi at their stations
+WhatsApp is very picky about media messages. This is actually a good thing for ensuring compatibility on all devices and clients (Android, iOS, all browsers for WhatsApp Web…).
+
+An image may be sent as an image message (JPEG, `image/jpeg`). This is relatively straight-forward.
+
+A voice message must meet these criteria:
+
+* Mime-Type: `application/ogg`, `audio/ogg`, sent as `audio/ogg; codecs=opus`
+* Container: `ogg`
+* Codec: `opus`
+* Channels: 1 (mono)
+* Sample-Rate: 16 kHz
+
+A video message must meet these criteria:
+
+* Mime-Type: `video/mp4`
+* Container Major Brand: `mp42` (observed), `isom` (also accepted)
+* Moov Atom Location: Beginning (recommended)
+* Video Track:
+    * Codec: `h264`
+    * Pixel Format: `yuv420p` (assumed, not checked)
+* Audio Track (optional):
+    * Codec: `aac` (not checked)
+
+Not all of these values are checked by the plug-in. Some of these criteria are guessed and may not actually be WhatsApp restrictions.
 
 #### Attachment Handling and Memory Consumption
 
@@ -197,3 +223,14 @@ Attachments (images, videos, voice messages, stickers, document) are *always* do
 On systems with many concurrent connections, this could exhaust memory.
 
 As of writing, whatsmeow does not offer an interface to read the file in chunks.
+
+#### Acknowledgements
+
+* [Peter "XP-Fan"](https://github.com/XP-Fan) for initiating the re-write
+* [yourealwaysbe](https://github.com/yourealwaysbe) for proper group chats, support and tests against [bitlee](https://github.com/bitlbee/bitlbee)
+* [vitalyster](https://github.com/vitalyster) for support, packaging and adjustments for [spectrum2](https://github.com/SpectrumIM/spectrum2)
+* Martin Sebald from [https://jabber.hot-chilli.net/](hot-chilli.net) for extensive stress-testing 
+* [JimB](https://stackoverflow.com/users/32880/jimb) for golang insights
+* [Eion Robb](https://github.com/EionRobb/) for sharing his invaluable purple advice
+* [HVV](https://www.hvv.de/) for providing free wifi at their stations
+

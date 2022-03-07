@@ -6,41 +6,43 @@ import (
 	"github.com/alfg/mp4"
 )
 
-func check_ogg(data []byte) string {
+func check_ogg(data []byte) error {
 	reader, header, err := NewWith(bytes.NewReader(data)) // TODO: have oggreader in its package
 	if reader != nil && err == nil && header != nil && header.SampleRate == 16000 && header.Channels == 1 {
-		return ""
+		return nil
 	} else {
-		return fmt.Sprintf("An ogg audio file was provided, but it has not the correct format.\nNeed opus, channel: 1, rate: 16000, error nil.\nGot channels: %d , rate: %d, error %s.", header.Channels, header.SampleRate, err)
+		return fmt.Errorf("An ogg audio file was provided, but it has not the correct format.\nNeed opus, channel: 1, rate: 16000, error nil.\nGot channels: %d , rate: %d, error %s.", header.Channels, header.SampleRate, err)
 	}
 }
 
-func check_mp4(data []byte) string {
+func check_mp4(data []byte) error {
 	mp4, err := mp4.OpenFromBytes(data)
 	if err != nil {
-		return fmt.Sprintf("An mp4 video file was provided, but it could not be analyzed because of %v.", err)
+		return fmt.Errorf("An mp4 video file was provided, but it could not be analyzed because of %v.", err)
 	}
-	// NOTE: I assume brand must be mp42
-	// TODO: also accept compatible brands with slices.Contains(mp4.Ftyp.CompatibleBrands, "mp42")
-	if mp4.Ftyp.MajorBrand == "mp42" && mp4.Ftyp.MinorVersion == 0 && mp4.Moov.IsFragmented == false {
+	// NOTE: WhatsApp seems to prefer MajorBrand == "mp42", MinorVersion == 0
+	// TODO: also consider CompatibleBrands
+	// TODO: check moov atom (faststart) location
+	if (mp4.Ftyp.MajorBrand == "mp42" || mp4.Ftyp.MajorBrand == "isom") && mp4.Moov.IsFragmented == false {
 		// NOTE: I assume video track must be at 0
 		// presence of Avc1 box (Box.Name "avc1") indicates h264
 		// see https://developer.apple.com/library/archive/documentation/QuickTime/QTFF/QTFFChap3/qtff3.html
+		// TODO: access h264 stream and check for yuv420
+		edits_ok := true
 		video_ok := false
 		audio_ok := true // TODO: actually check audio
 		if len(mp4.Moov.Traks) == 1 || len(mp4.Moov.Traks) == 2 {
 			trak := mp4.Moov.Traks[0]
 			video_ok = trak.Mdia.Minf.Stbl != nil && trak.Mdia.Minf.Stbl.Stsd.Avc1 != nil
-			// TODO: access h264 stream and check for yuv420
+			edits_ok = edits_ok && trak.Edts == nil // I have no idea what this means, but WhatsApp seems to like it nil
 		}
-		// TODO: assert mp4.Edts == nil ?
-		if video_ok && audio_ok {
-			return ""
+		if edits_ok && video_ok && audio_ok {
+			return nil
 		} else {
-			return fmt.Sprintf("An mp42 video file was provided, but it has not the correct format.\nFirst track avc1 (aka. h264) video. Second track mp4a (aka. aac) audio (optional).")
+			return fmt.Errorf("An mp42 video file was provided, but it has not the correct format.\nFirst track avc1 (aka. h264) video. Second track mp4a (aka. aac) audio (optional).")
 		}
 	} else {
-		return fmt.Sprintf("An mp4 video file was provided, but it has not the correct container.\nNeed brand: mp42, version: 0, fragmented: false.")
+		return fmt.Errorf("An mp4 video file was provided, but it has not the correct container.\nNeed brand: mp42, version: 0, fragmented: false.")
 	}
 	/*
 	   handler.log.Infof("mp4: %+v", mp4)
