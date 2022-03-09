@@ -161,7 +161,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
     * After connecting, the account automatically joins all chats representing the WhatsApp groups.
   
 * `database-address`  
-  whatsmeow stores all session information in a SQL database. This string will be passed to [database/sql.Open](https://pkg.go.dev/database/sql#Open) as `dataSourceName`.
+  whatsmeow stores all session information in a SQL database.
   
   This setting can have place-holders:
   
@@ -171,9 +171,9 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   default: `file:$purple_user_dir/whatsmeow.db?_foreign_keys=on&_busy_timeout=3000`  
   Folder must exist, `whatsmeow.db` is created automatically.
   
-  If the address starts with `file:`, the driver will be `sqlite3` for a file-backed SQLite database. This is not recommended for multi-account-applications (e.g. spectrum or bitlbee) due to a [limitation in the driver](https://github.com/mattn/go-sqlite3/issues/209). The file-system (see addess option) must support locking and be responsive. Network shares (especially SMB) **do not work**.
+  By default, the driver will be `sqlite3` for a file-backed SQLite database. This is not recommended for multi-account-applications (e.g. spectrum or bitlbee) due to a [limitation in the driver](https://github.com/mattn/go-sqlite3/issues/209). The file-system (see addess option) must support locking and be responsive. Network shares (especially SMB) **do not work**.
   
-  Other [SQLDrivers](https://github.com/golang/go/wiki/SQLDrivers) may be added upon request. As of writing, `pgx` for PostgreSQL is the only other option [supported by whatsmeow](https://github.com/tulir/whatsmeow/blob/b078a9e/store/sqlstore/container.go#L34).
+  If the setting starts with `postgres:`, the suffix will be passed to [database/sql.Open](https://pkg.go.dev/database/sql#Open) as `dataSourceName` for the [pq](https://github.com/lib/pq) PostgreSQL driver. At time of writing, there are no further drivers [supported by whatsmeow](https://github.com/tulir/whatsmeow/blob/b078a9e/store/sqlstore/container.go#L34). Support for MySQL/MariaDB has been [requested](https://github.com/tulir/whatsmeow/pull/48). 
 
 * `embed-max-file-size`  
   When set to a value greater than 0 (default, in megabytes), the plug-in tries to detect link-only messages such as `https://example.com/voicemessage.oga` for forwarding.

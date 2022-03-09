@@ -9,7 +9,7 @@ import (
 	"context"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/jackc/pgx"
+	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/skip2/go-qrcode"
@@ -38,14 +38,16 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	address := purple_get_string(account, C.GOWHATSAPP_DATABASE_ADDRESS_OPTION, C.GOWHATSAPP_DATABASE_ADDRESS_DEFAULT)
 	address = strings.Replace(address, "$purple_user_dir", purple_user_dir, -1)
 	address = strings.Replace(address, "$username", username, -1)
-	dialect := "pgx" // see https://github.com/jackc/pgx/wiki/Getting-started-with-pgx-through-database-sql
-	if strings.HasPrefix(address, "file:") {
-		dialect = "sqlite3" // see https://github.com/mattn/go-sqlite3/blob/671e666/_example/simple/simple.go#L14
+	dialect := "sqlite3" // see https://github.com/mattn/go-sqlite3/blob/671e666/_example/simple/simple.go#L14
+	if strings.HasPrefix(address, "postgres:") {
+		dialect = "postgres"
+		address = strings.Replace(address, "postgres:", "", -1)
 	} else if strings.HasPrefix(address, "mysql:") {
 		dialect = "mysql"
 		address = strings.Replace(address, "mysql:", "", -1)
 	} else {
 		// nothing else, see https://github.com/tulir/whatsmeow/blob/b078a9e/store/sqlstore/container.go#L34
+		// and https://github.com/tulir/whatsmeow/blob/4ea4925/mdtest/main.go#L44
 	}
 	dbLog.Infof("%s connecting to %s", dialect, address)
 	container, err := sqlstore.New(dialect, address, dbLog)
