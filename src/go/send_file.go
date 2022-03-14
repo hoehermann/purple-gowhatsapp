@@ -43,14 +43,16 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 		if err == nil {
 			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus")
 		} else {
-			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s\nSending file as document...", err))
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s Sending file as document...", err))
+			err = nil
 		}
 	case "video/mp4":
 		err = check_mp4(data)
 		if err == nil {
 			msg, err = handler.send_file_video(data, "video/mp4")
 		} else {
-			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s\nSending file as document...", err))
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s Sending file as document...", err))
+			err = nil
 		}
 	default:
 		err = fmt.Errorf("Mimetype %s not supported.", mimetype)
