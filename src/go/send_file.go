@@ -9,7 +9,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
+	"strings"
 )
 
 // based on https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go
@@ -55,10 +56,12 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 			err = nil
 		}
 	default:
-		err = fmt.Errorf("Mimetype %s not supported.", mimetype)
+		// generic other file. nothing special to do here.
 	}
 	if msg == nil && err == nil {
-		basename := path.Base(filename) // TODO: find out whether this should be with or without extension. WhatsApp server seems to add extention.
+		basename := filepath.Base(filename)
+		strings.TrimSuffix(basename, filepath.Ext(basename))
+		// WhatsApp server seems to add extention, remove it here.
 		msg, err = handler.send_file_document(data, mimetype, basename)
 	}
 	if err != nil {
