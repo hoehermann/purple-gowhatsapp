@@ -60,7 +60,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		db.SetMaxOpenConns(max_open_conns)
 	}
 	if err != nil {
-		purple_error(account, fmt.Sprintf("whatsmeow database driver is unable to establish connection to %s due to %v.", address, err), ERROR_FATAL)
+		purple_error(account, fmt.Sprintf("database driver %s is unable to establish connection to %s due to %v.", dialect, address, err), ERROR_FATAL)
 		return
 	}
 	container := sqlstore.NewWithDB(db, dialect, dbLog)
