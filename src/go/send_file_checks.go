@@ -7,23 +7,32 @@ import (
 )
 
 func check_ogg(data []byte) error {
-	reader, header, err := NewWith(bytes.NewReader(data)) // TODO: have oggreader in its package
-	if reader != nil && err == nil && header != nil && header.SampleRate == 16000 && header.Channels == 1 {
-		return nil
+	_, header, err := NewWith(bytes.NewReader(data)) // TODO: have oggreader in its package
+	if err != nil {
+		return fmt.Errorf("An ogg audio file was provided, but it could not be analyzed: %v.", err)
+	}
+	if header == nil {
+		return fmt.Errorf("An ogg audio file was provided, but the header was empty or was not an opus header.")
+	}
+	if header.SampleRate != 16000 && header.Channels != 1 {
+		return fmt.Errorf("An ogg audio file with opus encoded content was provided, but it has not the correct format.\nNeed channel: 1, rate: 16000.\nGot channels: %d , rate: %d.", header.Channels, header.SampleRate)
 	} else {
-		return fmt.Errorf("An ogg audio file was provided, but it has not the correct format.\nNeed opus, channel: 1, rate: 16000, error nil.\nGot channels: %d , rate: %d, error %s.", header.Channels, header.SampleRate, err)
+		return nil
 	}
 }
 
 func check_mp4(data []byte) error {
 	mp4, err := mp4.OpenFromBytes(data)
 	if err != nil {
-		return fmt.Errorf("An mp4 video file was provided, but it could not be analyzed because of %v.", err)
+		return fmt.Errorf("An mp4 video file was provided, but it could not be analyzed: %v.", err)
+	}
+	if mp4 == nil {
+		return fmt.Errorf("An mp4 video file was provided, but it could not be analyzed.")
 	}
 	// NOTE: WhatsApp seems to prefer MajorBrand == "mp42", MinorVersion == 0
 	// TODO: also consider CompatibleBrands
 	// TODO: check moov atom (faststart) location
-	if (mp4.Ftyp.MajorBrand == "mp42" || mp4.Ftyp.MajorBrand == "isom") && mp4.Moov.IsFragmented == false {
+	if mp4.Ftyp != nil && (mp4.Ftyp.MajorBrand == "mp42" || mp4.Ftyp.MajorBrand == "isom") && mp4.Moov != nil && mp4.Moov.IsFragmented == false {
 		// NOTE: I assume video track must be at 0
 		// presence of Avc1 box (Box.Name "avc1") indicates h264
 		// see https://developer.apple.com/library/archive/documentation/QuickTime/QTFF/QTFFChap3/qtff3.html
