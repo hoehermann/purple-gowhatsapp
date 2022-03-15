@@ -43,7 +43,16 @@ purple_account_set_credentials(PurpleAccount *account, char *credentials)
     
     // bitlbee stores credentials in password field
     // in Pidgin, purple_signal_emit causes the GTK debug view to crash
-    if (purple_account_get_bool(account, GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION, FALSE)) {
+    // so we need to check if the signal has been registered before emitting
+    int num_values = 0;
+    PurpleValue **values;
+    purple_signal_get_values(
+        purple_accounts_get_handle(), 
+        "bitlbee-set-account-password",
+        NULL,
+        &num_values, &values
+    );
+    if (num_values > 0) {
         purple_account_set_password(account, credentials);
         purple_signal_emit(
             purple_accounts_get_handle(),

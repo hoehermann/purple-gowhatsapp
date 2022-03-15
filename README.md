@@ -157,8 +157,9 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   Special compatibility setting for protocol bridges like Spectrum or bitlbee. Setting this to true (default: false) will have the following effects:
     * System messages will be treated just like normal messages, allowing them to be logged and forwarded. This only affects soft errors regarding a specific conversation, e.g. "message could not be sent".
     * After a message has been sent successfully, it is not explicitly echoed locally.
-    * Account credentials are not only stored in the account data store, but also in its password store.
-    * After connecting, the account automatically joins all chats representing the WhatsApp groups.
+
+* `autojoin-chats`  
+  Automatically join all chats representing the WhatsApp groups after connecting and every time group information is provided. This is useful for protocol bridges.
   
 * `database-address`  
   whatsmeow stores all session information in a SQL database.
