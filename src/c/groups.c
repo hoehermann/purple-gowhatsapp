@@ -179,9 +179,11 @@ void
 gowhatsapp_chat_add_participants(PurpleAccount *account, char *remoteJid, char **participants) {
     PurpleConvChat *conv_chat = purple_conversations_find_chat_with_account(remoteJid, account);
     if (conv_chat != NULL) { // only consider active chats
-        for(char **iter = participants; iter != NULL && *iter != NULL; iter++) {
-            PurpleConvChatBuddyFlags flags = 0;
-            purple_conv_chat_add_user(conv_chat, *iter, NULL, flags, FALSE);
+        for(char **participant_ptr = participants; participant_ptr != NULL && *participant_ptr != NULL; participant_ptr++) {
+            if (!gowhatsapp_user_in_conv_chat(conv_chat, *participant_ptr)) {
+                PurpleConvChatBuddyFlags flags = 0;
+                purple_conv_chat_add_user(conv_chat, *participant_ptr, NULL, flags, FALSE);
+            }
         }
     }
 }
@@ -231,16 +233,13 @@ char *gowhatsapp_get_chat_name(GHashTable *components)
  * Determines if user is participating in conversation.
  */
 int gowhatsapp_user_in_conv_chat(PurpleConvChat *conv_chat, const char *userJid) {
-    GList *users = purple_conv_chat_get_users(conv_chat);
-
-    while (users != NULL) {
+    for (GList *users = purple_conv_chat_get_users(conv_chat); users != NULL; 
+        users = users->next) {
         PurpleConvChatBuddy *buddy = (PurpleConvChatBuddy *) users->data;
         if (!strcmp(buddy->name, userJid)) {
             return TRUE;
         }
-        users = users->next;
     }
-
     return FALSE;
 }
 
