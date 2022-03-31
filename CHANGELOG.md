@@ -1,6 +1,14 @@
+# 1.2.0
+
+* Change: Automatically detect bitlbee when storing credentials. `bridge-compatibility` no longer regarded for this feature.
+* Change: SQLite connections limited to 1 (was unlimited).
+* Change: Strip local extension form file name when sending as document (was append WhatsApp suppled extension).
+* Bugfix: A non-media file is sent as a document (was fail sending message).
+* Bugfix: Do not duplicate chat participants.
+
 # 1.1.0
 
-* Feature: Can send mp4 videos as video message.
+* Feature: Can send a mp4 video as video message.
 * Feature: Link-only messages can be converted in media messages.
 * Change: Using "file:…" for sqlite3 and "postgres:…" for pq in `database-address` setting.
 * Change: Presence subscriptions are issued even when in "away" state (was "online" only).
