@@ -46,8 +46,8 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, errmsg)
 	} else {
 		// inject message back to self to indicate success
-		// spectrum users do not want this
-		if !purple_get_bool(handler.account, C.GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION, false) {
+		setting := purple_get_string(handler.account, C.GOWHATSAPP_ECHO_OPTION, C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS)
+		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS) {
 			ownJid := "" // TODO: find out if this messes up group chats
 			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, ownJid, nil, ts, message)
 		}
@@ -64,7 +64,6 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
  * Sending a message causes all previously received messages to become "read" (configurable).
  */
 func (handler *Handler) send_message(who string, message string, isGroup bool) {
-	handler.log.Infof("Message length: %d", len(message))
 	recipient, err := parseJID(who)
 	if err != nil {
 		purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)

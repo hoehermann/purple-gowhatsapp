@@ -22,17 +22,32 @@ gowhatsapp_add_account_options(GList *account_options)
         );
     account_options = g_list_append(account_options, option);
     
-    GList *choices = NULL;
-    choices = add_choice(choices, "Immediately", GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY);
-    choices = add_choice(choices, "When interacting with conversation (buggy)", GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_INTERACT);
-    choices = add_choice(choices, "When sending a reply", GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_ANSWER);
-    choices = add_choice(choices, "Never", GOWHATSAPP_SEND_RECEIPT_CHOICE_NEVER);
-    option = purple_account_option_list_new(
-        "Send receipts",
-        GOWHATSAPP_SEND_RECEIPT_OPTION,
-        choices
-    );
-    account_options = g_list_append(account_options, option);
+    {
+        GList *choices = NULL;
+        choices = add_choice(choices, "Immediately", GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY);
+        choices = add_choice(choices, "When interacting with conversation (buggy)", GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_INTERACT);
+        choices = add_choice(choices, "When sending a reply", GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_ANSWER);
+        choices = add_choice(choices, "Never", GOWHATSAPP_SEND_RECEIPT_CHOICE_NEVER);
+        option = purple_account_option_list_new(
+            "Send receipts",
+            GOWHATSAPP_SEND_RECEIPT_OPTION,
+            choices
+        );
+        account_options = g_list_append(account_options, option);
+    }
+    
+    {
+        GList *choices = NULL;
+        choices = add_choice(choices, "On success", GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS);
+        choices = add_choice(choices, "Immediately", GOWHATSAPP_ECHO_CHOICE_IMMEDIATELY);
+        choices = add_choice(choices, "Never", GOWHATSAPP_ECHO_CHOICE_NEVER);
+        option = purple_account_option_list_new(
+            "Echo sent messages",
+            GOWHATSAPP_ECHO_OPTION,
+            choices
+        );
+        account_options = g_list_append(account_options, option);
+    }
     
     option = purple_account_option_int_new(
         "QR code size (pixels)",

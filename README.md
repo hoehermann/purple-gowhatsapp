@@ -142,10 +142,10 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 * `send-receipt`  
   Selects when to send receipts "double blue tick" notifications:
-    * "immediately": immediately upon message receival
-    * "on-interact": as the user interacts with the conversation window (currently buggy)
-    * "on-answer": as soon as the user sends an answer (default)
-    * "never": never
+    * `immediately`: immediately upon message receival
+    * `on-interact`: as the user interacts with the conversation window (currently buggy)
+    * `on-answer`: as soon as the user sends an answer (default)
+    * `never`: never
     
 * `inline-images`:
   If set to true (default), images will automatically be downloaded and embedded in the conversation window.
@@ -154,9 +154,13 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
   
 * `bridge-compatibility`  
-  Special compatibility setting for protocol bridges like Spectrum or bitlbee. Setting this to true (default: false) will have the following effects:
-    * System messages will be treated just like normal messages, allowing them to be logged and forwarded. This only affects soft errors regarding a specific conversation, e.g. "message could not be sent".
-    * After a message has been sent successfully, it is not explicitly echoed locally.
+  Special compatibility setting for protocol bridges like Spectrum or bitlbee. Setting this to true (default: false) will treat system messages just like normal messages, allowing them to be logged and forwarded. This only affects soft errors regarding a specific conversation, e.g. "message could not be sent".
+    
+* `echo-sent-messages`  
+  Selects when to put an outgoing message into the local conversation window:
+    * `on-success`: After the WhatsApp *server* has received the message (default). Note: This does not indicate whether the message has been received by the *contact*.
+    * `immediately`: Immediately after hitting send (message may not actually have been sent).
+    * `never`: Never (some protocol bridges want this).
 
 * `autojoin-chats`  
   Automatically join all chats representing the WhatsApp groups after connecting and every time group information is provided. This is useful for protocol bridges.

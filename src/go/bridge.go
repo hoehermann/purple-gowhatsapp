@@ -64,7 +64,15 @@ func gowhatsapp_go_send_message(account *PurpleAccount, who *C.char, message *C.
 	handler, ok := handlers[account]
 	if ok {
 		go handler.send_message(C.GoString(who), C.GoString(message), Cint_to_bool(is_group))
-		return 0
+
+		setting := purple_get_string(handler.account, C.GOWHATSAPP_ECHO_OPTION, C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS)
+		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_IMMEDIATELY) {
+			// indicate immediate success, message is echoed back into conversation by purple
+			return 1
+		} else {
+			// suppress message echo
+			return 0
+		}
 	}
 	return -107 // ENOTCONN, see libpurple/prpl.h
 }
