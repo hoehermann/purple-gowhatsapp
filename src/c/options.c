@@ -56,6 +56,13 @@ gowhatsapp_add_account_options(GList *account_options)
         );
     account_options = g_list_append(account_options, option);
 
+    option = purple_account_option_int_new(
+        "Maximum linked file-size (MB)",
+        GOWHATSAPP_EMBED_MAX_FILE_SIZE_OPTION,
+        0
+        );
+    account_options = g_list_append(account_options, option);
+
     option = purple_account_option_bool_new(
         "Inline images",
         GOWHATSAPP_INLINE_IMAGES_OPTION,
@@ -95,13 +102,6 @@ gowhatsapp_add_account_options(GList *account_options)
         "Protocol bridge compatibility mode",
         GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION,
         FALSE
-        );
-    account_options = g_list_append(account_options, option);
-
-    option = purple_account_option_int_new(
-        "Maximum file-size (MB) for link-only message convertion",
-        GOWHATSAPP_EMBED_MAX_FILE_SIZE_OPTION,
-        0
         );
     account_options = g_list_append(account_options, option);
 
