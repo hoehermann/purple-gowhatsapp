@@ -52,7 +52,7 @@ process_message(gowhatsapp_message_t * gwamsg) {
     }
     PurpleConnection *connection = purple_account_get_connection(gwamsg->account);
     if (connection == NULL) {
-        purple_debug_info(GOWHATSAPP_NAME, "No active connection for account %p. Ignoring message.\n", gwamsg->account);
+        purple_debug_warning(GOWHATSAPP_NAME, "No active connection for account %p. Ignoring message.\n", gwamsg->account);
         return;
     }
     gowhatsapp_process_message(gwamsg);
