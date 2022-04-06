@@ -20,6 +20,7 @@ Standard features:
 * Sending other files as documents.
 * Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures ([Markus "nihilus" Gothe](https://github.com/nihilus) for [Peter "XP-Fan"](https://github.com/XP-Fan)).
 * Sending receipts (configurable).
+* Support for socks5 proxies.
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
 * Under the hood: Reasonable callback mechanism thanks to [Eion Robb](https://github.com/EionRobb).
 
@@ -41,10 +42,6 @@ Other improvements:
   * Other devices (i.e. the main phone) display notifications while plug-in connection is "away".
   * WhatsApp does not send contact presence updates while being "away".
   * Caveat emptor: Other side-effects may occur while using "away" state.
-
-Features which are present in the go-whatsapp version but missing here:
-
-* Support for proxy servers (whatsmeow limitation).
 
 Known issues:
 
@@ -228,6 +225,10 @@ Attachments (images, videos, voice messages, stickers, document) are *always* do
 On systems with many concurrent connections, this could exhaust memory.
 
 As of writing, whatsmeow does not offer an interface to read the file in chunks.
+
+#### Proxy Support
+
+[whatsmeow](https://github.com/tulir/whatsmeow/blob/9f73bc00d158688a14d0147a93b6b25373facbb8/client.go#L206) offers support for SOCKS5 proxies only. Even if no proxy settings are set in purple, the underlying Go runtime might pick up the `https_proxy` environment variable anyway. 
 
 #### Acknowledgements
 

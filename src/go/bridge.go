@@ -50,8 +50,8 @@ func Cint_to_bool(i C.int) bool {
 }
 
 //export gowhatsapp_go_login
-func gowhatsapp_go_login(account *PurpleAccount, purple_user_dir *C.char, username *C.char, password *C.char) {
-	login(account, C.GoString(purple_user_dir), C.GoString(username), C.GoString(password))
+func gowhatsapp_go_login(account *PurpleAccount, purple_user_dir *C.char, username *C.char, password *C.char, proxy_uri *C.char) {
+	login(account, C.GoString(purple_user_dir), C.GoString(username), C.GoString(password), C.GoString(proxy_uri))
 }
 
 //export gowhatsapp_go_close

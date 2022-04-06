@@ -25,7 +25,7 @@ import (
 /*
  * This is the go part of purple's login() function.
  */
-func login(account *PurpleAccount, purple_user_dir string, username string, credentials string) {
+func login(account *PurpleAccount, purple_user_dir string, username string, credentials string, proxy_address string) {
 	log := PurpleLogger(account, "Handler")
 	_, ok := handlers[account]
 	if ok {
@@ -120,7 +120,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	}
 	handlers[account] = &handler
 	handler.client.AddEventHandler(handler.eventHandler)
-	go handler.connect()
+	go handler.connect(proxy_address)
 }
 
 /*
@@ -161,9 +161,12 @@ func (handler *Handler) prune_devices(deviceJid types.JID) {
  * Helper function for login procedure.
  * Calls whatsmeow.Client.Connect().
  */
-func (handler *Handler) connect() {
+func (handler *Handler) connect(proxy_address string) {
 	clientLog := handler.log
 	client := handler.client
+	if proxy_address != "" {
+		client.SetProxyAddress(proxy_address)
+	}
 	if client.Store.ID == nil {
 		// No ID stored, new login
 		qrChan, _ := client.GetQRChannel(context.Background())
