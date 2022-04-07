@@ -1,3 +1,9 @@
+# 1.3.0
+
+* Feature: Socks5 proxy support.
+* Change: Echo behaviour can now be controlled via `echo-sent-messages` setting (was previously included implicitly in `bridge-compatibility`).
+* Bugfix: Do not forget to update (or create) database structures.
+
 # 1.2.0
 
 * Change: Automatically detect bitlbee when storing credentials. `bridge-compatibility` no longer regarded for this feature.
