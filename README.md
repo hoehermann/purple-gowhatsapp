@@ -18,7 +18,7 @@ Standard features:
 * Sending ogg audio files as voice messages.
 * Sending mp4 video files as video messages.
 * Sending other files as documents.
-* Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures ([Markus "nihilus" Gothe](https://github.com/nihilus) for [Peter "XP-Fan"](https://github.com/XP-Fan)).
+* Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures ([Markus "nihilus" Gothe](https://github.com/nihilus) for [Peter "theassemblerguy" Bachmaier](https://github.com/theassemblerguy)).
 * Sending receipts (configurable).
 * Support for socks5 proxies.
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
@@ -116,7 +116,9 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 * Create a new account  
   You can enter an arbitrary username. 
   It is recommended to use your own internationalized number, followed by `@s.whatsapp.net`.  
-  Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`. This way, you recognize yourself in group chats and Pidgin's logs look sane.  
+  Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`.  
+  This way, you *recognize yourself in group chats* and Pidgin's logs look sane.  
+  Note: Spectrum user reports say, prepending a plus sign works better: `+49123456789@s.whatsapp.net`
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.
@@ -232,7 +234,7 @@ As of writing, whatsmeow does not offer an interface to read the file in chunks.
 
 #### Acknowledgements
 
-* [Peter "XP-Fan"](https://github.com/XP-Fan) for initiating the re-write
+* [Peter "theassemblerguy" Bachmaier](https://github.com/theassemblerguy) for initiating the re-write
 * [yourealwaysbe](https://github.com/yourealwaysbe) for proper group chats, support and tests against [bitlee](https://github.com/bitlbee/bitlbee)
 * [vitalyster](https://github.com/vitalyster) for support, packaging and adjustments for [spectrum2](https://github.com/SpectrumIM/spectrum2)
 * Martin Sebald from [https://jabber.hot-chilli.net/](hot-chilli.net) for extensive stress-testing 
