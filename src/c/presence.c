@@ -38,8 +38,9 @@ gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg)
 {
     purple_buddy_icons_set_for_user(gwamsg->account, gwamsg->remoteJid, gwamsg->blob, gwamsg->blobsize, NULL);
     PurpleBuddy *buddy = purple_blist_find_buddy(gwamsg->account, gwamsg->remoteJid);
-    purple_blist_node_set_string(&buddy->node, "picture_date", gwamsg->text);
     // no g_free(gwamsg->blob) here – purple takes ownership
+    purple_blist_node_set_string(&buddy->node, "picture_date", gwamsg->text);
+    // TODO: use purple_buddy_icons_set_account_icon_timestamp instead of saving the time string
 }
 
 void 
