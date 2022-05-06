@@ -1,6 +1,7 @@
 package main
 
 /*
+#include "../c/constants.h"
 #include "../c/bridge.h"
 */
 import "C"
@@ -15,8 +16,13 @@ import (
 
 func (handler *Handler) handle_message(evt *events.Message) {
 	handler.log.Infof("Received message: %#v", evt)
-	message := evt.Message
 	info := evt.Info
+	if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, false) && info.MessageSource.Chat.ToNonAD().String() == "status@broadcast" {
+		handler.log.Warnf("This is a status broadcast. Ignoring message as requested by user settings.")
+		return
+	}
+	
+	message := evt.Message
 	text := message.GetConversation()
 	etm := message.ExtendedTextMessage
 	if etm != nil {

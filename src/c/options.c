@@ -99,6 +99,13 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
     
     option = purple_account_option_bool_new(
+        "Ignore status broadcasts",
+        GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION,
+        FALSE
+        );
+    account_options = g_list_append(account_options, option);
+    
+    option = purple_account_option_bool_new(
         "Protocol bridge compatibility mode",
         GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION,
         FALSE
