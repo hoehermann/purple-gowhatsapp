@@ -29,7 +29,7 @@ CHARCONSTANT(GOWHATSAPP_ECHO_OPTION, "echo-sent-messages");
 CHARCONSTANT(GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, "ignore-status-broadcast");
 CHARCONSTANT(GOWHATSAPP_EMBED_MAX_FILE_SIZE_OPTION, "embed-max-file-size");
 CHARCONSTANT(GOWHATSAPP_DATABASE_ADDRESS_OPTION, "database-address");
-CHARCONSTANT(GOWHATSAPP_DATABASE_ADDRESS_DEFAULT, "file:$purple_user_dir/whatsmeow.db?_foreign_keys=on&_busy_timeout=3000");
+CHARCONSTANT(GOWHATSAPP_DATABASE_ADDRESS_DEFAULT, "sqlite:$purple_user_dir/whatsmeow.db?_pragma=foreign_keys(1)&_pragma=busy_timeout(3000)");
 
 /*
  * Choices for GOWHATSAPP_SEND_RECEIPT_OPTION.

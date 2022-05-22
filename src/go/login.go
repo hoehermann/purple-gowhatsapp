@@ -11,7 +11,7 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/glebarez/go-sqlite"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
@@ -41,7 +41,11 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	address = strings.Replace(address, "$username", username, -1)
 	dialect := "sqlite3" // see https://github.com/mattn/go-sqlite3/blob/671e666/_example/simple/simple.go#L14
 	max_open_conns := 1
-	if strings.HasPrefix(address, "postgres:") {
+	if strings.HasPrefix(address, "sqlite:") { // https://github.com/glebarez/go-sqlite
+		dialect = "sqlite"
+		max_open_conns = 1
+		address = strings.Replace(address, "sqlite:", "", -1)
+	} else if strings.HasPrefix(address, "mysql:") {
 		dialect = "postgres"
 		max_open_conns = 0
 		address = strings.Replace(address, "postgres:", "", -1)
