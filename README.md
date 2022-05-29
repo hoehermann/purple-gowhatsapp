@@ -57,6 +57,7 @@ Other planned features:
 * Display receipts in conversation window.
 * Join group chat via link.
 * Option to log out explicitly.
+* Option to refresh contacts.
 * After download succeeds, write link to chat (for bitlbee).
 * Embed stickers into conversation (maybe, WebP support in GDK would be ideal).
 
