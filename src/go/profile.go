@@ -49,7 +49,7 @@ func (handler *Handler) profile_picture_downloader() {
 			continue
 		}
 		preview := true
-		ppi, _ := handler.client.GetProfilePictureInfo(jid, preview)
+		ppi, _ := handler.client.GetProfilePictureInfo(jid, preview, "")
 		if ppi == nil {
 			// contact has no picture set
 			continue
