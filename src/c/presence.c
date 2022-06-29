@@ -39,6 +39,7 @@ gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg)
     purple_buddy_icons_set_for_user(gwamsg->account, gwamsg->remoteJid, gwamsg->blob, gwamsg->blobsize, NULL);
     PurpleBuddy *buddy = purple_blist_find_buddy(gwamsg->account, gwamsg->remoteJid);
     // no g_free(gwamsg->blob) here – purple takes ownership
+    purple_blist_node_set_string(&buddy->node, "picture_id", gwamsg->senderJid);
     purple_blist_node_set_string(&buddy->node, "picture_date", gwamsg->text);
     // TODO: use purple_buddy_icons_set_account_icon_timestamp instead of saving the time string
 }
@@ -52,6 +53,10 @@ gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean
         char buf[bufsize];
         strftime(buf, bufsize, "%c", gmtime(&t));
         purple_notify_user_info_add_pair(info, "Last seen", buf);
+    }
+    const char *picture_id = purple_blist_node_get_string(&buddy->node, "picture_id");
+    if (picture_id != NULL) {
+        purple_notify_user_info_add_pair(info, "Picture ID", picture_id);
     }
     const char *picture_date = purple_blist_node_get_string(&buddy->node, "picture_date");
     if (picture_date != NULL) {

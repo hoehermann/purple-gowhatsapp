@@ -20,8 +20,9 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
     }
     
     if (purple_account_get_bool(account, GOWHATSAPP_GET_ICONS_OPTION, FALSE)) {
+        const char *picture_id = purple_blist_node_get_string(&buddy->node, "picture_id");
         const char *picture_date = purple_blist_node_get_string(&buddy->node, "picture_date");
-        gowhatsapp_go_request_profile_picture(account, buddy->name, (char *)picture_date); // cgo does not suport const
+        gowhatsapp_go_request_profile_picture(account, buddy->name, (char *)picture_date, (char *)picture_id); // cgo does not suport const
     }
 }
 

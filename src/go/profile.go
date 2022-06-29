@@ -9,11 +9,12 @@ import (
 
 type ProfilePictureRequest struct {
 	who          string // JID of the contact whos profile picture is being requested
-	picture_date string // age of profile picture currently being displaye (may be "" in case of no picture)
+	picture_date string // age of profile picture currently being displayed (may be "" in case of no picture)
+	picture_id   string // id of profile picture currently being displayed (may be "" in case of no picture)
 }
 
-func (handler *Handler) request_profile_picture(who string, picture_date string) {
-	handler.pictureRequests <- ProfilePictureRequest{who: who, picture_date: picture_date}
+func (handler *Handler) request_profile_picture(who string, picture_date string, picture_id string) {
+	handler.pictureRequests <- ProfilePictureRequest{who: who, picture_date: picture_date, picture_id: picture_id}
 }
 
 /*
@@ -49,9 +50,9 @@ func (handler *Handler) profile_picture_downloader() {
 			continue
 		}
 		preview := true
-		ppi, _ := handler.client.GetProfilePictureInfo(jid, preview, "")
+		ppi, _ := handler.client.GetProfilePictureInfo(jid, preview, pdr.picture_id)
 		if ppi == nil {
-			// contact has no picture set
+			// no (updated) picture available for this contact
 			continue
 		}
 		req, err := http.NewRequest("GET", ppi.URL, nil)
@@ -74,6 +75,6 @@ func (handler *Handler) profile_picture_downloader() {
 			log.Warnf("Error while transferring profile picture for %s: %#v", pdr.who, err)
 			continue
 		}
-		purple_set_profile_picture(handler.account, pdr.who, b.Bytes(), resp.Header.Get("Last-Modified"))
+		purple_set_profile_picture(handler.account, pdr.who, b.Bytes(), resp.Header.Get("Last-Modified"), ppi.ID)
 	}
 }

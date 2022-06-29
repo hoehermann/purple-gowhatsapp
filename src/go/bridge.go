@@ -198,10 +198,10 @@ func gowhatsapp_go_get_contacts(account *PurpleAccount) {
 }
 
 //export gowhatsapp_go_request_profile_picture
-func gowhatsapp_go_request_profile_picture(account *PurpleAccount, who *C.char, picture_date *C.char) {
+func gowhatsapp_go_request_profile_picture(account *PurpleAccount, who *C.char, picture_date *C.char, picture_id *C.char) {
 	handler, ok := handlers[account]
 	if ok {
-		go handler.request_profile_picture(C.GoString(who), C.GoString(picture_date))
+		go handler.request_profile_picture(C.GoString(who), C.GoString(picture_date), C.GoString(picture_id))
 	} else {
 		// no connection, fail silently
 	}
@@ -334,11 +334,12 @@ func purple_handle_attachment(account *PurpleAccount, remoteJid string, isGroup 
 /*
  * Forwards a downloaded profile picture to purple.
  */
-func purple_set_profile_picture(account *PurpleAccount, who string, data []byte, picture_date string) {
+func purple_set_profile_picture(account *PurpleAccount, who string, data []byte, picture_date string, picture_id string) {
 	cmessage := C.struct_gowhatsapp_message{
 		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_profile_picture),
 		remoteJid: C.CString(who),
+		senderJid: C.CString(picture_id),
 		text:      C.CString(picture_date),
 		blob:      C.CBytes(data),
 		blobsize:  C.size_t(len(data)),
