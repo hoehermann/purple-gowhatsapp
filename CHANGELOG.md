@@ -1,3 +1,8 @@
+# 1.4.0
+
+* Change: Depends on whatsmeow v0.0.0-20220629162100 or newer.
+* Change: More socket related errors should trigger an automated reconnect within libpurple.
+
 # 1.3.0
 
 * Feature: Socks5 proxy support.
