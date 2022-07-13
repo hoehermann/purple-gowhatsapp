@@ -104,7 +104,6 @@ PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
     }
 
     if (topic != NULL && fetch_contacts) {
-        // components uses free on key (unlike above)
         purple_blist_alias_chat(chat, topic);
     }
 

@@ -39,7 +39,7 @@ GList * gowhatsapp_chat_info(PurpleConnection *pc)
 /*
  * Takes a purple chat_name and prepares all information necessary to join the chat with that name.
  * 
- * Ideally, this would take then human readable WhatsApp group name and look up the appropriate JID.
+ * Ideally, this would take the human readable WhatsApp group name and look up the appropriate JID.
  * For now, it expects the chat_name to be the group JID and simply wraps it.
  * 
  * The "topic" field denoting the human readable WhatsApp group name remains empty
@@ -208,7 +208,7 @@ gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid)
         // use hash of jid for chat id number
         PurpleConversation *conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);
         if (conv != NULL) {
-            purple_conversation_set_data(conv, "name", g_strdup(remoteJid));
+            purple_conversation_set_data(conv, "name", g_strdup(remoteJid)); // store the JID so it can be retrieved by get_chat_name
             gowhatsapp_go_query_groups(account); // TODO: query this specific group
         }
         conv_chat = PURPLE_CONV_CHAT(conv);
@@ -219,6 +219,10 @@ gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid)
 /*
  * Get the identifying aspect of a chat (as passed to serv_got_joined_chat) 
  * given the chat_info entries. In WhatsApp, this is the JID.
+ * 
+ * The JID is stored in the "name" field. In libpurple, this is the default.
+ * It is reimplementerd here explicitly since it might be good for compatibility 
+ * with bitlbee or spectrum.
  *
  * Borrowed from:
  * https://github.com/matrix-org/purple-matrix/blob/master/libmatrix.c
