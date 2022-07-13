@@ -1,6 +1,10 @@
+# 1.5.0
+
+* Update: Depends on whatsmeow v0.0.0-20220711113451 or newer.
+
 # 1.4.0
 
-* Change: Depends on whatsmeow v0.0.0-20220629162100 or newer.
+* Update: Depends on whatsmeow v0.0.0-20220629162100.
 * Change: More socket related errors should trigger an automated reconnect within libpurple.
 
 # 1.3.0

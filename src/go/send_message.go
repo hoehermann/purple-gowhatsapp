@@ -41,7 +41,7 @@ func parseJID(arg string) (types.JID, error) {
  */
 func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, message string) {
 	msg := &waProto.Message{Conversation: &message}
-	ts, err := handler.client.SendMessage(context.Background(), recipient, "", msg)
+	resp, err := handler.client.SendMessage(context.Background(), recipient, "", msg)
 	if err != nil {
 		errmsg := fmt.Sprintf("Error sending message: %v", err)
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, errmsg)
@@ -50,7 +50,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 		setting := purple_get_string(handler.account, C.GOWHATSAPP_ECHO_OPTION, C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS)
 		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS) {
 			ownJid := "" // TODO: find out if this messes up group chats
-			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, ownJid, nil, ts, message)
+			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, ownJid, nil, resp.Timestamp, message)
 		}
 	}
 }
