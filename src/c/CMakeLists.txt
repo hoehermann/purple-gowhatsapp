@@ -22,13 +22,15 @@ add_library(${TARGET_NAME} SHARED
     "presence.c"
     "options.c"
     "receipt.c"
+    "pixbuf.c"
+    "pixbuf.h"
 )
 add_dependencies(${TARGET_NAME} purple-go-whatsapp)
 
 file(READ "${CMAKE_SOURCE_DIR}/VERSION" PLUGIN_VERSION)
 target_compile_definitions(${TARGET_NAME} PRIVATE PLUGIN_VERSION=${PLUGIN_VERSION})
-target_include_directories(${TARGET_NAME} PRIVATE ${GO_WHATSAPP_INCLUDE_DIRS} ${PURPLE_INCLUDE_DIRS})
-target_link_libraries(${TARGET_NAME} PRIVATE ${GO_WHATSAPP_LIBRARIES} ${PURPLE_LIBRARIES})
+target_include_directories(${TARGET_NAME} PRIVATE ${GO_WHATSAPP_INCLUDE_DIRS} ${PURPLE_INCLUDE_DIRS} ${PIXBUF_INCLUDE_DIRS})
+target_link_libraries(${TARGET_NAME} PRIVATE ${GO_WHATSAPP_LIBRARIES} ${PURPLE_LIBRARIES} ${PIXBUF_LIBRARIES})
 set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "lib")
 
 message(STATUS "PURPLE_PLUGIN_DIR: ${PURPLE_PLUGIN_DIR}")

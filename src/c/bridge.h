@@ -76,7 +76,7 @@ struct gowhatsapp_message {
     size_t blobsize; /// size of binary payload in bytes
     time_t timestamp; /// timestamp the message was sent(?)
     char msgtype; /// message type – see above
-    char subtype; /// loglevel, error severity, or online-state
+    char subtype; /// loglevel, error severity, attachment type or online-state
     char isGroup; /// this is a group chat message
     char fromMe; /// this is (a copy of) an outgoing message
     char system; /// this is a system-message, not user-generated

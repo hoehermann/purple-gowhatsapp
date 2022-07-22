@@ -1,3 +1,7 @@
+# 1.6.0
+
+* Feature: Conditional support for WebP stickers (not animated).
+
 # 1.5.0
 
 * Update: Depends on whatsmeow v0.0.0-20220711113451 or newer.

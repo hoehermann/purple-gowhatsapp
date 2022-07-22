@@ -51,6 +51,10 @@ Known issues:
   * Attachments are downloaded, but link is not shown in group conversation window (not a Purple limitation, tdlib can do it).
   * Cannot send files of any kind to groups (Purple limitation? tdlib can embed images).
   * No notification when being added to a group (the chat will be entered upon receiving a message).
+* Stickers:
+  * A [webp pixbuf loader](https://github.com/aruiz/webp-pixbuf-loader) must be present at runtime.
+  * GDK pixbuf headers must be available at build time else presence of loader cannot be checked.
+  * Stickers are not animated.
 
 Other planned features:
 
@@ -59,7 +63,6 @@ Other planned features:
 * Option to log out explicitly.
 * Option to refresh contacts.
 * After download succeeds, write link to chat (for bitlbee).
-* Embed stickers into conversation (maybe, WebP support in GDK would be ideal).
 
 These features will not be worked on:
 
@@ -149,6 +152,9 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
     
 * `inline-images`:
   If set to true (default), images will automatically be downloaded and embedded in the conversation window.
+  
+* `inline-stickers`:
+  If set to true (default), stickers will automatically be downloaded and may embedded in the conversation window if an appropriate webp GDK pixbuf loader is present.
   
 * `get-icons`  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.

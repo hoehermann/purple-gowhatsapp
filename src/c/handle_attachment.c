@@ -1,5 +1,6 @@
 #include "gowhatsapp.h"
 #include "constants.h"
+#include "pixbuf.h"
 
 static
 void xfer_init_fnc(PurpleXfer *xfer) {
@@ -51,14 +52,17 @@ void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg
 
 void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
     const gboolean is_image = gwamsg->subtype == gowhatsapp_attachment_type_image;
+    const gboolean is_sticker = gwamsg->subtype == gowhatsapp_attachment_type_sticker;
     const gboolean inline_images = purple_account_get_bool(gwamsg->account, GOWHATSAPP_INLINE_IMAGES_OPTION, TRUE);
+    const gboolean inline_stickers = purple_account_get_bool(gwamsg->account, GOWHATSAPP_INLINE_STICKERS_OPTION, TRUE);
+    const gboolean inline_this = (is_image && inline_images) || (is_sticker && inline_stickers);
     int img_id = -1;
-    if (is_image && inline_images) {
+    if (inline_this && pixbuf_is_loadable_image_mimetype(gwamsg->text)) {
         img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL);
         if (img_id >= 0) {
-            // gowhatsapp_display_text_message should not mistake the file name for a push name 
-            g_free(gwamsg->name); 
-            gwamsg->name = NULL; 
+            // strip information from mis-used fields so they are not wrongly interpreted by gowhatsapp_display_text_message
+            g_free(gwamsg->name); gwamsg->name = NULL; 
+            g_free(gwamsg->text); gwamsg->text = NULL; 
             gwamsg->text = g_strdup_printf("<img id=\"%u\"/>", img_id);
             gowhatsapp_display_text_message(pc, gwamsg, PURPLE_MESSAGE_IMAGES);
         }

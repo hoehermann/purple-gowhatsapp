@@ -69,6 +69,13 @@ gowhatsapp_add_account_options(GList *account_options)
         TRUE
         );
     account_options = g_list_append(account_options, option);
+    
+    option = purple_account_option_bool_new(
+        "Inline stickers (needs webp loader)",
+        GOWHATSAPP_INLINE_STICKERS_OPTION,
+        TRUE
+        );
+    account_options = g_list_append(account_options, option);
 
     option = purple_account_option_bool_new(
         "Display offline contacts as away",

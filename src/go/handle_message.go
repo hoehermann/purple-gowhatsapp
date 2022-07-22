@@ -84,6 +84,7 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 		err       error
 		filename  = ""
 		data_type C.int
+		mimetype *string
 	)
 	message := evt.Message
 	ms := evt.Info.MessageSource
@@ -94,6 +95,7 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 		data, err = handler.client.Download(im)
 		filename = hex.EncodeToString(im.FileSha256) + extension_from_mimetype(im.Mimetype)
 		data_type = C.gowhatsapp_attachment_type_image
+		mimetype = im.Mimetype
 	}
 	vm := message.GetVideoMessage()
 	if vm != nil {
@@ -119,6 +121,7 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 		data, err = handler.client.Download(sm)
 		filename = hex.EncodeToString(sm.FileSha256) + extension_from_mimetype(sm.Mimetype)
 		data_type = C.gowhatsapp_attachment_type_sticker
+		mimetype = sm.Mimetype
 	}
 	if err != nil {
 		purple_display_system_message(handler.account, chat, ms.IsGroup, fmt.Sprintf("Message contained an attachment, but the download failed: %#v", err))
@@ -131,6 +134,6 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 			// so source is known even when receiving from group chats
 			filename = fmt.Sprintf("%s_%s", sender.User, filename)
 		}
-		purple_handle_attachment(handler.account, chat, ms.IsGroup, sender.String(), ms.IsFromMe, data_type, filename, data)
+		purple_handle_attachment(handler.account, chat, ms.IsGroup, sender.String(), ms.IsFromMe, data_type, mimetype, filename, data)
 	}
 }
