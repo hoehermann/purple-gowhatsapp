@@ -136,7 +136,7 @@ gowhatsapp_roomlist_add_room(PurpleConnection *pc, char *remoteJid, char *name) 
             purple_connection_set_protocol_data(pc, NULL);
         } else {
             PurpleRoomlistRoom *room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM, remoteJid, NULL); // this sets the room's name
-            purple_roomlist_room_add_field(roomlist, room, name); // this sets the room'S title
+            purple_roomlist_room_add_field(roomlist, room, name); // this sets the room's title
             purple_roomlist_room_add(roomlist, room);
         }
     }
