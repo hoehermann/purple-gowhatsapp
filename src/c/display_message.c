@@ -2,17 +2,12 @@
 #include "constants.h"
 
 static
-PurpleConversation *gowhatsapp_find_conversation(char *username, PurpleAccount *account) {
+PurpleConversation *gowhatsapp_have_conversation(char *username, PurpleAccount *account) {
     gowhatsapp_ensure_buddy_in_blist(account, username, NULL);
 
-    PurpleIMConversation *imconv = purple_conversations_find_im_with_account(username, account);
-    if (imconv == NULL) {
-        imconv = purple_im_conversation_new(account, username);
-    }
-    PurpleConversation *conv = PURPLE_CONVERSATION(imconv);
+    PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, username, account);
     if (conv == NULL) {
-        imconv = purple_conversations_find_im_with_account(username, account);
-        conv = PURPLE_CONVERSATION(imconv);
+        conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, username);
     }
     return conv;
 }
@@ -55,7 +50,7 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
         }
     } else {
         if (gwamsg->fromMe) {
-            PurpleConversation *conv = gowhatsapp_find_conversation(gwamsg->remoteJid, gwamsg->account);
+            PurpleConversation *conv = gowhatsapp_have_conversation(gwamsg->remoteJid, gwamsg->account);
             // display message sent from own account (but other device) here
             purple_conversation_write(conv, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
         } else {
