@@ -43,3 +43,16 @@ gowhatsapp_send_file(PurpleConnection *pc, const gchar *who, const gchar *filena
         purple_xfer_request(xfer);
     }
 }
+
+void
+gowhatsapp_chat_send_file(PurpleConnection *pc, int id, const char *filename)
+{
+    PurpleConversation *conv = purple_find_chat(pc, id);
+    if (conv != NULL) {
+        const gchar *who = purple_conversation_get_data(conv, "name");
+        if (who != NULL) {
+            gowhatsapp_send_file(pc, who, (gchar *)filename);
+        }
+    }
+    // TODO: display error if conv or who are NULL
+}

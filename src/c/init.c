@@ -117,6 +117,9 @@ plugin_init(PurplePlugin *plugin)
     // file transfer
     prpl_info->new_xfer = gowhatsapp_new_xfer;
     prpl_info->send_file = gowhatsapp_send_file;
+    #if PURPLE_VERSION_CHECK(2,14,0)
+    prpl_info->chat_send_file = gowhatsapp_chat_send_file;
+    #endif
 }
 
 static PurplePluginInfo info = {
