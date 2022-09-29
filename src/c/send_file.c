@@ -20,7 +20,7 @@ gowhatsapp_xfer_send_init(PurpleXfer *xfer)
         purple_xfer_set_bytes_sent(xfer, purple_xfer_get_size(xfer));
         purple_xfer_set_completed(xfer, TRUE);
     }
-g_free(error);
+    g_free(error);
 }
 
 PurpleXfer *

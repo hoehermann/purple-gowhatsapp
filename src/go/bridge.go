@@ -457,12 +457,15 @@ func purple_get_string(account *PurpleAccount, key *C.char, default_value *C.cha
 }
 
 /*
- * Store credential string in purple's account settings (Pidgin) and/or password (bitlbee).
+ * Forward credential string to purple.
  */
 func purple_set_credentials(account *PurpleAccount, credentials string) {
-	if C.gowhatsapp_account_exists(account) == 1 {
-		C.purple_account_set_credentials(account, C.CString(credentials))
+	cmessage := C.struct_gowhatsapp_message{
+		account: account,
+		text: C.CString(credentials),
+		msgtype: C.char(C.gowhatsapp_message_type_credentials),
 	}
+	C.gowhatsapp_process_message_bridge(cmessage)
 }
 
 func main() {

@@ -15,6 +15,7 @@ GList *gowhatsapp_add_account_options(GList *account_options);
 // login
 void gowhatsapp_login(PurpleAccount *account);
 void gowhatsapp_close(PurpleConnection *pc);
+void gowhatsapp_store_credentials(PurpleAccount *account, char *credentials);
 
 // qrcode
 void gowhatsapp_handle_qrcode(PurpleConnection *pc, const char *challenge, const char *terminal, void *image_data, size_t image_data_len);

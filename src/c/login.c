@@ -67,7 +67,7 @@ gowhatsapp_close(PurpleConnection *pc)
 }
 
 void
-purple_account_set_credentials(PurpleAccount *account, char *credentials)
+gowhatsapp_store_credentials(PurpleAccount *account, char *credentials)
 {
     // Pidgin stores the credentials in the account settings
     // spectrum included special handling for this case
@@ -75,22 +75,11 @@ purple_account_set_credentials(PurpleAccount *account, char *credentials)
     purple_account_set_string(account, GOWHATSAPP_CREDENTIALS_KEY, credentials);
     
     // bitlbee stores credentials in password field
-    // TODO: call in main thread via message bridge, then remove check
-    int num_values = 0;
-    PurpleValue **values;
-    purple_signal_get_values(
-        purple_accounts_get_handle(), 
+    purple_account_set_password(account, credentials);
+    purple_signal_emit(
+        purple_accounts_get_handle(),
         "bitlbee-set-account-password",
-        NULL,
-        &num_values, &values
+        account,
+        credentials
     );
-    if (num_values > 0) {
-        purple_account_set_password(account, credentials);
-        purple_signal_emit(
-            purple_accounts_get_handle(),
-            "bitlbee-set-account-password",
-            account,
-            credentials
-        );
-    }
 }

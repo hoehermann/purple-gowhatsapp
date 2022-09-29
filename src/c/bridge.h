@@ -28,6 +28,7 @@ extern const char * purple_account_get_string(PurpleAccount *account, const char
     MESSAGE_TYPE(log) \
     MESSAGE_TYPE(login) \
     MESSAGE_TYPE(pairing_succeeded) \
+    MESSAGE_TYPE(credentials) \
     MESSAGE_TYPE(connected) \
     MESSAGE_TYPE(disconnected) \
     MESSAGE_TYPE(system) \
@@ -85,7 +86,4 @@ typedef struct gowhatsapp_message gowhatsapp_message_t;
 
 // for feeding messages from go into purple
 extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
-
-// for storing the credentials
-extern void purple_account_set_credentials(PurpleAccount *account, char *credentials);
 #endif

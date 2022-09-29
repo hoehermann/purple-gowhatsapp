@@ -50,6 +50,9 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
         case gowhatsapp_message_type_pairing_succeeded:
             gowhatsapp_close_qrcode(gwamsg->account);
             break;
+        case gowhatsapp_message_type_credentials:
+            gowhatsapp_store_credentials(gwamsg->account, gwamsg->text);
+            break;
         case gowhatsapp_message_type_connected:
             gowhatsapp_close_qrcode(gwamsg->account);
             purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
