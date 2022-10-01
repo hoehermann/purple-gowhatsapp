@@ -21,7 +21,7 @@ func (handler *Handler) handle_message(evt *events.Message) {
 		handler.log.Warnf("This is a status broadcast. Ignoring message as requested by user settings.")
 		return
 	}
-	
+
 	message := evt.Message
 	text := message.GetConversation()
 	etm := message.ExtendedTextMessage
@@ -84,7 +84,7 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 		err       error
 		filename  = ""
 		data_type C.int
-		mimetype *string
+		mimetype  *string
 	)
 	message := evt.Message
 	ms := evt.Info.MessageSource

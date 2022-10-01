@@ -58,11 +58,22 @@ status_types(PurpleAccount *account)
     return types;
 }
 
+static void
+logout(PurplePluginAction* action) {
+  PurpleConnection* pc = action->context;
+  PurpleAccount *account = purple_connection_get_account(pc);
+  gowhatsapp_go_logout(account);
+}
+
 static GList *
 actions(PurplePlugin *plugin, gpointer context)
 {
-    GList *m = NULL;
-    return m;
+    GList* actions = NULL;
+    {
+        PurplePluginAction *act = purple_plugin_action_new("Logout", &logout);
+        actions = g_list_append(actions, act);
+    }
+    return actions;
 }
 
 /* Purple 2 Plugin Load Functions */

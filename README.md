@@ -37,6 +37,7 @@ Other improvements:
 * Typing notifications are handled.
 * Logging happens via purple.
 * Messages which only consist of a single URL may be sent as media messages (disabled by default).
+* Account can be logged out via purple action.
 * There is an "away" state.
   * For compatibility with the auto-responder plug-in.
   * Other devices (i.e. the main phone) display notifications while plug-in connection is "away".
@@ -60,9 +61,9 @@ Other planned features:
 
 * Display receipts in conversation window.
 * Join group chat via link.
-* Option to log out explicitly.
 * Option to refresh contacts.
 * After download succeeds, write link to chat (for bitlbee).
+* Have a virtual contact to send control commands to (e.g. display version, update contacts, logout).
 
 These features will not be worked on:
 
@@ -208,6 +209,8 @@ A voice message must meet these criteria:
 * Codec: `opus`
 * Channels: 1 (mono)
 * Sample-Rate: 16 kHz
+
+User reports say, 44.1 kHz 16 bit PCM (WAV) disguised as `audio/mp3` works fine, too.
 
 A video message must meet these criteria:
 

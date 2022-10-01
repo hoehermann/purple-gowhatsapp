@@ -59,6 +59,20 @@ func gowhatsapp_go_close(account *PurpleAccount) {
 	close(account)
 }
 
+//export gowhatsapp_go_logout
+func gowhatsapp_go_logout(account *PurpleAccount) {
+	handler, ok := handlers[account]
+	if ok {
+		err := handler.client.Logout()
+		if err != nil {
+			purple_error(account, fmt.Sprintf("Logout failed: %#v", err), ERROR_FATAL)
+			// TODO: ask user whether they want to force Client.Disconnect() and Client.Store.Delete()
+		} else {
+			purple_error(account, "User requested logout.", ERROR_FATAL)
+		}
+	}
+}
+
 //export gowhatsapp_go_send_message
 func gowhatsapp_go_send_message(account *PurpleAccount, who *C.char, message *C.char, is_group C.int) int {
 	handler, ok := handlers[account]
@@ -462,7 +476,7 @@ func purple_get_string(account *PurpleAccount, key *C.char, default_value *C.cha
 func purple_set_credentials(account *PurpleAccount, credentials string) {
 	cmessage := C.struct_gowhatsapp_message{
 		account: account,
-		text: C.CString(credentials),
+		text:    C.CString(credentials),
 		msgtype: C.char(C.gowhatsapp_message_type_credentials),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
