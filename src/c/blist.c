@@ -5,7 +5,7 @@
 PurpleGroup * gowhatsapp_get_purple_group() {
     PurpleGroup *group = purple_blist_find_group("Whatsapp");
     if (!group) {
-        group = purple_group_new("Whatsapp");
+        group = purple_group_new("Whatsapp"); // MEMCHECK: caller takes ownership
         purple_blist_add_group(group, NULL);
     }
     return group;
@@ -53,7 +53,7 @@ void gowhatsapp_ensure_buddy_in_blist(
 
     if (!buddy) {
         PurpleGroup *group = gowhatsapp_get_purple_group();
-        buddy = purple_buddy_new(account, remoteJid, display_name);
+        buddy = purple_buddy_new(account, remoteJid, display_name); // MEMCHECK: blist takes ownership
         purple_blist_add_buddy(buddy, NULL, group, NULL);
         gowhatsapp_assume_buddy_online(account, buddy);
         gowhatsapp_subscribe_presence_updates(account, buddy);
@@ -96,9 +96,9 @@ PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
     PurpleChat *chat = purple_blist_find_chat(account, remoteJid);
 
     if (chat == NULL && fetch_contacts) {
-        GHashTable *comp = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
+        GHashTable *comp = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free); // MEMCHECK: purple_chat_new takes ownership
         g_hash_table_insert(comp, "name", g_strdup(remoteJid));
-        chat = purple_chat_new(account, remoteJid, comp);
+        chat = purple_chat_new(account, remoteJid, comp); // MEMCHECK: blist takes ownership
         PurpleGroup *group = gowhatsapp_get_purple_group();
         purple_blist_add_chat(chat, group, NULL);
     }

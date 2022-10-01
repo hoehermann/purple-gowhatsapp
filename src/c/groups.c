@@ -21,19 +21,19 @@ GList * gowhatsapp_chat_info(PurpleConnection *pc)
 
     struct proto_chat_entry *pce;
 
-    pce = g_new0(struct proto_chat_entry, 1);
+    pce = g_new0(struct proto_chat_entry, 1); // MEMCHECK: infos takes ownership
     pce->label = "JID";
     pce->identifier = "name";
     pce->required = TRUE;
     infos = g_list_append(infos, pce);
 
-    pce = g_new0(struct proto_chat_entry, 1);
+    pce = g_new0(struct proto_chat_entry, 1); // MEMCHECK: infos takes ownership
     pce->label = "Group Name";
     pce->identifier = "topic";
     pce->required = TRUE;
     infos = g_list_append(infos, pce);
 
-    return infos;
+    return infos; // MEMCHECK: caller takes ownership
 }
 
 /*
@@ -52,7 +52,7 @@ GList * gowhatsapp_chat_info(PurpleConnection *pc)
  */
 GHashTable * gowhatsapp_chat_info_defaults(PurpleConnection *pc, const char *chat_name) 
 {
-    GHashTable *defaults = g_hash_table_new_full(
+    GHashTable *defaults = g_hash_table_new_full( // MEMCHECK: caller takes ownership
         g_str_hash, g_str_equal, NULL, g_free
     );
     if (chat_name != NULL) {
@@ -107,10 +107,10 @@ gowhatsapp_roomlist_get_list(PurpleConnection *pc) {
         purple_debug_info(GOWHATSAPP_NAME, "Already getting roomlist.");
         return roomlist;
     }
-    roomlist = purple_roomlist_new(account);
+    roomlist = purple_roomlist_new(account); // MEMCHECK: caller takes ownership
     purple_roomlist_set_in_progress(roomlist, TRUE);
     GList *fields = NULL;
-    fields = g_list_append(fields, purple_roomlist_field_new(
+    fields = g_list_append(fields, purple_roomlist_field_new( // MEMCHECK: fields takes ownership
         PURPLE_ROOMLIST_FIELD_STRING, "Group Name", "topic", FALSE
     ));
     purple_roomlist_set_fields(roomlist, fields);
@@ -135,7 +135,8 @@ gowhatsapp_roomlist_add_room(PurpleConnection *pc, char *remoteJid, char *name) 
             purple_roomlist_unref(roomlist); // unref here, roomlist may remain in ui
             purple_connection_set_protocol_data(pc, NULL);
         } else {
-            PurpleRoomlistRoom *room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM, remoteJid, NULL); // this sets the room's name
+            PurpleRoomlistRoom *room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM, remoteJid, NULL); // MEMCHECK: roomlist takes ownership 
+            // purple_roomlist_room_new sets the room's name
             purple_roomlist_room_add_field(roomlist, room, name); // this sets the room's title
             purple_roomlist_room_add(roomlist, room);
         }

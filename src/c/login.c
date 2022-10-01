@@ -29,7 +29,7 @@ gowhatsapp_login(PurpleAccount *account)
         const char *proxy_password = purple_proxy_info_get_password(proxy_info);
         const char *proxy_host = purple_proxy_info_get_host(proxy_info);
         int proxy_port = purple_proxy_info_get_port(proxy_info);
-        GString * proxy_string = g_string_new(proxy_host);
+        GString * proxy_string = g_string_new(proxy_host); // MEMCHECK: proxy_address takes ownership
         if (proxy_username && proxy_username[0]) {
             proxy_string = g_string_prepend_c(proxy_string, '@');
             if (proxy_password && proxy_password[0]) {
@@ -41,7 +41,7 @@ gowhatsapp_login(PurpleAccount *account)
         proxy_string = g_string_append_c(proxy_string, ':');
         g_string_append_printf(proxy_string, "%d", proxy_port);
         proxy_string = g_string_prepend(proxy_string, "socks5://");
-        proxy_address = g_string_free(proxy_string, FALSE);
+        proxy_address = g_string_free(proxy_string, FALSE); // MEMCHECK: free'd here
         purple_debug_info(GOWHATSAPP_NAME, "Using proxy address %s.\n", proxy_address);
     } else {
         purple_debug_info(GOWHATSAPP_NAME, "No proxy set in purple. The go runtime might pick up the https_proxy environment variable regardless.\n");

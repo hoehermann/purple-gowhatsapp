@@ -83,7 +83,7 @@ gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
             gowhatsapp_roomlist_get_list(pc);
             gowhatsapp_go_get_contacts(account);
         }
-    }    
+    }
     gowhatsapp_go_send_presence(account, (char *)status_id); // cgo does not support const
     // (re-)subscribe for presence updates (will check status_id again)
     gowhatsapp_subscribe_all_presence_updates(account);

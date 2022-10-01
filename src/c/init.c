@@ -40,19 +40,27 @@ list_icon(PurpleAccount *account, PurpleBuddy *buddy)
 static GList *
 status_types(PurpleAccount *account)
 {
-    GList *types = NULL;
+    GList *types = NULL; // MEMCHECK: caller takes ownership
     PurpleStatusType *status;
 
-    status = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE, GOWHATSAPP_STATUS_STR_AVAILABLE, NULL, TRUE, TRUE, FALSE);
+    status = purple_status_type_new_full( // MEMCHECK: types takes ownership
+        PURPLE_STATUS_AVAILABLE, GOWHATSAPP_STATUS_STR_AVAILABLE, NULL, TRUE, TRUE, FALSE
+    );
     types = g_list_append(types, status);
 
-    status = purple_status_type_new_full(PURPLE_STATUS_AWAY, GOWHATSAPP_STATUS_STR_AWAY, NULL, TRUE, TRUE, FALSE);
+    status = purple_status_type_new_full( // MEMCHECK: types takes ownership
+        PURPLE_STATUS_AWAY, GOWHATSAPP_STATUS_STR_AWAY, NULL, TRUE, TRUE, FALSE
+    );
     types = g_list_prepend(types, status);
 
-    status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, GOWHATSAPP_STATUS_STR_OFFLINE, NULL, TRUE, TRUE, FALSE);
+    status = purple_status_type_new_full( // MEMCHECK: types takes ownership
+        PURPLE_STATUS_OFFLINE, GOWHATSAPP_STATUS_STR_OFFLINE, NULL, TRUE, TRUE, FALSE
+    );
     types = g_list_append(types, status);
 
-    status = purple_status_type_new_full(PURPLE_STATUS_MOBILE, GOWHATSAPP_STATUS_STR_MOBILE, NULL, FALSE, FALSE, TRUE);
+    status = purple_status_type_new_full( // MEMCHECK: types takes ownership
+        PURPLE_STATUS_MOBILE, GOWHATSAPP_STATUS_STR_MOBILE, NULL, FALSE, FALSE, TRUE
+    );
     types = g_list_prepend(types, status);
     
     return types;
@@ -94,12 +102,12 @@ static void
 plugin_init(PurplePlugin *plugin)
 {
     PurplePluginInfo *info;
-    PurplePluginProtocolInfo *prpl_info = g_new0(PurplePluginProtocolInfo, 1); // TODO: find out why this leaks memory
+    PurplePluginProtocolInfo *prpl_info = g_new0(PurplePluginProtocolInfo, 1); // MEMCHECK: THIS LEAKS. WHY?
 
     info = plugin->info;
 
     if (info == NULL) {
-        plugin->info = info = g_new0(PurplePluginInfo, 1);
+        plugin->info = info = g_new0(PurplePluginInfo, 1); // MEMCHECK: TODO
     }
     // base protocol information
     info->name = "WhatsApp (whatsmeow)";

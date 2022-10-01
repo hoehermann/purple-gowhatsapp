@@ -18,7 +18,7 @@ gssize xfer_read_fnc(guchar **buffer, PurpleXfer * xfer) {
     // entire attachment already is in memory.
     // just forward the pointer to the destination buffer.
     *buffer = xfer->data;
-    xfer->data = NULL; // not our memory to free any more
+    xfer->data = NULL; // MEMCHECK: not our memory to free any more
     return purple_xfer_get_size(xfer);
 }
 
@@ -33,7 +33,6 @@ void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg
     g_return_if_fail(pc != NULL);
     PurpleAccount *account = purple_connection_get_account(pc);
     PurpleXfer * xfer = purple_xfer_new(account, PURPLE_XFER_RECEIVE, gwamsg->senderJid);
-    //purple_xfer_ref(xfer);
     purple_xfer_set_filename(xfer, gwamsg->name);
     purple_xfer_set_size(xfer, gwamsg->blobsize);
     xfer->data = gwamsg->blob;
@@ -48,6 +47,7 @@ void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg
     purple_xfer_set_cancel_recv_fnc(xfer, xfer_release_blob);
     
     purple_xfer_request(xfer);
+    // MEMCHECK NOTE: purple_xfer_unref calls purple_xfer_destroy wich MAY call purple_xfer_cancel_local if (purple_xfer_get_status(xfer) == PURPLE_XFER_STATUS_STARTED) which calls cancel_recv and cancel_local
 }
 
 void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
@@ -58,7 +58,7 @@ void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gw
     const gboolean inline_this = (is_image && inline_images) || (is_sticker && inline_stickers);
     int img_id = -1;
     if (inline_this && pixbuf_is_loadable_image_mimetype(gwamsg->text)) {
-        img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL);
+        img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL); // MEMCHECK: imgstore takes ownership
         if (img_id >= 0) {
             // strip information from mis-used fields so they are not wrongly interpreted by gowhatsapp_display_text_message
             g_free(gwamsg->name); gwamsg->name = NULL; 
@@ -68,6 +68,6 @@ void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gw
         }
     }
     if (img_id < 0) {
-        xfer_download_attachment(pc, gwamsg);
+        xfer_download_attachment(pc, gwamsg); // MEMCHECK: xfer system takes ownership
     }
 }

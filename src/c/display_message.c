@@ -7,7 +7,7 @@ PurpleConversation *gowhatsapp_have_conversation(char *username, PurpleAccount *
 
     PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, username, account);
     if (conv == NULL) {
-        conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, username);
+        conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, username); // MEMCHECK: caller takes ownership
     }
     return conv;
 }
