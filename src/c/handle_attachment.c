@@ -63,7 +63,7 @@ void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gw
             // strip information from mis-used fields so they are not wrongly interpreted by gowhatsapp_display_text_message
             g_free(gwamsg->name); gwamsg->name = NULL; 
             g_free(gwamsg->text); gwamsg->text = NULL; 
-            gwamsg->text = g_strdup_printf("<img id=\"%u\"/>", img_id);
+            gwamsg->text = g_strdup_printf("<img id=\"%u\"/>", img_id); // MEMCHECK: g_strdup'ed string released by caller
             gowhatsapp_display_text_message(pc, gwamsg, PURPLE_MESSAGE_IMAGES);
         }
     }

@@ -56,8 +56,8 @@ GHashTable * gowhatsapp_chat_info_defaults(PurpleConnection *pc, const char *cha
         g_str_hash, g_str_equal, NULL, g_free
     );
     if (chat_name != NULL) {
-        g_hash_table_insert(defaults, "name", g_strdup(chat_name));
-        g_hash_table_insert(defaults, "topic", g_strdup(""));
+        g_hash_table_insert(defaults, "name", g_strdup(chat_name)); // MEMCHECK: g_strdup'ed string released by GHashTable's value_destroy_func g_free (see above)
+        g_hash_table_insert(defaults, "topic", g_strdup("")); // MEMCHECK: g_strdup'ed string released by GHashTable's value_destroy_func g_free (see above)
     }
     return defaults;
 }
@@ -209,12 +209,22 @@ gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid)
         // use hash of jid for chat id number
         PurpleConversation *conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);
         if (conv != NULL) {
-            purple_conversation_set_data(conv, "name", g_strdup(remoteJid)); // store the JID so it can be retrieved by get_chat_name
+            // store the JID so it can be retrieved by get_chat_name
+            purple_conversation_set_data(conv, "name", g_strdup(remoteJid)); // MEMCHECK: strdup'ed value eventually released by gowhatsapp_free_name
             gowhatsapp_go_query_groups(account); // TODO: query this specific group
         }
         conv_chat = PURPLE_CONV_CHAT(conv);
     }
     return conv_chat;
+}
+
+/*
+ * purple_conversation_destroy does not implicitly release the data members.
+ * We need to do it explicitly.
+ */
+void gowhatsapp_free_name(PurpleConversation *conv) {
+    // TODO: find out why this is never called
+    g_free(purple_conversation_get_data(conv, "name"));
 }
 
 /*
@@ -231,7 +241,7 @@ gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid)
 char *gowhatsapp_get_chat_name(GHashTable *components)
 {
     const char *jid = g_hash_table_lookup(components, "name");
-    return g_strdup(jid);
+    return g_strdup(jid); // MEMCHECK: strdup'ed value is released by caller
 }
 
 /*

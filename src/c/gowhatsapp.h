@@ -18,7 +18,7 @@ void gowhatsapp_close(PurpleConnection *pc);
 void gowhatsapp_store_credentials(PurpleAccount *account, char *credentials);
 
 // qrcode
-void gowhatsapp_handle_qrcode(PurpleConnection *pc, const char *challenge, const char *terminal, void *image_data, size_t image_data_len);
+void gowhatsapp_handle_qrcode(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
 void gowhatsapp_close_qrcode(PurpleAccount *account);
 
 // process_message
@@ -44,6 +44,7 @@ GHashTable * gowhatsapp_chat_info_defaults(PurpleConnection *pc, const char *cha
 void gowhatsapp_chat_add_participants(PurpleAccount *account, char *remoteJid, char **participants);
 void gowhatsapp_roomlist_add_room(PurpleConnection *pc, char *remoteJid, char *name);
 void gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
+void gowhatsapp_free_name(PurpleConversation *conv);
 
 // blist
 void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, char *remoteJid, char *display_name);

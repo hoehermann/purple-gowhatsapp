@@ -97,7 +97,7 @@ PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
 
     if (chat == NULL && fetch_contacts) {
         GHashTable *comp = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free); // MEMCHECK: purple_chat_new takes ownership
-        g_hash_table_insert(comp, "name", g_strdup(remoteJid));
+        g_hash_table_insert(comp, "name", g_strdup(remoteJid)); // MEMCHECK: g_strdup'ed string released by GHashTable's value_destroy_func g_free (see above)
         chat = purple_chat_new(account, remoteJid, comp); // MEMCHECK: blist takes ownership
         PurpleGroup *group = gowhatsapp_get_purple_group();
         purple_blist_add_chat(chat, group, NULL);

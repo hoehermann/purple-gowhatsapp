@@ -45,7 +45,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_close_qrcode(gwamsg->account);
             break;
         case gowhatsapp_message_type_login:
-            gowhatsapp_handle_qrcode(pc, gwamsg->text, gwamsg->name, gwamsg->blob, gwamsg->blobsize);
+            gowhatsapp_handle_qrcode(pc, gwamsg);
             break;
         case gowhatsapp_message_type_pairing_succeeded:
             gowhatsapp_close_qrcode(gwamsg->account);

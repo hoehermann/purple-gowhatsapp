@@ -5,8 +5,8 @@
 static GList * add_choice(GList *choices, const char *description, const char *value)
 {
     PurpleKeyValuePair *kvp = g_new0(PurpleKeyValuePair, 1); // MEMCHECK: caller takes ownership
-    kvp->key = g_strdup(description);
-    kvp->value = g_strdup(value);
+    kvp->key = g_strdup(description); // MEMCHECK: according to valgrind, this leaks
+    kvp->value = g_strdup(value); // MEMCHECK: according to valgrind, this leaks
     return g_list_append(choices, kvp);
 }
 
