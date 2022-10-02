@@ -56,18 +56,20 @@ void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gw
     const gboolean inline_images = purple_account_get_bool(gwamsg->account, GOWHATSAPP_INLINE_IMAGES_OPTION, TRUE);
     const gboolean inline_stickers = purple_account_get_bool(gwamsg->account, GOWHATSAPP_INLINE_STICKERS_OPTION, TRUE);
     const gboolean inline_this = (is_image && inline_images) || (is_sticker && inline_stickers);
-    int img_id = -1;
+    int img_id = 0;
     if (inline_this && pixbuf_is_loadable_image_mimetype(gwamsg->text)) {
-        img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL); // MEMCHECK: imgstore takes ownership
-        if (img_id >= 0) {
+        img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL); // MEMCHECK: released including gwamsg->blob by purple_imgstore_unref_by_id (see below)
+        if (img_id > 0) {
+            gwamsg->blob = NULL; // MEMCHECK: not our memory to free any more
             // strip information from mis-used fields so they are not wrongly interpreted by gowhatsapp_display_text_message
             g_free(gwamsg->name); gwamsg->name = NULL; 
             g_free(gwamsg->text); gwamsg->text = NULL; 
             gwamsg->text = g_strdup_printf("<img id=\"%u\"/>", img_id); // MEMCHECK: g_strdup'ed string released by caller
             gowhatsapp_display_text_message(pc, gwamsg, PURPLE_MESSAGE_IMAGES);
+            purple_imgstore_unref_by_id(img_id);
         }
     }
-    if (img_id < 0) {
+    if (img_id == 0) {
         xfer_download_attachment(pc, gwamsg); // MEMCHECK: xfer system takes ownership
     }
 }

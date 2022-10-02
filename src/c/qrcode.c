@@ -60,11 +60,11 @@ gowhatsapp_handle_qrcode(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
         // The UI hasn't implemented the func we want, just output as a message instead
         PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
         gchar *msg_out;
-        int img_id = -1;
+        int img_id = 0;
         if (gwamsg->blobsize > 0) {
-            img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL); // MEMCHECK: imgstore does NOT make a copy
+            img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL); // MEMCHECK: released including gwamsg->blob by purple_imgstore_unref_by_id (see below)
         }
-        if (img_id >= 0) {
+        if (img_id > 0) {
             gwamsg->blob = NULL; // MEMCHECK: not our memory to free any more
             msg_out = g_strdup_printf( // MEMCHECK: msg_out released here (see below)
                 "%s<br /><img id=\"%u\" alt=\"%s\"/><br />%s", 
@@ -78,6 +78,9 @@ gowhatsapp_handle_qrcode(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
             );
         }
         purple_serv_got_im(pc, "Logon QR Code", msg_out, flags, time(NULL));
+        if (img_id > 0) {
+            purple_imgstore_unref_by_id(img_id);
+        }
         g_free(msg_out);
     } else {
         PurpleAccount *account = purple_connection_get_account(pc);
