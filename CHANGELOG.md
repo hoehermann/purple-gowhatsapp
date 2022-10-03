@@ -1,3 +1,10 @@
+# 1.7.0-rc1
+
+* Feature: Client logout is available via action.
+* Feature: Files can be sent to group chats (untested).
+* Bugfix: Memory of embedded images is released after message is displayed.
+* Change: Credentials supplied by WhatsApp servers are forwarded to main thread (might affect bitlbee).
+
 # 1.6.0
 
 * Feature: Conditional support for WebP stickers (not animated).
