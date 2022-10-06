@@ -22,3 +22,4 @@
 #define purple_connection_get_protocol          purple_connection_get_prpl
 #define PurpleConversationUpdateType       PurpleConvUpdateType
 #define PURPLE_CONVERSATION_UPDATE_UNSEEN  PURPLE_CONV_UPDATE_UNSEEN
+#define purple_blist_chat_new purple_chat_new
