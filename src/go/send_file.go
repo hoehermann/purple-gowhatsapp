@@ -60,7 +60,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	}
 	if msg == nil && err == nil {
 		basename := filepath.Base(filename)
-		strings.TrimSuffix(basename, filepath.Ext(basename))
+		basename = strings.TrimSuffix(basename, filepath.Ext(basename))
 		// WhatsApp server seems to add extention, remove it here.
 		msg, err = handler.send_file_document(data, mimetype, basename)
 	}
