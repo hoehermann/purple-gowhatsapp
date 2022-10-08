@@ -14,6 +14,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"regexp"
+	"path/filepath"
 )
 
 // from https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go
@@ -79,6 +81,19 @@ func (handler *Handler) send_message(who string, message string, isGroup bool) {
 	}
 }
 
+func (handler *Handler) check_url_trust(url string) bool {
+	trusted_url_regex := purple_get_string(handler.account, C.GOWHATSAPP_TRUSTED_URL_REGEX_OPTION, C.GOWHATSAPP_TRUSTED_URL_REGEX_DEFAULT)
+	if trusted_url_regex != "" {
+		matched, err := regexp.MatchString(trusted_url_regex, url)
+		if err != nil {
+			handler.log.Errorf("Checking URL trust failed due to %v,", err)
+			return false
+		}
+		return matched
+	}
+	return false
+}
+
 /*
  * Checks wheter message contains a link to a file which can be sent as a
  * media message. Performs HTTP request, checks size and server-supplied mime-type.
@@ -105,7 +120,7 @@ func (handler *Handler) is_link_only_message(message string) bool {
 		return res.ContentLength <= int64(max_file_size)*1024*1024
 	default:
 		handler.log.Infof("Server returned content-type '%s' for '%s'. No media type available for this content.", res.Header.Get("Content-Type"), message)
-		return false
+		return handler.check_url_trust(message)
 	}
 }
 
@@ -133,10 +148,12 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 	var msg *waProto.Message = nil
 	switch resp.Header.Get("Content-Type") {
 	case "image/jpeg":
+		// send jpeg as ImageMessage
 		// no checks here
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Compatible file detected. Forwarding as image message…")
 		msg, err = handler.send_file_image(data, "image/jpeg")
 	case "application/ogg", "audio/ogg":
+		// send ogg file as AudioMessage
 		err = check_ogg(data)
 		if err == nil {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Compatible file detected. Forwarding as audio message…")
@@ -146,6 +163,7 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 			return false
 		}
 	case "video/mp4":
+		// send mp4 file as VideoMessage
 		err = check_mp4(data)
 		if err == nil {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Compatible file detected. Forwarding as video message…")
@@ -155,7 +173,11 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 			return false
 		}
 	default:
-		return false
+		// send any other file type as DocumentMessage
+		// NOTE: for security reasons, this should be guarded by a whitelist, see check_url_trust
+		mimetype := resp.Header.Get("Content-Type")
+		filename := filepath.Base(resp.Request.URL.Path)
+		msg, err = handler.send_file_document(data, mimetype, filename)
 	}
 	if err != nil {
 		handler.log.Infof("Error while sending file: %s", err)

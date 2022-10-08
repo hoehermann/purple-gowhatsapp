@@ -192,7 +192,18 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   
   If enabled, this plug-in tries to download and forward the linked file, choosing the appropriate media type automatically. This way, your contacts do not see a link to an image, video or a voice message, but instead can play the content directly in their app. The message must consist of one URL exactly, including whitespace. For this reason, this mode is incompatbile with Pidgin's OTR plug-in, see [this bug report](https://developer.pidgin.im/ticket/10280). 
   
-  At time of writing, the maximum file-size supported by WhatsApp is 16 MB. Further conditions need to be met, see below. 
+  At time of writing, the maximum file-size supported by WhatsApp is 16 MB.
+  
+* `trusted-url-regex`  
+  In case a link-only message does not point to an image, video or audio file, the file may be sent as a document message. For reasons of safetey, this will only happen for files from trusted sources. An URL must match this [regular expression](https://golangbyexample.com/golang-regex-match-full-string/) to be considered trustworthy. Matching is case-sensitive. The match spans the entire verbatim URL, so query and fragment need to be considered. Do not forget the caret and/or dollar sign. Some examples:
+  
+  * `^https://www\.example\.com` trust files from `www.example.com` via HTTPS.
+  * `^https://[^/]*example\.com` trust files from `example.com` and subdomains, authentication data via HTTPS.
+  * `^[^?#]+\.pdf$` trust all PDFs.
+  * `^[^?#]+\.(pdf|png)$` trust all PDFs and PNGs.
+  * `^https://www\.example\.com[^?#]+\.(pdf|png)$` trust all PDFs and PNGs from `https://www.example.com`.
+  
+  In case of image, video or audio files, further conditions need to be met, see below. 
 
 ### Notes
 
