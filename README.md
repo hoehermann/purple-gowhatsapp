@@ -156,7 +156,11 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   
 * `inline-stickers`:
   If set to true (default), stickers will automatically be downloaded and may embedded in the conversation window if an appropriate webp GDK pixbuf loader is present.
-  
+
+* `group-is-file-origin`:
+  It set to true (default), when a file is posted into a group chat, that chat will be the origin of the file. If set to false, the file will originate from the group chat *participant*.  
+  Note: File transfers for group chats are supported since libpurple 2.14.0. Some protocol bridges may want to set this to false.
+
 * `get-icons`  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
   

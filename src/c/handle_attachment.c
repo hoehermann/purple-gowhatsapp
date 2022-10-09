@@ -32,7 +32,11 @@ static
 void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
     g_return_if_fail(pc != NULL);
     PurpleAccount *account = purple_connection_get_account(pc);
-    PurpleXfer * xfer = purple_xfer_new(account, PURPLE_XFER_RECEIVE, gwamsg->senderJid);
+    const char * sender = gwamsg->senderJid;
+    if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_GROUP_IS_FILE_ORIGIN_OPTION, TRUE)) {
+        sender = gwamsg->remoteJid;
+    }
+    PurpleXfer * xfer = purple_xfer_new(account, PURPLE_XFER_RECEIVE, sender);
     purple_xfer_set_filename(xfer, gwamsg->name);
     purple_xfer_set_size(xfer, gwamsg->blobsize);
     xfer->data = gwamsg->blob;

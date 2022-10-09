@@ -85,6 +85,13 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
 
     option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
+        "Treat group as the origin of files",
+        GOWHATSAPP_GROUP_IS_FILE_ORIGIN_OPTION,
+        TRUE
+        );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
         "Display offline contacts as away",
         GOWHATSAPP_FAKE_ONLINE_OPTION,
         TRUE
