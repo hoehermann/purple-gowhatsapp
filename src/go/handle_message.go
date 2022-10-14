@@ -15,15 +15,16 @@ import (
 )
 
 func (handler *Handler) handle_message(evt *events.Message) {
-	handler.log.Infof("Received message: %#v", evt)
+	//handler.log.Infof("Received message: %#v", evt)
 	info := evt.Info
 	if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, false) && info.MessageSource.Chat.ToNonAD().String() == "status@broadcast" {
 		handler.log.Warnf("This is a status broadcast. Ignoring message as requested by user settings.")
 		return
 	}
-
 	message := evt.Message
+	//handler.log.Infof("Message: %#v", message)
 	text := message.GetConversation()
+
 	etm := message.ExtendedTextMessage
 	if etm != nil {
 		// message containing quote or link to group
@@ -50,6 +51,15 @@ func (handler *Handler) handle_message(evt *events.Message) {
 	vm := message.GetVideoMessage()
 	if vm != nil && vm.Caption != nil {
 		text += *message.GetVideoMessage().Caption
+	}
+
+	rm := message.GetReactionMessage()
+	if rm != nil && rm.Text != nil && rm.Key != nil && rm.Key.Id != nil {
+		if *rm.Text == "" {
+			text += fmt.Sprintf("removed their reaction to message ID %s.", *rm.Key.Id)
+		} else {
+			text += fmt.Sprintf("reacted to message ID %s with %s.", *rm.Key.Id, *rm.Text)
+		}
 	}
 
 	if text == "" {

@@ -13,9 +13,9 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"io"
 	"net/http"
-	"strings"
-	"regexp"
 	"path/filepath"
+	"regexp"
+	"strings"
 )
 
 // from https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go
