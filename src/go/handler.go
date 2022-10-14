@@ -9,7 +9,14 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"net/http"
+	"time"
 )
+
+type CachedMessage struct {
+	id        types.MessageID
+	text      string
+	timestamp time.Time
+}
 
 /*
  * Holds all data for one connection.
@@ -19,7 +26,8 @@ type Handler struct {
 	log              waLog.Logger
 	container        *sqlstore.Container
 	client           *whatsmeow.Client
-	deferredReceipts map[types.JID]map[types.JID][]types.MessageID // Holds ID and sender of a received message so the receipt can be sent later.
+	deferredReceipts map[types.JID]map[types.JID][]types.MessageID // holds ID and sender of a received message so the receipt can be sent later.
+	cachedMessages   []CachedMessage                               // holds texts of some message
 	pictureRequests  chan ProfilePictureRequest
 	httpClient       *http.Client // for executing picture requests
 }

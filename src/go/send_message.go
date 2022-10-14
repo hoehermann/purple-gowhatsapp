@@ -54,6 +54,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			ownJid := "" // TODO: find out if this messes up group chats
 			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, ownJid, nil, resp.Timestamp, message)
 		}
+		handler.addToCache(CachedMessage{id: resp.ID, text: message, timestamp: resp.Timestamp})
 	}
 }
 
@@ -183,12 +184,13 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		handler.log.Infof("Error while sending file: %s", err)
 		return false
 	}
-	_, err = handler.client.SendMessage(context.Background(), recipient, "", msg)
+	send_response, err := handler.client.SendMessage(context.Background(), recipient, "", msg)
 	if err != nil {
 		handler.log.Infof("Error while sending media message: %v", err)
 		return false
 	} else {
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s has been forwarded.", link))
+		handler.addToCache(CachedMessage{id: send_response.ID, text: link, timestamp: send_response.Timestamp})
 		return true
 	}
 }

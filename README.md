@@ -20,6 +20,7 @@ Standard features:
 * Sending other files as documents.
 * Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures ([Markus "nihilus" Gothe](https://github.com/nihilus) for [Peter "theassemblerguy" Bachmaier](https://github.com/theassemblerguy)).
 * Sending receipts (configurable).
+* Displaying reactions.
 * Support for socks5 proxies.
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
 * Under the hood: Reasonable callback mechanism thanks to [Eion Robb](https://github.com/EionRobb).
@@ -150,7 +151,10 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
     * `on-interact`: as the user interacts with the conversation window (currently buggy)
     * `on-answer`: as soon as the user sends an answer (default)
     * `never`: never
-    
+
+* `message-cache-size`  
+  Stores a number (default: 100) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions.
+
 * `inline-images`:
   If set to true (default), images will automatically be downloaded and embedded in the conversation window.
   

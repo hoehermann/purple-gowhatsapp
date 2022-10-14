@@ -12,6 +12,7 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	"mime"
 	"strings"
+	"time"
 )
 
 func (handler *Handler) handle_message(evt *events.Message) {
@@ -55,10 +56,22 @@ func (handler *Handler) handle_message(evt *events.Message) {
 
 	rm := message.GetReactionMessage()
 	if rm != nil && rm.Text != nil && rm.Key != nil && rm.Key.Id != nil {
+		quote := ""
+		for i := range handler.cachedMessages {
+			if handler.cachedMessages[i].id == *rm.Key.Id {
+				message := &handler.cachedMessages[i]
+				quote = fmt.Sprintf("message \"%.50s\" from %s", message.text, message.timestamp.Format(time.RFC822))
+				// TODO: truncate string when storing, not when displaying
+				break
+			}
+		}
+		if quote == "" {
+			quote = fmt.Sprintf("unknown message with ID %s", *rm.Key.Id)
+		}
 		if *rm.Text == "" {
-			text += fmt.Sprintf("removed their reaction to message ID %s.", *rm.Key.Id)
+			text += fmt.Sprintf("removed their reaction to %s.", quote)
 		} else {
-			text += fmt.Sprintf("reacted to message ID %s with %s.", *rm.Key.Id, *rm.Text)
+			text += fmt.Sprintf("reacted with %s to %s.", *rm.Text, quote)
 		}
 	}
 
@@ -74,6 +87,8 @@ func (handler *Handler) handle_message(evt *events.Message) {
 	}
 
 	handler.handle_attachment(evt)
+
+	handler.addToCache(CachedMessage{id: info.ID, text: text, timestamp: info.Timestamp})
 }
 
 func extension_from_mimetype(mimeType *string) string {

@@ -49,6 +49,13 @@ gowhatsapp_add_account_options(GList *account_options)
         account_options = g_list_append(account_options, option);
     }
     
+    option = purple_account_option_int_new(
+                "Number of messages to cache",
+                GOWHATSAPP_MESSAGE_CACHE_SIZE_OPTION,
+                100
+                );
+    account_options = g_list_append(account_options, option);
+
     option = purple_account_option_int_new( // MEMCHECK: account_options takes ownership
         "QR code size (pixels)",
         GOWHATSAPP_QRCODE_SIZE_OPTION,
