@@ -71,7 +71,12 @@ gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean
 /*
  * Set own presence.
  * 
+ * Also implicitly update contacts and groups.
+ * 
  * NOTE: Receiving contact presence updates may only be sent by WhatsApp when being "available".
+ * 
+ * NOTE: It looks like Spectrum wants all contacts to be updated before entering any group chat.
+ * This is *not* guaranteed ehere since the requests are handled asynchronously.
  */
 void
 gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
@@ -79,9 +84,10 @@ gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
     if (purple_strequal(status_id, GOWHATSAPP_STATUS_STR_AVAILABLE)) {
         if (purple_account_get_bool(account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE)) {
             // update contacts when switching to available
+            gowhatsapp_go_get_contacts(account);
+            // also update groups
             PurpleConnection *pc = purple_account_get_connection(account);
             gowhatsapp_roomlist_get_list(pc);
-            gowhatsapp_go_get_contacts(account);
         }
     }
     gowhatsapp_go_send_presence(account, (char *)status_id); // cgo does not support const
