@@ -32,7 +32,7 @@ gboolean gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char
 gboolean gowhatsapp_message_is_new_enough(PurpleAccount *account, const time_t ts);
 
 // groups
-PurpleConvChat *gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid);
+PurpleConvChat *gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **participants);
 int gowhatsapp_user_in_conv_chat(PurpleConvChat *conv_chat, const char *userJid);
 void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data);
 char *gowhatsapp_get_chat_name(GHashTable *components);
@@ -41,7 +41,7 @@ void gowhatsapp_set_chat_topic(PurpleConnection *pc, int id, const char *topic);
 gchar *gowhatsapp_roomlist_serialize(PurpleRoomlistRoom *room);
 GList * gowhatsapp_chat_info(PurpleConnection *pc);
 GHashTable * gowhatsapp_chat_info_defaults(PurpleConnection *pc, const char *chat_name);
-void gowhatsapp_chat_add_participants(PurpleAccount *account, char *remoteJid, char **participants);
+void gowhatsapp_chat_add_participants(PurpleConvChat *conv_chat, char **participants);
 void gowhatsapp_roomlist_add_room(PurpleConnection *pc, char *remoteJid, char *name);
 void gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
 void gowhatsapp_free_name(PurpleConversation *conv);

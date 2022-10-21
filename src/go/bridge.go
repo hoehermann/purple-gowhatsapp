@@ -30,6 +30,7 @@ import "C"
 import (
 	"fmt"
 	"go.mau.fi/whatsmeow/appstate"
+	"go.mau.fi/whatsmeow/types"
 	"time"
 	"unsafe"
 )
@@ -131,6 +132,34 @@ func gowhatsapp_go_subscribe_presence(account *PurpleAccount, who *C.char) {
 	}
 }
 
+func participants_to_ntcstrarray(group_participants []types.GroupParticipant) **C.char {
+	participant_count := len(group_participants)
+	// declare a C-array of C-strings
+	var cparticipants **C.char = nil
+	// allocate one extra all-zero element to denote end of C array
+	cparticipants = (**C.char)(C.calloc(C.size_t(participant_count+1), C.size_t(unsafe.Sizeof(cparticipants))))
+	// create a Slice "view" of the c-array
+	// https://stackoverflow.com/questions/51525876/use-go-slice-in-c
+	participants := unsafe.Slice((**C.char)(cparticipants), participant_count)
+	for pi, participant := range group_participants {
+		participants[pi] = C.CString(participant.JID.ToNonAD().String())
+	}
+	return cparticipants
+}
+
+//export gowhatsapp_go_query_group_participants
+func gowhatsapp_go_query_group_participants(account *PurpleAccount, groupid *C.char) **C.char {
+	handler, ok := handlers[account]
+	if ok {
+		jid, _ := parseJID(C.GoString(groupid))      // TODO: handle error
+		group, _ := handler.client.GetGroupInfo(jid) // TODO: handle error
+		return participants_to_ntcstrarray(group.Participants)
+	} else {
+		purple_error(account, "Cannot get group information: Not connected.", ERROR_TRANSIENT)
+	}
+	return nil
+}
+
 //export gowhatsapp_go_query_groups
 func gowhatsapp_go_query_groups(account *PurpleAccount) {
 	handler, ok := handlers[account]
@@ -147,14 +176,7 @@ func gowhatsapp_go_query_groups(account *PurpleAccount) {
 						remoteJid: C.CString(group.JID.ToNonAD().String()),
 						name:      C.CString(group.Name),
 					}
-					participant_count := len(group.Participants)
-					// allocate one extra all-zero element to denote end of C array
-					cmessage.participants = (**C.char)(C.calloc(C.size_t(participant_count+1), C.size_t(unsafe.Sizeof(cmessage.participants))))
-					// https://stackoverflow.com/questions/51525876/use-go-slice-in-c
-					participants := unsafe.Slice((**C.char)(cmessage.participants), participant_count)
-					for pi, participant := range group.Participants {
-						participants[pi] = C.CString(participant.JID.ToNonAD().String())
-					}
+					cmessage.participants = participants_to_ntcstrarray(group.Participants)
 					C.gowhatsapp_process_message_bridge(cmessage)
 				}
 				// emit an empty group message to denote end of list

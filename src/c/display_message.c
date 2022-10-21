@@ -39,7 +39,7 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
         flags |= PURPLE_MESSAGE_RECV;
     }
     if (gwamsg->isGroup) {
-        PurpleConvChat *chat = gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid);
+        PurpleConvChat *chat = gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid, NULL);
         if (chat != NULL) {
             // participants in group chats have their senderJid supplied
             const char *who = gwamsg->senderJid;
