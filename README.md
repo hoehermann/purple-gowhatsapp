@@ -1,6 +1,6 @@
 # purple-whatsmeow
 
-A libpurple/Pidgin plugin for WhatsApp. Being developed on Ubuntu 20.04. 
+A libpurple/Pidgin plugin for WhatsApp. Being developed on Ubuntu 22.04. 
 
 This is a re-write of [purple-gowhatsapp](https://github.com/hoehermann/purple-gowhatsapp/tree/gowhatsapp), switching back-ends from [go-whatsapp](https://github.com/Rhymen/go-whatsapp) to [whatsmeow](https://github.com/tulir/whatsmeow). whatsmeow is written by Tulir Asokan. It has multi-device support.
 
@@ -51,8 +51,9 @@ Known issues:
   * If someone adds you to their contacts and sends you the very first message, the message will not be received. WhatsApp Web shows a notice "message has been delayed – check your phone". This notice is not shown by the plug-in.
 * Group Chats:
   * Attachments are downloaded, but link is not shown in group conversation window (not a Purple limitation, tdlib can do it).
-  * Cannot send files of any kind to groups (Purple limitation? tdlib can embed images).
+  * Purple prior to 2.14.0 cannot send files to groups.
   * No notification when being added to a group (the chat will be entered upon receiving a message).
+  * The list of participants is not updated if a participants leaves the chat (on Pidgin, closing the window and re-entering the chat triggers a refresh).
 * Stickers:
   * A [webp pixbuf loader](https://github.com/aruiz/webp-pixbuf-loader) must be present at runtime.
   * GDK pixbuf headers must be available at build time else presence of loader cannot be checked.
@@ -62,7 +63,7 @@ Other planned features:
 
 * Display receipts in conversation window.
 * Join group chat via link.
-* Option to refresh contacts.
+* Action to refresh contacts.
 * After download succeeds, write link to chat (for bitlbee).
 * Have a virtual contact to send control commands to (e.g. display version, update contacts, logout).
 
@@ -77,7 +78,7 @@ These features will not be worked on:
 
 #### Pre-Built Binaries
 
-* [Nightly Build](https://buildbot.hehoe.de/purple-whatsmeow/builds/) (Windows).
+* [Nightly Build](https://buildbot.hehoe.de/purple-whatsmeow/builds/) (Windows, Ubuntu).
 
 #### Instructions
 
@@ -210,6 +211,8 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   * `^[^?#]+\.pdf$` trust all PDFs.
   * `^[^?#]+\.(pdf|png)$` trust all PDFs and PNGs.
   * `^https://www\.example\.com[^?#]+\.(pdf|png)$` trust all PDFs and PNGs from `https://www.example.com`.
+  * `.*` trust anything.
+  * `^$` trust nothing (default).
   
   In case of image, video or audio files, further conditions need to be met, see below. 
 

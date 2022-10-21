@@ -1,9 +1,17 @@
-# 1.7.0-rc1
+# 1.8.0
+
+* Feature: Link-only messages can send arbitrary files from trusted sources (configurable).
+* Feature: Reactions can be displayed (enabled by default).
+* Change: Information about a specific group is now requested when joining the respective purple room.
+* Change: Files can originate from group chats (enabled by default).
+* Bugfix: Extension is stripped from outgoing filename since WhatsApp adds it.
+
+# 1.7.0
 
 * Feature: Client logout is available via action.
 * Feature: Files can be sent to group chats (untested).
-* Bugfix: Memory of embedded images is released after message is displayed.
 * Change: Credentials supplied by WhatsApp servers are forwarded to main thread (might affect bitlbee).
+* Bugfix: Memory of embedded images is released after message is displayed.
 
 # 1.6.0
 
