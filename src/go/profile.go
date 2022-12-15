@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"go.mau.fi/whatsmeow"
 	"io"
 	"net/http"
 )
@@ -49,8 +50,13 @@ func (handler *Handler) profile_picture_downloader() {
 			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 			continue
 		}
-		preview := true
-		ppi, _ := handler.client.GetProfilePictureInfo(jid, preview, pdr.picture_id)
+		ppi, _ := handler.client.GetProfilePictureInfo(
+			jid, &whatsmeow.GetProfilePictureParams{
+				Preview:     true, // TODO: let user decide
+				ExistingID:  pdr.picture_id,
+				IsCommunity: false, // TODO: find out if we do or do not want this
+			},
+		)
 		if ppi == nil {
 			// no (updated) picture available for this contact
 			continue
@@ -58,6 +64,7 @@ func (handler *Handler) profile_picture_downloader() {
 		req, err := http.NewRequest("GET", ppi.URL, nil)
 		if pdr.picture_date != "" {
 			// include date of local picture in request
+			// NOTE: this should no longer be necessary since we include the ExistingID in GetProfilePictureParams now
 			req.Header.Add("If-Modified-Since", pdr.picture_date)
 		}
 		resp, err := handler.httpClient.Do(req)

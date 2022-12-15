@@ -1,3 +1,7 @@
+# 1.9.0
+
+* Update: Depends on whatsmeow v0.0.0-20221213225718-9e2b3546dbc4 or newer.
+
 # 1.8.0
 
 * Feature: Link-only messages can send arbitrary files from trusted sources (configurable).
@@ -36,7 +40,7 @@
 
 * Change: Automatically detect bitlbee when storing credentials. `bridge-compatibility` no longer regarded for this feature.
 * Change: SQLite connections limited to 1 (was unlimited).
-* Change: Strip local extension form file name when sending as document (was append WhatsApp suppled extension).
+* Change: Strip local extension form file name when sending as document (was append WhatsApp supplied extension).
 * Bugfix: A non-media file is sent as a document (was fail sending message).
 * Bugfix: Do not duplicate chat participants.
 
