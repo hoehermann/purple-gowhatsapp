@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"go.mau.fi/whatsmeow"
 	"io"
 	"net/http"
 )
@@ -49,8 +50,17 @@ func (handler *Handler) profile_picture_downloader() {
 			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 			continue
 		}
+
 		preview := true
-		ppi, _ := handler.client.GetProfilePictureInfo(jid, preview, pdr.picture_id)
+		isCommunity := false
+		ppi, _ := handler.client.GetProfilePictureInfo(
+			jid, &whatsmeow.GetProfilePictureParams{
+				Preview: preview,
+				ExistingID: pdr.picture_id,
+				IsCommunity: isCommunity,
+			},
+		)
+
 		if ppi == nil {
 			// no (updated) picture available for this contact
 			continue
