@@ -47,6 +47,8 @@ Other improvements:
 
 Known issues:
 
+* Pairing:
+  * Sometimes, right after pairing, you cannot send messages right away. They are dropped silently. Reconnecting helps. See issue #142.
 * Contacts:
   * If someone adds you to their contacts and sends you the very first message, the message will not be received. WhatsApp Web shows a notice "message has been delayed – check your phone". This notice is not shown by the plug-in.
 * Group Chats:
@@ -129,7 +131,8 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   Note: Spectrum user reports say, prepending a plus sign works better: `+49123456789@s.whatsapp.net`
 
 * Upon login, a QR code is shown in a Pidgin request window.  
-  Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.
+  Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.  
+  Wait for a couple of seconds before sending the first messages.
 
 #### Purple Settings
 
