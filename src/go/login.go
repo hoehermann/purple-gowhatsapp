@@ -6,7 +6,6 @@ package main
 import "C"
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
@@ -125,7 +124,36 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	}
 	handlers[account] = &handler
 	handler.client.AddEventHandler(handler.eventHandler)
-	go handler.connect(proxy_address)
+
+	if proxy_address != "" {
+		handler.client.SetProxyAddress(proxy_address)
+	}
+	err = handler.client.Connect()
+	if err != nil {
+		purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_TRANSIENT)
+	}
+}
+
+/*
+ * After calling client.Connect() with a pristine device ID, WhatsApp servers
+ * send a list of codes which can be turned into QR codes for scanning with the offical app.
+ */
+func (handler *Handler) handle_qrcode(codes []string) {
+	code := codes[0] // use only first code for now
+	// TODO: emit events to destroy and update the code in the ui
+	var png []byte
+	var err error
+	var b strings.Builder
+	fmt.Fprintf(&b, "Scan this code to log in:\n%s\n", code)
+	qrterminal.GenerateHalfBlock(code, qrterminal.L, &b)
+	size := purple_get_int(handler.account, C.GOWHATSAPP_QRCODE_SIZE_OPTION, 256)
+	if size > 0 {
+		png, err = qrcode.Encode(code, qrcode.Medium, size)
+		if err != nil {
+			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
+		}
+	}
+	purple_display_qrcode(handler.account, b.String(), code, png)
 }
 
 /*
@@ -158,55 +186,6 @@ func (handler *Handler) prune_devices(deviceJid types.JID) {
 					device.Delete() // ignores errors
 				}
 			}
-		}
-	}
-}
-
-/*
- * Helper function for login procedure.
- * Calls whatsmeow.Client.Connect().
- */
-func (handler *Handler) connect(proxy_address string) {
-	clientLog := handler.log
-	client := handler.client
-	if proxy_address != "" {
-		client.SetProxyAddress(proxy_address)
-	}
-	if client.Store.ID == nil {
-		// No ID stored, new login
-		qrChan, _ := client.GetQRChannel(context.Background())
-		err := client.Connect()
-		if err != nil {
-			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
-		}
-		for evt := range qrChan {
-			if !client.IsConnected() {
-				clientLog.Infof("Got QR code for disconnected client. Login cancelled.")
-				break
-			}
-			if evt.Event == "code" {
-				// Render the QR code here
-				var png []byte
-				var b strings.Builder
-				fmt.Fprintf(&b, "Scan this code to log in:\n%s\n", evt.Code)
-				qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, &b)
-				size := purple_get_int(handler.account, C.GOWHATSAPP_QRCODE_SIZE_OPTION, 256)
-				if size > 0 {
-					png, err = qrcode.Encode(evt.Code, qrcode.Medium, size)
-					if err != nil {
-						purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
-					}
-				}
-				purple_display_qrcode(handler.account, b.String(), evt.Code, png)
-			} else {
-				clientLog.Infof("Login event:", evt.Event)
-			}
-		}
-	} else {
-		// Already logged in, just connect
-		err := client.Connect()
-		if err != nil {
-			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_TRANSIENT)
 		}
 	}
 }

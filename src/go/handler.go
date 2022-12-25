@@ -101,8 +101,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	case *events.LoggedOut:
 		purple_error(handler.account, "Logged out. Please link again.", ERROR_FATAL)
 	case *events.QR:
-		// this is handled explicitly in connect()
-		// though maybe I should move it here for consistency
+		handler.handle_qrcode(evt.Codes)
 	case *events.PairSuccess:
 		log.Infof("PairSuccess: %#v", evt)
 		log.Infof("client.Store: %#v", cli.Store)
