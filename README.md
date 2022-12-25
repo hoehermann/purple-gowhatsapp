@@ -66,6 +66,7 @@ Other planned features:
 * Action to refresh contacts.
 * After download succeeds, write link to chat (for bitlbee).
 * Have a virtual contact to send control commands to (e.g. display version, update contacts, logout).
+* Support [sending mentions](https://github.com/tulir/whatsmeow/discussions/259).
 
 These features will not be worked on:
 
