@@ -73,7 +73,7 @@ gowhatsapp_add_account_options(GList *account_options)
     option = purple_account_option_string_new( // MEMCHECK: account_options takes ownership
         "Linked file trusted URL regex",
         GOWHATSAPP_TRUSTED_URL_REGEX_OPTION,
-        ""
+        GOWHATSAPP_TRUSTED_URL_REGEX_DEFAULT
         );
     account_options = g_list_append(account_options, option);
 
