@@ -18,7 +18,7 @@ import (
 func (handler *Handler) handle_message(evt *events.Message) {
 	//handler.log.Infof("Received message: %#v", evt)
 	info := evt.Info
-	if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, false) && info.MessageSource.Chat.ToNonAD().String() == "status@broadcast" {
+	if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, true) && info.MessageSource.Chat.ToNonAD().String() == "status@broadcast" {
 		handler.log.Warnf("This is a status broadcast. Ignoring message as requested by user settings.")
 		return
 	}

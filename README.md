@@ -60,6 +60,8 @@ Known issues:
   * A [webp pixbuf loader](https://github.com/aruiz/webp-pixbuf-loader) must be present at runtime.
   * GDK pixbuf headers must be available at build time else presence of loader cannot be checked.
   * Stickers are not animated.
+* Statuses:
+  * There have been numerous reports of the plug-in crashing when a contact updates their status. For this reason, status updates are ignored by default.
 
 Other planned features:
 
@@ -160,18 +162,21 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 * `message-cache-size`  
   Stores a number (default: 100) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions.
 
-* `inline-images`:
+* `inline-images`  
   If set to true (default), images will automatically be downloaded and embedded in the conversation window.
   
-* `inline-stickers`:
+* `inline-stickers`  
   If set to true (default), stickers will automatically be downloaded and may embedded in the conversation window if an appropriate webp GDK pixbuf loader is present.
 
-* `group-is-file-origin`:
+* `group-is-file-origin`  
   It set to true (default), when a file is posted into a group chat, that chat will be the origin of the file. If set to false, the file will originate from the group chat *participant*.  
   Note: File transfers for group chats are supported since libpurple 2.14.0. Some protocol bridges may want to set this to false.
 
 * `get-icons`  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
+  
+* `ignore-status-broadcast`  
+  If set to true (default), your contact's status broadcasts are ignored.
   
 * `bridge-compatibility`  
   Special compatibility setting for protocol bridges like Spectrum or bitlbee. Setting this to true (default: false) will treat system messages just like normal messages, allowing them to be logged and forwarded. This only affects soft errors regarding a specific conversation, e.g. "message could not be sent".
