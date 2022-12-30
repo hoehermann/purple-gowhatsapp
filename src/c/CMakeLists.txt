@@ -24,6 +24,7 @@ add_library(${TARGET_NAME} SHARED
     "receipt.c"
     "pixbuf.c"
     "pixbuf.h"
+    "commands.c"
 )
 add_dependencies(${TARGET_NAME} purple-go-whatsapp)
 

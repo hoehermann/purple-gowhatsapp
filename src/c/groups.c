@@ -171,14 +171,17 @@ gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
  * Adds participants to chat.
  */
 void 
-gowhatsapp_chat_add_participants(PurpleConvChat *conv_chat, char **participants) {
+gowhatsapp_chat_set_participants(PurpleConvChat *conv_chat, char **participants) {
+    // remove all users
+    // TODO: gracefully remove participants who are in the purple chat, but not in the array of participants
+    purple_conv_chat_clear_users(conv_chat);
+    // now add all current users
     for(char **participant_ptr = participants; participant_ptr != NULL && *participant_ptr != NULL; participant_ptr++) {
         if (!gowhatsapp_user_in_conv_chat(conv_chat, *participant_ptr)) {
             PurpleConvChatBuddyFlags flags = 0;
             purple_conv_chat_add_user(conv_chat, *participant_ptr, NULL, flags, FALSE);
         }
     }
-    // TODO: remove participants who are in the purple chat, but not in the array of participants
 }
 
 /*
@@ -200,18 +203,18 @@ gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **
     if (conv_chat == NULL) {
         // use hash of jid for chat id number
         PurpleConversation *conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);
-        conv_chat = PURPLE_CONV_CHAT(conv);
         if (conv != NULL) {
             // store the JID so it can be retrieved by get_chat_name
             purple_conversation_set_data(conv, "name", g_strdup(remoteJid)); // MEMCHECK: strdup'ed value eventually released by gowhatsapp_free_name
+            conv_chat = purple_conversation_get_chat_data(conv);
             if (participants == NULL) {
                 // list of participants is empty, request it explicitly and release it immediately
                 char **participants = gowhatsapp_go_query_group_participants(account, (char *)remoteJid);
-                gowhatsapp_chat_add_participants(conv_chat, participants);
+                gowhatsapp_chat_set_participants(conv_chat, participants);
                 g_strfreev(participants);
             } else {
                 // list of participants was given by caller, add particpants have caller release it later
-                gowhatsapp_chat_add_participants(conv_chat, participants);
+                gowhatsapp_chat_set_participants(conv_chat, participants);
             }
         }
     }

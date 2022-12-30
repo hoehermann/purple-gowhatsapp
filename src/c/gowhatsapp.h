@@ -41,7 +41,7 @@ void gowhatsapp_set_chat_topic(PurpleConnection *pc, int id, const char *topic);
 gchar *gowhatsapp_roomlist_serialize(PurpleRoomlistRoom *room);
 GList * gowhatsapp_chat_info(PurpleConnection *pc);
 GHashTable * gowhatsapp_chat_info_defaults(PurpleConnection *pc, const char *chat_name);
-void gowhatsapp_chat_add_participants(PurpleConvChat *conv_chat, char **participants);
+void gowhatsapp_chat_set_participants(PurpleConvChat *conv_chat, char **participants);
 void gowhatsapp_roomlist_add_room(PurpleConnection *pc, char *remoteJid, char *name);
 void gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
 void gowhatsapp_free_name(PurpleConversation *conv);
@@ -76,3 +76,12 @@ void gowhatsapp_subscribe_presence_updates(PurpleAccount *account, PurpleBuddy *
 
 // receipts
 void gowhatsapp_receipts_init(PurpleConnection *pc);
+
+// commands
+enum gowhatsapp_command {
+    GOWHATSAPP_COMMAND_NONE = 0,
+    GOWHATSAPP_COMMAND_CONTACTS,
+    GOWHATSAPP_COMMAND_PARTICIPANTS
+};
+enum gowhatsapp_command is_command(const char *message);
+int execute_command(PurpleConnection *pc, const gchar *message, const gchar *who, PurpleConversation *conv);

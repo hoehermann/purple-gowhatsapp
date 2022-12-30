@@ -12,9 +12,12 @@ send_message(PurpleConnection *pc, const gchar *who, const gchar *message, gbool
 }
 
 int
-gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message, PurpleMessageFlags flags)
-{
-    return send_message(pc, who, message, FALSE);
+gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message, PurpleMessageFlags flags){
+    if (is_command(message)) {
+        return execute_command(pc, message, who, NULL);
+    } else {
+        return send_message(pc, who, message, FALSE);
+    }
 }
 
 int
@@ -25,7 +28,11 @@ gowhatsapp_send_chat(
     if (conv != NULL) {
         gchar *who = (gchar *)purple_conversation_get_data(conv, "name");
         if (who != NULL) {
-            return send_message(pc, who, message, TRUE);
+            if (is_command(message)) {
+                return execute_command(pc, message, who, conv);
+            } else {
+                return send_message(pc, who, message, TRUE);
+            }
         }
     }
     return -6; // a negative value to indicate failure. chose ENXIO "no such address"
