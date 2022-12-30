@@ -67,6 +67,8 @@ Other planned features:
 
 * Display receipts in conversation window.
 * Join group chat via link.
+* View group icon.
+* Gracefully handle group updates.
 * Action to refresh contacts.
 * After download succeeds, write link to chat (for bitlbee).
 * Have a virtual contact to send control commands to (e.g. display version, update contacts, logout).
