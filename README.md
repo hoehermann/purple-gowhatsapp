@@ -51,6 +51,7 @@ Known issues:
   * Sometimes, right after pairing, you cannot send messages right away. They are dropped silently. Reconnecting helps. See issue #142.
 * Contacts:
   * If someone adds you to their contacts and sends you the very first message, the message will not be received. WhatsApp Web shows a notice "message has been delayed – check your phone". This notice is not shown by the plug-in.
+  * Contact's status is not supported.
 * Group Chats:
   * Attachments are downloaded, but link is not shown in group conversation window (not a Purple limitation, tdlib can do it).
   * Purple prior to 2.14.0 cannot send files to groups.
@@ -176,10 +177,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 * `get-icons`  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
-  
-* `ignore-status-broadcast`  
-  If set to true (default), your contact's status broadcasts are ignored.
-  
+
 * `bridge-compatibility`  
   Special compatibility setting for protocol bridges like Spectrum or bitlbee. Setting this to true (default: false) will treat system messages just like normal messages, allowing them to be logged and forwarded. This only affects soft errors regarding a specific conversation, e.g. "message could not be sent".
     

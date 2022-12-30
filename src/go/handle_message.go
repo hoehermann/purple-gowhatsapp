@@ -18,8 +18,11 @@ import (
 func (handler *Handler) handle_message(evt *events.Message) {
 	//handler.log.Infof("Received message: %#v", evt)
 	info := evt.Info
-	if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, true) && info.MessageSource.Chat.ToNonAD().String() == "status@broadcast" {
-		handler.log.Warnf("This is a status broadcast. Ignoring message as requested by user settings.")
+	if info.MessageSource.Chat.User == "status" && info.MessageSource.Chat.Server == "broadcast" {
+		handler.log.Warnf("Ignoring status broadcast.")
+		// there have been numerous user reports of status broadcasts crashing the plug-in
+		// I have been unable to replicate the behaviour in fact, I have been unable to get
+		// any meaningful data from a status broadcast, so they are ignored for now
 		return
 	}
 	message := evt.Message
