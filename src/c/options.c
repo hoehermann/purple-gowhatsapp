@@ -118,6 +118,13 @@ gowhatsapp_add_account_options(GList *account_options)
         FALSE
         );
     account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
+        "Fetch conversation history (experimental)",
+        GOWHATSAPP_FETCH_HISTORY_OPTION,
+        FALSE
+        );
+    account_options = g_list_append(account_options, option);
     
     option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
         "Automatically join all chats",

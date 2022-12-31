@@ -9,23 +9,22 @@ import "C"
 import (
 	"encoding/hex"
 	"fmt"
-	"go.mau.fi/whatsmeow/types/events"
+	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/types"
 	"mime"
 	"strings"
 	"time"
 )
 
-func (handler *Handler) handle_message(evt *events.Message) {
+func (handler *Handler) handle_message(message *waProto.Message, id string, source types.MessageSource, name *string, timestamp time.Time, is_historical bool) {
 	//handler.log.Infof("Received message: %#v", evt)
-	info := evt.Info
-	if info.MessageSource.Chat.User == "status" && info.MessageSource.Chat.Server == "broadcast" {
+	if source.IsIncomingBroadcast() {
 		handler.log.Warnf("Ignoring status broadcast.")
 		// there have been numerous user reports of status broadcasts crashing the plug-in
 		// I have been unable to replicate the behaviour in fact, I have been unable to get
 		// any meaningful data from a status broadcast, so they are ignored for now
 		return
 	}
-	message := evt.Message
 	//handler.log.Infof("Message: %#v", message)
 	text := message.GetConversation()
 
@@ -82,15 +81,15 @@ func (handler *Handler) handle_message(evt *events.Message) {
 		handler.log.Warnf("Received a message without any text.")
 	} else {
 		// note: info.PushName always denotes the sender (not the chat)
-		purple_display_text_message(handler.account, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, info.MessageSource.IsFromMe, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text)
-		handler.addToCache(CachedMessage{id: info.ID, text: text, timestamp: info.Timestamp})
-		if !info.MessageSource.IsFromMe { // do not send receipt for own messages
-			handler.mark_read_defer(info.ID, info.MessageSource.Chat, info.MessageSource.Sender)
-			handler.mark_read_if_on_receival(info.MessageSource.Chat)
+		purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, source.IsFromMe, source.Sender.ToNonAD().String(), name, timestamp, text)
+		handler.addToCache(CachedMessage{id: id, text: text, timestamp: timestamp})
+		if !source.IsFromMe && !is_historical { // do not send receipt for own messages or historical messages
+			handler.mark_read_defer(id, source.Chat, source.Sender)
+			handler.mark_read_if_on_receival(source.Chat)
 		}
 	}
 
-	handler.handle_attachment(evt)
+	handler.handle_attachment(message, source)
 }
 
 func extension_from_mimetype(mimeType *string) string {
@@ -105,7 +104,7 @@ func extension_from_mimetype(mimeType *string) string {
 }
 
 // based on https://github.com/FKLC/WhatsAppToDiscord/blob/master/WA2DC.go
-func (handler *Handler) handle_attachment(evt *events.Message) {
+func (handler *Handler) handle_attachment(message *waProto.Message, source types.MessageSource) {
 	var (
 		data      []byte
 		err       error
@@ -113,9 +112,7 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 		data_type C.int
 		mimetype  *string
 	)
-	message := evt.Message
-	ms := evt.Info.MessageSource
-	chat := ms.Chat.ToNonAD().String()
+	chat := source.Chat.ToNonAD().String()
 
 	im := message.GetImageMessage()
 	if im != nil {
@@ -151,16 +148,16 @@ func (handler *Handler) handle_attachment(evt *events.Message) {
 		mimetype = sm.Mimetype
 	}
 	if err != nil {
-		purple_display_system_message(handler.account, chat, ms.IsGroup, fmt.Sprintf("Message contained an attachment, but the download failed: %#v", err))
+		purple_display_system_message(handler.account, chat, source.IsGroup, fmt.Sprintf("Message contained an attachment, but the download failed: %#v", err))
 		return
 	}
 	if filename != "" {
-		sender := ms.Sender.ToNonAD()
-		if ms.IsGroup {
+		sender := source.Sender.ToNonAD()
+		if source.IsGroup {
 			// put original sender username into file-name
 			// so source is known even when receiving from group chats
 			filename = fmt.Sprintf("%s_%s", sender.User, filename)
 		}
-		purple_handle_attachment(handler.account, chat, ms.IsGroup, sender.String(), ms.IsFromMe, data_type, mimetype, filename, data)
+		purple_handle_attachment(handler.account, chat, source.IsGroup, sender.String(), source.IsFromMe, data_type, mimetype, filename, data)
 	}
 }

@@ -32,6 +32,7 @@ set(GO_SRCS
   oggreader.go
   send_file_checks.go
   message_cache.go
+  conversations.go
 )
 set(OUTPUT_PREFIX purple-go-whatsapp)
 add_custom_command(

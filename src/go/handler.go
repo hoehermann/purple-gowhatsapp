@@ -1,5 +1,10 @@
 package main
 
+/*
+#include "../c/constants.h"
+*/
+import "C"
+
 import (
 	"fmt"
 	"go.mau.fi/whatsmeow"
@@ -75,7 +80,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// NOTE: evt contains no data
 		purple_error(handler.account, "Connection stream has been replaced. Reconnecting...", ERROR_TRANSIENT)
 	case *events.Message:
-		handler.handle_message(evt)
+		handler.handle_message(evt.Message, evt.Info.ID, evt.Info.MessageSource, &evt.Info.PushName, evt.Info.Timestamp, false)
 	case *events.Receipt:
 		if evt.Type == events.ReceiptTypeRead || evt.Type == events.ReceiptTypeReadSelf {
 			log.Infof("%v was read by %s at %s", evt.MessageIDs, evt.SourceString(), evt.Timestamp)
@@ -86,14 +91,15 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		handler.handle_presence(evt)
 	case *events.HistorySync:
 		// this happens after initial logon via QR code (after AppStateSyncComplete)
-		log.Infof("history sync: %#v", evt.Data)
 		pushnames := evt.Data.GetPushnames()
 		for _, p := range pushnames {
 			if p.Id != nil && p.Pushname != nil {
 				purple_update_name(handler.account, *p.Id, *p.Pushname)
 			}
 		}
-		//conversations := evt.Data.GetConversations() // TODO: enable this if user wants it
+		if purple_get_bool(handler.account, C.GOWHATSAPP_FETCH_HISTORY_OPTION, false) {
+			handler.handle_historical_conversations(evt.Data.GetConversations())
+		}
 	case *events.ChatPresence:
 		handler.handle_chat_presence(evt)
 	case *events.AppState:

@@ -162,6 +162,9 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 * `message-cache-size`  
   Stores a number (default: 100) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions.
 
+* `fetch-history`  
+  If set to true (default: false), the history of conversations will be displayed. This feature is experimental. WhatsApp servers send the history once during the linking process. Messages will appear out-of-order. Files will be downloaded again. If used when linking for the first time (without prior population of the buddy list), it may add name-less contacts to the buddy list.
+
 * `inline-images`  
   If set to true (default), images will automatically be downloaded and embedded in the conversation window.
   
