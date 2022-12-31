@@ -1,6 +1,6 @@
 # 1.9.0
 
-* Update: Depends on whatsmeow v0.0.0-20221213225718-9e2b3546dbc4 or newer.
+* Update: Depends on whatsmeow v0.0.0-20221228122648-8db2c068c345 or newer which requires Go 1.18 or newer.
 
 # 1.8.0
 
