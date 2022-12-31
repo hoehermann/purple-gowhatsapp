@@ -69,51 +69,7 @@ gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean
 }
 
 /*
- * Set own presence.
- * 
- * Also implicitly update contacts and groups.
- * 
- * NOTE: Receiving contact presence updates may only be sent by WhatsApp when being "available".
- * 
- * NOTE: It looks like Spectrum wants all contacts to be updated before entering any group chat.
- * This is *not* guaranteed ehere since the requests are handled asynchronously.
- */
-void
-gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
-    const char *status_id = purple_status_get_id(status);
-    if (purple_strequal(status_id, GOWHATSAPP_STATUS_STR_AVAILABLE)) {
-        if (purple_account_get_bool(account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE)) {
-            // update contacts when switching to available
-            gowhatsapp_go_get_contacts(account);
-            // also update groups
-            PurpleConnection *pc = purple_account_get_connection(account);
-            gowhatsapp_roomlist_get_list(pc);
-        }
-    }
-    gowhatsapp_go_send_presence(account, (char *)status_id); // cgo does not support const
-    // (re-)subscribe for presence updates (will check status_id again)
-    gowhatsapp_subscribe_all_presence_updates(account);
-}
-
-/*
  * Subscribe for presence updates for all contacts currently in the buddy list.
- * 
- * NOTE: Receiving contact presence updates may only be sent by WhatsApp when being "available".
- */
-void
-gowhatsapp_subscribe_presence_updates(PurpleAccount *account, PurpleBuddy *buddy)
-{
-    const PurpleStatus *status = purple_account_get_active_status(account);
-    const char *status_id = purple_status_get_id(status);
-    if (purple_strequal(status_id, GOWHATSAPP_STATUS_STR_AVAILABLE)) {
-        // NOTE: WhatsApp requires you to be available to receive presence updates
-        // subscribing for presence updates might implicitly set own presence to available
-        gowhatsapp_go_subscribe_presence(account, buddy->name);
-    }
-}
-
-/*
- * Subscribe for presence updates for a specific buddy.
  * 
  * NOTE: Receiving contact presence updates may only be sent by WhatsApp when being "available".
  */
@@ -125,5 +81,49 @@ gowhatsapp_subscribe_all_presence_updates(PurpleAccount *account)
     while (buddies != NULL) {
         gowhatsapp_subscribe_presence_updates(account, buddies->data);
         buddies = g_slist_delete_link(buddies, buddies);
+    }
+}
+
+/*
+ * Set own presence.
+ * 
+ * NOTE: Remote contact's presence updates may only be sent by WhatsApp when being "available" oneself.
+ */
+void
+gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
+    const char *status_id = purple_status_get_id(status);
+
+    PurpleConnection *pc = purple_account_get_connection(account);
+    WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(pc);
+    if (wpd->presence_override != NULL) {
+        status_id = wpd->presence_override;
+    }
+
+    gowhatsapp_go_send_presence(account, (char *)status_id); // cgo does not support const
+    // (re-)subscribe for presence updates (will check status_id again)
+    gowhatsapp_subscribe_all_presence_updates(account);
+}
+
+/*
+ * Subscribe for presence updates for a specific buddy.
+ * 
+ * NOTE: Remote contact's presence updates may only be sent by WhatsApp when being "available" oneself.
+ */
+void
+gowhatsapp_subscribe_presence_updates(PurpleAccount *account, PurpleBuddy *buddy)
+{
+    const PurpleStatus *status = purple_account_get_active_status(account);
+    const char *status_id = purple_status_get_id(status);
+    
+    PurpleConnection *pc = purple_account_get_connection(account);
+    WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(pc);
+    if (wpd->presence_override != NULL) {
+        status_id = wpd->presence_override;
+    }
+    
+    if (purple_strequal(status_id, GOWHATSAPP_STATUS_STR_AVAILABLE)) {
+        // NOTE: WhatsApp requires you to be available to receive presence updates
+        // subscribing for presence updates might implicitly set own presence to available
+        gowhatsapp_go_subscribe_presence(account, buddy->name);
     }
 }

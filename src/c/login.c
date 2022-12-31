@@ -16,6 +16,9 @@ gowhatsapp_login(PurpleAccount *account)
 
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
     
+    WhatsappProtocolData *wpd = g_new0(WhatsappProtocolData, 1);
+    purple_connection_set_protocol_data(pc, wpd);
+    
     char *proxy_address = NULL;
     PurpleProxyInfo *proxy_info = purple_proxy_get_setup(account);
     if (proxy_info != NULL && purple_proxy_info_get_type(proxy_info) != PURPLE_PROXY_NONE) {
@@ -64,6 +67,10 @@ gowhatsapp_close(PurpleConnection *pc)
 {
     PurpleAccount * account = purple_connection_get_account(pc);
     gowhatsapp_go_close(account);
+    
+    WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(pc);
+    purple_connection_set_protocol_data(pc, NULL);
+    g_free(wpd);
 }
 
 void

@@ -9,6 +9,16 @@
 #define GOWHATSAPP_STATUS_STR_OFFLINE   "offline"
 #define GOWHATSAPP_STATUS_STR_MOBILE    "mobile"
 
+// protocol data for one connection
+typedef struct {
+    // reference to roomlist which is currently being populated in asynchronous calls
+    PurpleRoomlist *roomlist;
+    
+    // user-supplied string for overriding the connections presence
+    // may only contain pointers to static strings or NULL
+    const char *presence_override; 
+} WhatsappProtocolData;
+
 // options
 GList *gowhatsapp_add_account_options(GList *account_options);
 
@@ -71,7 +81,6 @@ void gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char av
 void gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean full);
 void gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg);
 void gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status);
-void gowhatsapp_subscribe_all_presence_updates(PurpleAccount *account);
 void gowhatsapp_subscribe_presence_updates(PurpleAccount *account, PurpleBuddy *buddy);
 
 // receipts
@@ -80,8 +89,11 @@ void gowhatsapp_receipts_init(PurpleConnection *pc);
 // commands
 enum gowhatsapp_command {
     GOWHATSAPP_COMMAND_NONE = 0,
+    GOWHATSAPP_COMMAND_VERSION,
     GOWHATSAPP_COMMAND_CONTACTS,
-    GOWHATSAPP_COMMAND_PARTICIPANTS
+    GOWHATSAPP_COMMAND_PARTICIPANTS,
+    GOWHATSAPP_COMMAND_PRESENCE,
+    GOWHATSAPP_COMMAND_LOGOUT
 };
 enum gowhatsapp_command is_command(const char *message);
 int execute_command(PurpleConnection *pc, const gchar *message, const gchar *who, PurpleConversation *conv);

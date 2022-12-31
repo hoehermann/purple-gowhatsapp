@@ -57,7 +57,14 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_close_qrcode(gwamsg->account);
             purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
             gowhatsapp_set_presence(gwamsg->account, purple_account_get_active_status(gwamsg->account));
-            gowhatsapp_assume_all_buddies_online(gwamsg->account);
+            gowhatsapp_assume_all_buddies_online(gwamsg->account); // this affects existing buddies only
+            // after connecting, fetch contacts
+            // calling it after gowhatsapp_assume_all_buddies_online is fine,
+            // since the results are handled asynchronously anyway
+            gowhatsapp_go_get_contacts(gwamsg->account);
+            // NOTE: It looks like Spectrum wants all contacts to be updated before entering any group chat.
+            // this is not guaranteed due to the asynchronous nature of request handling
+            gowhatsapp_roomlist_get_list(pc);
             break;
         case gowhatsapp_message_type_disconnected:
             purple_connection_set_state(pc, PURPLE_CONNECTION_DISCONNECTED);

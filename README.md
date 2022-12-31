@@ -47,8 +47,6 @@ Other improvements:
 
 Known issues:
 
-* Pairing:
-  * Sometimes, right after pairing, you cannot send messages right away. They are dropped silently. Reconnecting helps. See issue #142.
 * Contacts:
   * If someone adds you to their contacts and sends you the very first message, the message will not be received. WhatsApp Web shows a notice "message has been delayed – check your phone". This notice is not shown by the plug-in.
   * Contact's status is not supported.
@@ -72,7 +70,6 @@ Other planned features:
 * Gracefully handle group updates.
 * Action to refresh contacts.
 * After download succeeds, write link to chat (for bitlbee).
-* Have a virtual contact to send control commands to (e.g. display version, update contacts, logout).
 * Support [sending mentions](https://github.com/tulir/whatsmeow/discussions/259).
 
 These features will not be worked on:
@@ -137,7 +134,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.  
-  Wait for a couple of seconds before sending the first messages.
+  Wait until the connection has been fully set up. Unfortunately, there is no progress indicator while keys are exchanged and old messages are fetched. Usually, a couple of seconds is enough. Some power users with many groups and contacts reported the process can take more than a minute. If the plug-in is not yet ready, outgoing messages may be dropped silently (see issue #142).
 
 #### Purple Settings
 
@@ -256,6 +253,26 @@ A video message must meet these criteria:
 
 Not all of these values are checked by the plug-in. Some of these criteria are guessed and may not actually be WhatsApp restrictions.
 
+#### Proxy Support
+
+[whatsmeow](https://github.com/tulir/whatsmeow/blob/9f73bc00d158688a14d0147a93b6b25373facbb8/client.go#L206) offers support for SOCKS5 proxies only. Even if no proxy settings are set in purple, the underlying Go runtime might pick up the `https_proxy` environment variable anyway. 
+
+#### Slash Commands
+
+This plug-in supports a couple of "IRC-style" commands. The user can write them in any chat. These features are experimental hacks. They have been included due to user reuqets. Use them with care.
+        
+* `/contacts`  
+  Request re-download of all contacts. Only affects the buddy list if `fetch-contacts` is set to true.
+
+* `/participants` alias `/members`  
+  Request the current list of participants. Can only be used in group chat conversations.
+
+* `/presenceavailable`, `/presenceunavailable`, `/presence`  
+  Overrides the presence which is being sent to WhatsApp servers. The displayed connection state may no longer match the advertised connection state. This can be used to appear unavailable while still being able to receive messages for logging or notification purposes. Using this command may result in unexpected behaviour. Use `/presence` (without a suffix) to give back control to the plug-in's internals.
+
+* `/logout`  
+  Performs a log-out. The QR-code will be requested upon connecting again.
+
 #### Attachment Handling and Memory Consumption
 
 Attachments (images, videos, voice messages, stickers, document) are *always* downloaded as *soon as the message is processed*. The user is then asked where they want the file to be written. During this time, the file data is residing in memory multiple times:
@@ -268,10 +285,6 @@ Attachments (images, videos, voice messages, stickers, document) are *always* do
 On systems with many concurrent connections, this could exhaust memory.
 
 As of writing, whatsmeow does not offer an interface to read the file in chunks.
-
-#### Proxy Support
-
-[whatsmeow](https://github.com/tulir/whatsmeow/blob/9f73bc00d158688a14d0147a93b6b25373facbb8/client.go#L206) offers support for SOCKS5 proxies only. Even if no proxy settings are set in purple, the underlying Go runtime might pick up the `https_proxy` environment variable anyway. 
 
 #### Acknowledgements
 

@@ -102,7 +102,9 @@ void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data) {
 PurpleRoomlist *
 gowhatsapp_roomlist_get_list(PurpleConnection *pc) {
     PurpleAccount *account = purple_connection_get_account(pc);
-    PurpleRoomlist *roomlist = (PurpleRoomlist *)purple_connection_get_protocol_data(pc);
+    WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(pc);
+    g_return_val_if_fail(wpd != NULL, NULL);
+    PurpleRoomlist *roomlist = wpd->roomlist;
     if (roomlist != NULL) {
         purple_debug_info(GOWHATSAPP_NAME, "Already getting roomlist.");
         return roomlist;
@@ -114,7 +116,7 @@ gowhatsapp_roomlist_get_list(PurpleConnection *pc) {
         PURPLE_ROOMLIST_FIELD_STRING, "Group Name", "topic", FALSE
     ));
     purple_roomlist_set_fields(roomlist, fields);
-    purple_connection_set_protocol_data(pc, roomlist);
+    wpd->roomlist = roomlist;
     gowhatsapp_go_query_groups(account);
     return roomlist;
 }
@@ -127,13 +129,15 @@ gowhatsapp_roomlist_get_list(PurpleConnection *pc) {
  */
 void
 gowhatsapp_roomlist_add_room(PurpleConnection *pc, char *remoteJid, char *name) {
-    PurpleRoomlist *roomlist = (PurpleRoomlist *)purple_connection_get_protocol_data(pc);
+    WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(pc);
+    g_return_if_fail(wpd != NULL);
+    PurpleRoomlist *roomlist = wpd->roomlist;
     if (roomlist != NULL) {
         if (remoteJid == NULL) {
             // list end marker, room-listing is finished and ready
             purple_roomlist_set_in_progress(roomlist, FALSE);
             purple_roomlist_unref(roomlist); // unref here, roomlist may remain in ui
-            purple_connection_set_protocol_data(pc, NULL);
+            wpd->roomlist = NULL;
         } else {
             PurpleRoomlistRoom *room = purple_roomlist_room_new(PURPLE_ROOMLIST_ROOMTYPE_ROOM, remoteJid, NULL); // MEMCHECK: roomlist takes ownership 
             // purple_roomlist_room_new sets the room's name
