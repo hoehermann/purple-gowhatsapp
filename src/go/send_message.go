@@ -43,7 +43,7 @@ func parseJID(arg string) (types.JID, error) {
  */
 func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, message string) {
 	msg := &waProto.Message{Conversation: &message}
-	resp, err := handler.client.SendMessage(context.Background(), recipient, "", msg)
+	resp, err := handler.client.SendMessage(context.Background(), recipient, msg)
 	if err != nil {
 		errmsg := fmt.Sprintf("Error sending message: %v", err)
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, errmsg)
@@ -184,7 +184,7 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		handler.log.Infof("Error while sending file: %s", err)
 		return false
 	}
-	send_response, err := handler.client.SendMessage(context.Background(), recipient, "", msg)
+	send_response, err := handler.client.SendMessage(context.Background(), recipient, msg)
 	if err != nil {
 		handler.log.Infof("Error while sending media message: %v", err)
 		return false

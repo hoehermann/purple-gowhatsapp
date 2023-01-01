@@ -67,7 +67,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	if err != nil {
 		return fmt.Errorf("Failed to upload file: %v", err)
 	}
-	_, err = handler.client.SendMessage(context.Background(), recipient, "", msg)
+	_, err = handler.client.SendMessage(context.Background(), recipient, msg)
 	if err != nil {
 		return fmt.Errorf("Error sending file: %v", err)
 	} else {
