@@ -1,6 +1,17 @@
 # 1.9.0
 
-* Update: Depends on whatsmeow v0.0.0-20221228122648-8db2c068c345 or newer which requires Go 1.18 or newer.
+* Feature: Have some IRC-style commands.
+* Feature: Can display the server-supplied history (experimental).
+* Feature: Information about incoming attachments is written to the conversation (configurable).
+* Update: Depends on whatsmeow v0.0.0-20230101112920-9b93048f5e21 or later.
+* Update: Requires Go 1.18 since whatsmeow v0.0.0-20221228122648-8db2c068c345.
+* Change: Displaying status broadcasts is now optional (ignored by default).
+* Change: Queries for group participants are now retried.
+* Change: Only one connection may exist per username or WhatsApp number.
+* Bugfix: Timeout while getting group information no longer leads to a crash.
+* Bugfix: File downloads are properly marked as completed with purple 2.14.10.
+* Bugfix: Send file to group chat now actually works.
+* Bugfix: Plug-in information is now residing in static memory.
 
 # 1.8.0
 
