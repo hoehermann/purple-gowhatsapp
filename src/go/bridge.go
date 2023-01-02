@@ -151,9 +151,21 @@ func participants_to_ntcstrarray(group_participants []types.GroupParticipant) **
 func gowhatsapp_go_query_group_participants(account *PurpleAccount, groupid *C.char) **C.char {
 	handler, ok := handlers[account]
 	if ok {
-		jid, _ := parseJID(C.GoString(groupid))      // TODO: handle error
-		group, _ := handler.client.GetGroupInfo(jid) // TODO: handle error
-		return participants_to_ntcstrarray(group.Participants)
+		if groupid != nil {
+			jid, err := parseJID(C.GoString(groupid))
+			if err == nil {
+				group, err := handler.client.GetGroupInfo(jid)
+				if err == nil {
+					return participants_to_ntcstrarray(group.Participants)
+				} else {
+					purple_error(account, fmt.Sprintf("Cannot get group information due to %#v.", err), ERROR_FATAL)
+				}
+			} else {
+				purple_error(account, fmt.Sprintf("Cannot get group information due to %#v.", err), ERROR_FATAL)
+			}
+		} else {
+			purple_error(account, "Cannot get group information without group ID.", ERROR_FATAL)
+		}
 	} else {
 		purple_error(account, "Cannot get group information: Not connected.", ERROR_TRANSIENT)
 	}
