@@ -161,9 +161,14 @@ gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
     // these all cannot handle the group list end marker
     if (gwamsg->remoteJid != NULL) {
         // adds the group to the buddy list (if fetching contacts is enabled, useful for human-readable titles)
-        gowhatsapp_ensure_group_chat_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name); 
+        gowhatsapp_ensure_group_chat_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
+        // this might be a delayed response to a query for participants of a currently active group chat
+        PurpleConvChat *conv_chat = purple_conversations_find_chat_with_account(gwamsg->remoteJid, gwamsg->account);
+        if (conv_chat != NULL) {
+            gowhatsapp_chat_set_participants(conv_chat, gwamsg->participants);
+        }
+        // automatically join all chats (if user wants to)
         if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_AUTO_JOIN_CHAT_OPTION, FALSE)) {
-            // automatically join all chats
             gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid, gwamsg->participants); 
         }
     }
@@ -203,7 +208,7 @@ PurpleConvChat *
 gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **participants) 
 {
     PurpleAccount *account = purple_connection_get_account(pc);
-    PurpleConvChat *conv_chat = purple_conversations_find_chat_with_account(remoteJid, account); // TODO: find out why this fails an assertion in purple_conversation_get_chat_data
+    PurpleConvChat *conv_chat = purple_conversations_find_chat_with_account(remoteJid, account);
     if (conv_chat == NULL) {
         // use hash of jid for chat id number
         PurpleConversation *conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);

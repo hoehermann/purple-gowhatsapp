@@ -152,16 +152,12 @@ func gowhatsapp_go_query_group_participants(account *PurpleAccount, groupid *C.c
 	handler, ok := handlers[account]
 	if ok {
 		if groupid != nil {
-			jid, err := parseJID(C.GoString(groupid))
+			go_groupid := C.GoString(groupid)
+			jid, err := parseJID(go_groupid)
 			if err == nil {
-				group, err := handler.client.GetGroupInfo(jid)
-				if err == nil {
-					return participants_to_ntcstrarray(group.Participants)
-				} else {
-					purple_error(account, fmt.Sprintf("Cannot get group information due to %#v.", err), ERROR_FATAL)
-				}
+				return participants_to_ntcstrarray(handler.query_group_participants_retry(jid, 1, 10, 0))
 			} else {
-				purple_error(account, fmt.Sprintf("Cannot get group information due to %#v.", err), ERROR_FATAL)
+				purple_error(account, fmt.Sprintf("Cannot get group information from invalid JID %s due to %#v.", go_groupid, err), ERROR_FATAL)
 			}
 		} else {
 			purple_error(account, "Cannot get group information without group ID.", ERROR_FATAL)
@@ -182,20 +178,10 @@ func gowhatsapp_go_query_groups(account *PurpleAccount) {
 				purple_error(account, fmt.Sprintf("Unable to get list of groups: %#v", err), ERROR_FATAL)
 			} else {
 				for _, group := range groups {
-					cmessage := C.struct_gowhatsapp_message{
-						account:   account,
-						msgtype:   C.char(C.gowhatsapp_message_type_group),
-						remoteJid: C.CString(group.JID.ToNonAD().String()),
-						name:      C.CString(group.Name),
-					}
-					cmessage.participants = participants_to_ntcstrarray(group.Participants)
-					C.gowhatsapp_process_message_bridge(cmessage)
+					purple_update_group(account, group)
 				}
 				// emit an empty group message to denote end of list
-				C.gowhatsapp_process_message_bridge(C.struct_gowhatsapp_message{
-					account: account,
-					msgtype: C.char(C.gowhatsapp_message_type_group),
-				})
+				purple_update_group(account, nil)
 			}
 		}()
 	} else {
@@ -514,6 +500,27 @@ func purple_set_credentials(account *PurpleAccount, credentials string) {
 		msgtype: C.char(C.gowhatsapp_message_type_credentials),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
+ * This will forward group information to purple.
+ */
+func purple_update_group(account *PurpleAccount, group *types.GroupInfo) {
+	if group != nil {
+		cmessage := C.struct_gowhatsapp_message{
+			account:   account,
+			msgtype:   C.char(C.gowhatsapp_message_type_group),
+			remoteJid: C.CString(group.JID.ToNonAD().String()),
+			name:      C.CString(group.Name),
+		}
+		cmessage.participants = participants_to_ntcstrarray(group.Participants)
+		C.gowhatsapp_process_message_bridge(cmessage)
+	} else {
+		C.gowhatsapp_process_message_bridge(C.struct_gowhatsapp_message{
+			account: account,
+			msgtype: C.char(C.gowhatsapp_message_type_group),
+		})
+	}
 }
 
 func main() {
