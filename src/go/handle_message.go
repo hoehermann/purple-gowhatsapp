@@ -17,15 +17,13 @@ import (
 )
 
 func (handler *Handler) handle_message(message *waProto.Message, id string, source types.MessageSource, name *string, timestamp time.Time, is_historical bool) {
-	//handler.log.Infof("Received message: %#v", evt)
-	if source.IsIncomingBroadcast() {
+	//handler.log.Infof("message: %#v", message)
+	if source.Chat == types.StatusBroadcastJID && purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, true) {
 		handler.log.Warnf("Ignoring status broadcast.")
 		// there have been numerous user reports of status broadcasts crashing the plug-in
-		// I have been unable to replicate the behaviour in fact, I have been unable to get
-		// any meaningful data from a status broadcast, so they are ignored for now
+		// or other undesired behaviour such as just being annoying
 		return
 	}
-	//handler.log.Infof("Message: %#v", message)
 	text := message.GetConversation()
 
 	etm := message.ExtendedTextMessage

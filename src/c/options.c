@@ -131,6 +131,13 @@ gowhatsapp_add_account_options(GList *account_options)
         GOWHATSAPP_AUTO_JOIN_CHAT_OPTION,
         FALSE
         );
+    account_options = g_list_append(account_options, option);    
+    
+    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
+        "Ignore status broadcasts",
+        GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION,
+        TRUE
+        );
     account_options = g_list_append(account_options, option);
     
     option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
