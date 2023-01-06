@@ -28,14 +28,50 @@ void xfer_release_blob(PurpleXfer * xfer) {
     xfer->data = NULL;
 }
 
+static void gowhatsapp_xfer_announce(gowhatsapp_message_t *gwamsg) {
+    const char * template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_MESSAGE_OPTION, GOWHATSAPP_ATTACHMENT_MESSAGE_DEFAULT);
+    if (template != NULL && !purple_strequal(template, "")) {
+        // resolve number for displaying name
+        const char * alias = gwamsg->senderJid;
+        PurpleBuddy * buddy = purple_find_buddy(gwamsg->account, gwamsg->senderJid);
+        if (buddy != NULL) {
+            alias = purple_buddy_get_contact_alias(buddy);
+        }
+        
+        // prepare the template
+        GString * message = g_string_new(template);
+        // replace placeholders with actual data
+        #if (GLIB_CHECK_VERSION(2, 68, 0))
+        g_string_replace(message, "$filename", gwamsg->name, 0);
+        g_string_replace(message, "$sender", alias, 0);
+        #else
+        #pragma message "Warning: GLib version 2.68 needed for g_string_replace in attachment message template."
+        #endif
+        
+        if (gwamsg->text != NULL) {
+            // This should never happen. Output a warning if it does.
+            purple_debug_warning(GOWHATSAPP_NAME, "gwamsg->text is not NULL in gowhatsapp_xfer_announce.\n");
+            g_free(gwamsg->text);
+        }
+        // get data from filled template
+        gwamsg->text = g_string_free(message, FALSE);
+        // MEMCHECK: gwamsg->text will be released by process_message_bridge
+        
+        gowhatsapp_display_text_message(purple_account_get_connection(gwamsg->account), gwamsg, PURPLE_MESSAGE_SYSTEM);
+    }
+}
+
 static
 void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
     g_return_if_fail(pc != NULL);
     PurpleAccount *account = purple_connection_get_account(pc);
+    
+    gowhatsapp_xfer_announce(gwamsg);
     const char * sender = gwamsg->senderJid;
     if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_GROUP_IS_FILE_ORIGIN_OPTION, TRUE)) {
         sender = gwamsg->remoteJid;
     }
+    
     PurpleXfer * xfer = purple_xfer_new(account, PURPLE_XFER_RECEIVE, sender);
     purple_xfer_set_filename(xfer, gwamsg->name);
     purple_xfer_set_size(xfer, gwamsg->blobsize);
@@ -51,7 +87,7 @@ void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg
     purple_xfer_set_cancel_recv_fnc(xfer, xfer_release_blob);
     
     purple_xfer_request(xfer);
-    // MEMCHECK NOTE: purple_xfer_unref calls purple_xfer_destroy wich MAY call purple_xfer_cancel_local if (purple_xfer_get_status(xfer) == PURPLE_XFER_STATUS_STARTED) which calls cancel_recv and cancel_local
+    // MEMCHECK NOTE: purple_xfer_unref calls purple_xfer_destroy which MAY call purple_xfer_cancel_local if (purple_xfer_get_status(xfer) == PURPLE_XFER_STATUS_STARTED) which calls cancel_recv and cancel_local
 }
 
 void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {

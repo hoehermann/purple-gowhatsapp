@@ -69,7 +69,6 @@ Other planned features:
 * View group icon.
 * Gracefully handle group updates.
 * Action to refresh contacts.
-* After download succeeds, write link to chat (for bitlbee).
 * Support [sending mentions](https://github.com/tulir/whatsmeow/discussions/259).
 
 These features will not be worked on:
@@ -174,9 +173,15 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 * `group-is-file-origin`  
   It set to true (default), when a file is posted into a group chat, that chat will be the origin of the file. If set to false, the file will originate from the group chat *participant*.  
   Note: File transfers for group chats are supported since libpurple 2.14.0. Some protocol bridges may want to set this to false.
+  
+* `attachment-message`  
+  This system message is written to the conversation for each incoming attachment.  
+  The placeholder `$sender` denotes the original sender (the participant, not the group chat).  
+  The placeholder `$filename` refers to the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.  
+  Placeholders need at least GLib 2.68. On win32, Pidgin is usually shipped with an older version so do not expect them to work there.
 
 * `get-icons`  
-  If set to true (default: false), profile pictures are updated every time the plug-in connects.-  
+  If set to true (default: false), profile pictures are updated every time the plug-in connects.
 
 * `ignore-status-broadcast`  
   If set to true (default), your contact's status broadcasts are ignored.
@@ -201,7 +206,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   * `$purple_user_dir` – will be replaced by the user directory, e.g. `~/.purple`.
   * `$username` – will be replaced by the username as entered in the account details.
   
-  default: `file:$purple_user_dir/whatsmeow.db?_foreign_keys=on&_busy_timeout=3000`  
+  Default: `file:$purple_user_dir/whatsmeow.db?_foreign_keys=on&_busy_timeout=3000`  
   Folder must exist, `whatsmeow.db` is created automatically.
   
   By default, the driver will be `sqlite3` for a file-backed SQLite database. This is not recommended for multi-account-applications (e.g. spectrum or bitlbee) due to a [limitation in the driver](https://github.com/mattn/go-sqlite3/issues/209). The file-system (see addess option) must support locking and be responsive. Network shares (especially SMB) **do not work**.
