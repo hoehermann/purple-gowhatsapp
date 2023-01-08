@@ -23,6 +23,15 @@ gssize xfer_read_fnc(guchar **buffer, PurpleXfer * xfer) {
 }
 
 static
+void xfer_ack_fnc(PurpleXfer * xfer, const guchar * buffer, size_t bytes_read) {
+    // This is called after each time xfer_read_fnc returned a positive value.
+    // We only do one read, so the transfer is complete now.
+    #if PURPLE_VERSION_CHECK(2,14,10)
+    purple_xfer_set_completed(xfer, TRUE);
+    #endif
+}
+
+static
 void xfer_release_blob(PurpleXfer * xfer) {
     g_free(xfer->data);
     xfer->data = NULL;
@@ -80,6 +89,7 @@ void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg
     purple_xfer_set_init_fnc(xfer, xfer_init_fnc);
     purple_xfer_set_start_fnc(xfer, xfer_start_fnc);
     purple_xfer_set_read_fnc(xfer, xfer_read_fnc);
+    purple_xfer_set_ack_fnc(xfer, xfer_ack_fnc);
     
     // be very sure to release the data no matter what
     purple_xfer_set_end_fnc(xfer, xfer_release_blob);
