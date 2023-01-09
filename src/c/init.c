@@ -84,7 +84,6 @@ actions(PurplePlugin *plugin, gpointer context)
     return actions;
 }
 
-/* Purple 2 Plugin Load Functions */
 static gboolean
 libpurple2_plugin_load(PurplePlugin *plugin)
 {
@@ -99,77 +98,57 @@ libpurple2_plugin_unload(PurplePlugin *plugin)
     return TRUE;
 }
 
-static void
-plugin_init(PurplePlugin *plugin)
-{
-    PurplePluginInfo *info;
-    PurplePluginProtocolInfo *prpl_info = g_new0(PurplePluginProtocolInfo, 1); // MEMCHECK: THIS LEAKS. WHY?
-
-    info = plugin->info;
-
-    if (info == NULL) {
-        plugin->info = info = g_new0(PurplePluginInfo, 1); // MEMCHECK: TODO
-    }
-    // base protocol information
-    info->name = "WhatsApp (whatsmeow)";
-    info->extra_info = prpl_info;
-    prpl_info->struct_size = sizeof(PurplePluginProtocolInfo);
-    prpl_info->options = OPT_PROTO_NO_PASSWORD; // with this set, Pidgin will neither ask for a password and also won't store it. Yet storing a password is necessary for compatibility with bitlbee. See login.c for more information.
-    prpl_info->protocol_options = gowhatsapp_add_account_options(prpl_info->protocol_options);
-    prpl_info->list_icon = list_icon;
-    prpl_info->status_types = status_types; // this actually needs to exist, else the protocol cannot be set to "online"
-    prpl_info->set_status = gowhatsapp_set_presence;
-    prpl_info->login = gowhatsapp_login;
-    prpl_info->close = gowhatsapp_close;
-    prpl_info->send_im = gowhatsapp_send_im;
+static PurplePluginProtocolInfo prpl_info = {
+    .struct_size = sizeof(PurplePluginProtocolInfo), // must be set in for PURPLE_PROTOCOL_PLUGIN_HAS_FUNC to work across versions
+    .options = OPT_PROTO_NO_PASSWORD, // with this set, Pidgin will neither ask for a password and also won't store it. Yet storing a password is necessary for compatibility with bitlbee. See login.c for more information.
+    .list_icon = list_icon,
+    .status_types = status_types, // this actually needs to exist, else the protocol cannot be set to "online"
+    .set_status = gowhatsapp_set_presence,
+    .login = gowhatsapp_login,
+    .close = gowhatsapp_close,
+    .send_im = gowhatsapp_send_im,
     // group-chat related functions
-    prpl_info->chat_info = gowhatsapp_chat_info;
-    prpl_info->chat_info_defaults = gowhatsapp_chat_info_defaults;
-    prpl_info->join_chat = gowhatsapp_join_chat;
-    prpl_info->get_chat_name = gowhatsapp_get_chat_name;
-    prpl_info->find_blist_chat = gowhatsapp_find_blist_chat;
-    prpl_info->chat_send = gowhatsapp_send_chat;
-    prpl_info->set_chat_topic = gowhatsapp_set_chat_topic;
-    prpl_info->roomlist_get_list = gowhatsapp_roomlist_get_list;
-    //prpl_info->roomlist_room_serialize = gowhatsapp_roomlist_serialize; // not necessary – we store the JID in room->name
+    .chat_info = gowhatsapp_chat_info,
+    .chat_info_defaults = gowhatsapp_chat_info_defaults,
+    .join_chat = gowhatsapp_join_chat,
+    .get_chat_name = gowhatsapp_get_chat_name,
+    .find_blist_chat = gowhatsapp_find_blist_chat,
+    .chat_send = gowhatsapp_send_chat,
+    .set_chat_topic = gowhatsapp_set_chat_topic,
+    .roomlist_get_list = gowhatsapp_roomlist_get_list,
+    //.roomlist_room_serialize = gowhatsapp_roomlist_serialize, // not necessary – we store the JID in room->name
     // managing buddies (contacts)
-    prpl_info->add_buddy = gowhatsapp_add_buddy;
-    prpl_info->tooltip_text = gowhatsapp_tooltip_text;
+    .add_buddy = gowhatsapp_add_buddy,
+    .tooltip_text = gowhatsapp_tooltip_text,
     // file transfer
-    prpl_info->new_xfer = gowhatsapp_new_xfer;
-    prpl_info->send_file = gowhatsapp_send_file;
+    .new_xfer = gowhatsapp_new_xfer,
+    .send_file = gowhatsapp_send_file,
     #if PURPLE_VERSION_CHECK(2,14,0)
-    prpl_info->chat_send_file = gowhatsapp_chat_send_file;
+    .chat_send_file = gowhatsapp_chat_send_file,
     #endif
+};
+
+static void plugin_init(PurplePlugin *plugin) {
+    prpl_info.protocol_options = gowhatsapp_add_account_options(prpl_info.protocol_options);
 }
 
 static PurplePluginInfo info = {
-    PURPLE_PLUGIN_MAGIC,
-    PURPLE_MAJOR_VERSION,
-    PURPLE_MINOR_VERSION,
-    PURPLE_PLUGIN_PROTOCOL, /* type */
-    NULL, /* ui_requirement */
-    0, /* flags */
-    NULL, /* dependencies */
-    PURPLE_PRIORITY_DEFAULT, /* priority */
-    GOWHATSAPP_PRPL_ID, /* id */
-    GOWHATSAPP_NAME, /* name */
-    MAKE_STR(PLUGIN_VERSION), /* version */
-    "", /* summary */
-    "", /* description */
-    "Hermann Hoehne <hoehermann@gmx.de>", /* author */
-    "https://github.com/hoehermann/libpurple-gowhatsapp", /* homepage */
-    libpurple2_plugin_load, /* load */
-    libpurple2_plugin_unload, /* unload */
-    NULL, /* destroy */
-    NULL, /* ui_info */
-    NULL, /* extra_info */
-    NULL, /* prefs_info */
-    actions, /* actions */
-    NULL, /* padding */
-    NULL,
-    NULL,
-    NULL
+    .magic = PURPLE_PLUGIN_MAGIC,
+    .major_version = PURPLE_MAJOR_VERSION,
+    .minor_version = PURPLE_MINOR_VERSION,
+    .type = PURPLE_PLUGIN_PROTOCOL,
+    .priority = PURPLE_PRIORITY_DEFAULT,
+    .id = GOWHATSAPP_PRPL_ID,
+    .name = "WhatsApp (whatsmeow)",
+    .version = MAKE_STR(PLUGIN_VERSION),
+    .summary = "",
+    .description = "",
+    .author = "Hermann Hoehne <hoehermann@gmx.de>",
+    .homepage = "https://github.com/hoehermann/libpurple-gowhatsapp",
+    .load = libpurple2_plugin_load,
+    .unload = libpurple2_plugin_unload,
+    .extra_info = &prpl_info,
+    .actions = actions,
 };
 
 PURPLE_INIT_PLUGIN(gowhatsapp, plugin_init, info);
