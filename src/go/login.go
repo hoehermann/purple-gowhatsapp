@@ -31,7 +31,15 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		purple_error(account, "This connection already exists.", ERROR_FATAL)
 		return
 	}
-	// TODO: protect against concurrent invocation
+
+	// try to protect against concurrent connections
+	// this may lead to problems on multi-user systems since the purple-supplied username not necessarily denotes the actual user JID
+	for _, handler := range handlers {
+		if handler.username == username {
+			purple_error(account, fmt.Sprintf("A connection to this username %s already exists. Please fix your setup.", username), ERROR_FATAL)
+			return
+		}
+	}
 
 	// establish connection to database
 	dbLog := PurpleLogger(account, "Database")
@@ -114,8 +122,19 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		return
 	}
 
+	// try to protect against concurrent connections
+	// look through all currently active connections
+	// abort if there already is a connection with this JID
+	for _, handler := range handlers {
+		if handler.client.Store != nil && handler.client.Store.ID != nil && device.ID != nil && handler.client.Store.ID.ToNonAD() == device.ID.ToNonAD() {
+			purple_error(account, fmt.Sprintf("A connection to this number %s already exists. Please fix your setup.", device.ID.String()), ERROR_FATAL)
+			return
+		}
+	}
+
 	handler := Handler{
 		account:          account,
+		username:         username,
 		container:        container,
 		log:              log,
 		client:           whatsmeow.NewClient(device, PurpleLogger(account, "Client")),

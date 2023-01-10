@@ -28,6 +28,7 @@ type CachedMessage struct {
  */
 type Handler struct {
 	account          *PurpleAccount
+	username         string
 	log              waLog.Logger
 	container        *sqlstore.Container
 	client           *whatsmeow.Client
