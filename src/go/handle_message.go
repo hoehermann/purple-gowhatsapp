@@ -146,8 +146,12 @@ func (handler *Handler) handle_attachment(message *waProto.Message, source types
 		mimetype = sm.Mimetype
 	}
 	if err != nil {
-		purple_display_system_message(handler.account, chat, source.IsGroup, fmt.Sprintf("Message contained an attachment, but the download failed: %#v", err))
-		return
+		if data == nil || len(data) == 0 {
+			purple_display_system_message(handler.account, chat, source.IsGroup, fmt.Sprintf("Message contained an attachment, but the download failed: %v", err))
+			return
+		} else {
+			handler.log.Warnf("Forwarding file %s to frontend regardless of error: %v", filename, err)
+		}
 	}
 	if filename != "" {
 		sender := source.Sender.ToNonAD()
