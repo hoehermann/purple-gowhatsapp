@@ -52,6 +52,7 @@ static int execute_command_presence(PurpleAccount *account, PurpleConnection *pc
     if (g_str_has_prefix(message, command_string_presence)) {
         WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(pc);
         const char *presence_argument = message+strlen(command_string_presence);
+        // TODO: use purple_account_get/set_string for persistence in between restarts in Spectrum
         if (purple_strequal(presence_argument, GOWHATSAPP_STATUS_STR_AVAILABLE)) {
             wpd->presence_override = GOWHATSAPP_STATUS_STR_AVAILABLE;
         } else if (purple_strequal(presence_argument, GOWHATSAPP_STATUS_STR_AWAY)) {

@@ -16,7 +16,7 @@ gowhatsapp_login(PurpleAccount *account)
 
     purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
     
-    WhatsappProtocolData *wpd = g_new0(WhatsappProtocolData, 1);
+    WhatsappProtocolData *wpd = g_new0(WhatsappProtocolData, 1); // MEMCHECK: released in gowhatsapp_close
     purple_connection_set_protocol_data(pc, wpd);
     
     char *proxy_address = NULL;

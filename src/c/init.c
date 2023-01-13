@@ -99,7 +99,7 @@ libpurple2_plugin_unload(PurplePlugin *plugin)
 }
 
 static PurplePluginProtocolInfo prpl_info = {
-    .struct_size = sizeof(PurplePluginProtocolInfo), // must be set in for PURPLE_PROTOCOL_PLUGIN_HAS_FUNC to work across versions
+    .struct_size = sizeof(PurplePluginProtocolInfo), // must be set for PURPLE_PROTOCOL_PLUGIN_HAS_FUNC to work across versions
     .options = OPT_PROTO_NO_PASSWORD, // with this set, Pidgin will neither ask for a password and also won't store it. Yet storing a password is necessary for compatibility with bitlbee. See login.c for more information.
     .list_icon = list_icon,
     .status_types = status_types, // this actually needs to exist, else the protocol cannot be set to "online"
