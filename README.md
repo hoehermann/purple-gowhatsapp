@@ -128,8 +128,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   You can enter an arbitrary username. 
   It is recommended to use your own internationalized number, followed by `@s.whatsapp.net`.  
   Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`.  
-  This way, you *recognize yourself in group chats* and Pidgin's logs look sane.  
-  Note: Spectrum user reports say, prepending a plus sign works better: `+49123456789@s.whatsapp.net`
+  This way, you *recognize yourself in group chats* and Pidgin's logs look sane.
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.  
@@ -216,12 +215,12 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 * `embed-max-file-size`  
   When set to a value greater than 0 (default, in megabytes), the plug-in tries to detect link-only messages such as `https://example.com/voicemessage.oga` for forwarding.
   
-  If enabled, this plug-in tries to download and forward the linked file, choosing the appropriate media type automatically. This way, your contacts do not see a link to an image, video or a voice message, but instead can play the content directly in their app. The message must consist of one URL exactly, including whitespace. For this reason, this mode is incompatbile with Pidgin's OTR plug-in, see [this bug report](https://developer.pidgin.im/ticket/10280). 
+  If enabled, this plug-in tries to download and forward the linked file, choosing the appropriate media type automatically. This way, your contacts do not see a link to an image, video or a voice message, but instead can play the content directly in their app. The message must consist of one URL exactly, including whitespace. For this reason, this mode is incompatible with Pidgin's OTR plug-in, see [this bug report](https://developer.pidgin.im/ticket/10280). 
   
-  At time of writing, the maximum file-size supported by WhatsApp is 16 MB.
+  At time of writing, the maximum file-size supported by WhatsApp is 2 GB according to [wabetainfo](https://wabetainfo.com/whatsapp-is-testing-sharing-media-files-up-to-2gb-in-size/) and confirmed by iOS users in Germany.
   
 * `trusted-url-regex`  
-  In case a link-only message does not point to an image, video or audio file, the file may be sent as a document message. For reasons of safetey, this will only happen for files from trusted sources. An URL must match this [regular expression](https://golangbyexample.com/golang-regex-match-full-string/) to be considered trustworthy. Matching is case-sensitive. The match spans the entire verbatim URL, so query and fragment need to be considered. Do not forget the caret and/or dollar sign. Some examples:
+  In case a link-only message does not point to an image, video or audio file, the file may be sent as a document message. For reasons of safety, this will only happen for files from trusted sources. An URL must match this [regular expression](https://golangbyexample.com/golang-regex-match-full-string/) to be considered trustworthy. Matching is case-sensitive. The match spans the entire verbatim URL, so query and fragment need to be considered. Do not forget the caret and/or dollar sign. Some examples:
   
   * `^https://www\.example\.com` trust files from `www.example.com` via HTTPS.
   * `^https://[^/]*example\.com` trust files from `example.com` and subdomains, authentication data via HTTPS.
@@ -246,8 +245,11 @@ A voice message must meet these criteria:
 * Mime-Type: `application/ogg`, `audio/ogg`, sent as `audio/ogg; codecs=opus`
 * Container: `ogg`
 * Codec: `opus`
+
+Additional recommendations:
+
 * Channels: 1 (mono)
-* Sample-Rate: 16 kHz
+* Sample-Rate: 48 kHz
 
 User reports say, 44.1 kHz 16 bit PCM (WAV) disguised as `audio/mp3` works fine, too.
 
@@ -299,11 +301,12 @@ As of writing, whatsmeow does not offer an interface to read the file in chunks.
 
 #### Acknowledgements
 
+* [Gary 'grim' Kramlich](https://www.twitch.tv/rw_grim/) for developing Pidgin and purple
+* [Eion Robb](https://github.com/EionRobb/) for sharing his invaluable purple advice
 * [Peter "theassemblerguy" Bachmaier](https://github.com/theassemblerguy) for initiating the re-write
 * [yourealwaysbe](https://github.com/yourealwaysbe) for proper group chats, support and tests against [bitlee](https://github.com/bitlbee/bitlbee)
 * [vitalyster](https://github.com/vitalyster) for support, packaging and adjustments for [spectrum2](https://github.com/SpectrumIM/spectrum2)
 * Martin Sebald from [https://jabber.hot-chilli.net/](hot-chilli.net) for extensive stress-testing 
 * [JimB](https://stackoverflow.com/users/32880/jimb) for golang insights
-* [Eion Robb](https://github.com/EionRobb/) for sharing his invaluable purple advice
 * [HVV](https://www.hvv.de/) for providing free wifi at their stations
 

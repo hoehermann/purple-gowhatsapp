@@ -14,11 +14,7 @@ func check_ogg(data []byte) error {
 	if header == nil {
 		return fmt.Errorf("An ogg audio file was provided, but the header was empty or was not an opus header.")
 	}
-	if header.SampleRate != 16000 && header.Channels != 1 {
-		return fmt.Errorf("An ogg audio file with opus encoded content was provided, but it has not the correct format.\nNeed channel: 1, rate: 16000.\nGot channels: %d , rate: %d.", header.Channels, header.SampleRate)
-	} else {
-		return nil
-	}
+	return nil
 }
 
 func check_mp4(data []byte) error {
