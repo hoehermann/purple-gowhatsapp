@@ -43,7 +43,6 @@ gboolean gowhatsapp_message_is_new_enough(PurpleAccount *account, const time_t t
 
 // groups
 PurpleConvChat *gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **participants);
-int gowhatsapp_user_in_conv_chat(PurpleConvChat *conv_chat, const char *userJid);
 void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data);
 char *gowhatsapp_get_chat_name(GHashTable *components);
 PurpleRoomlist *gowhatsapp_roomlist_get_list(PurpleConnection *pc);

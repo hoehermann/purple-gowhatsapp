@@ -178,18 +178,18 @@ gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
 
 /*
  * Adds participants to chat.
+ * 
+ * NOTE: We cannot selectively add missing users since it looks like on Spectrum 
+ * only a remove-readd-cycle will trigger the display name resolution.
  */
 void 
 gowhatsapp_chat_set_participants(PurpleConvChat *conv_chat, char **participants) {
     // remove all users
-    // TODO: gracefully remove participants who are in the purple chat, but not in the array of participants
     purple_conv_chat_clear_users(conv_chat);
     // now add all current users
     for(char **participant_ptr = participants; participant_ptr != NULL && *participant_ptr != NULL; participant_ptr++) {
-        if (!gowhatsapp_user_in_conv_chat(conv_chat, *participant_ptr)) {
-            PurpleConvChatBuddyFlags flags = 0;
-            purple_conv_chat_add_user(conv_chat, *participant_ptr, NULL, flags, FALSE);
-        }
+        PurpleConvChatBuddyFlags flags = 0;
+        purple_conv_chat_add_user(conv_chat, *participant_ptr, NULL, flags, FALSE);
     }
 }
 
@@ -255,20 +255,6 @@ char *gowhatsapp_get_chat_name(GHashTable *components)
 {
     const char *jid = g_hash_table_lookup(components, "name");
     return g_strdup(jid); // MEMCHECK: strdup'ed value is released by caller
-}
-
-/*
- * Determines if user is participating in conversation.
- */
-int gowhatsapp_user_in_conv_chat(PurpleConvChat *conv_chat, const char *userJid) {
-    for (GList *users = purple_conv_chat_get_users(conv_chat); users != NULL; 
-        users = users->next) {
-        PurpleConvChatBuddy *buddy = (PurpleConvChatBuddy *) users->data;
-        if (!strcmp(buddy->name, userJid)) {
-            return TRUE;
-        }
-    }
-    return FALSE;
 }
 
 /*
