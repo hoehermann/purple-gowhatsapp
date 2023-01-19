@@ -49,9 +49,7 @@ Known issues:
 
 * Contacts:
   * If someone adds you to their contacts and sends you the very first message, the message will not be received. WhatsApp Web shows a notice "message has been delayed – check your phone". This notice is not shown by the plug-in.
-  * Status broadcasts are considered unreliable.
 * Group Chats:
-  * Attachments are downloaded, but link is not shown in group conversation window (not a Purple limitation, tdlib can do it).
   * Purple prior to 2.14.0 cannot send files to groups.
   * No notification when being added to a group (the chat will be entered upon receiving a message).
   * The list of participants is not updated if a participants leaves the chat (on Pidgin, closing the window and re-entering the chat triggers a refresh).
@@ -59,8 +57,6 @@ Known issues:
   * A [webp pixbuf loader](https://github.com/aruiz/webp-pixbuf-loader) must be present at runtime.
   * GDK pixbuf headers must be available at build time else presence of loader cannot be checked.
   * Stickers are not animated.
-* Statuses:
-  * There have been numerous reports of the plug-in crashing when a contact updates their status. For this reason, status updates are ignored by default.
 
 Other planned features:
 
@@ -68,7 +64,7 @@ Other planned features:
 * Join group chat via link.
 * View group icon.
 * Gracefully handle group updates.
-* Action to refresh contacts.
+* Action to refresh groups.
 * Support [sending mentions](https://github.com/tulir/whatsmeow/discussions/259).
 
 These features will not be worked on:
@@ -174,10 +170,12 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   Note: File transfers for group chats are supported since libpurple 2.14.0. Some protocol bridges may want to set this to false.
   
 * `attachment-message`  
-  This system message is written to the conversation for each incoming attachment.  
-  The placeholder `$sender` denotes the original sender (the participant, not the group chat).  
-  The placeholder `$filename` refers to the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.  
-  Placeholders need at least GLib 2.68. On win32, Pidgin is usually shipped with an older version so do not expect them to work there.
+  This system message is written to the conversation for each incoming attachment. It can have place-holders:
+  
+  * `$sender`: Denotes the original sender (the participant, not the group chat).  
+  * `$filename`: Refers to the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.
+  
+  These place-holders need at least GLib 2.68. On win32, Pidgin is usually shipped with an older version. Do not expect place-holders to work on win32.
 
 * `get-icons`  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
@@ -190,6 +188,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
     
 * `echo-sent-messages`  
   Selects when to put an outgoing message into the local conversation window:
+  
     * `on-success`: After the WhatsApp *server* has received the message (default). Note: This does not indicate whether the message has been received by the *contact*.
     * `immediately`: Immediately after hitting send (message may not actually have been sent).
     * `never`: Never (some protocol bridges want this).
@@ -202,8 +201,8 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   
   This setting can have place-holders:
   
-  * `$purple_user_dir` – will be replaced by the user directory, e.g. `~/.purple`.
-  * `$username` – will be replaced by the username as entered in the account details.
+  * `$purple_user_dir`: Will be replaced by the user directory, e.g. `~/.purple`.
+  * `$username`: Will be replaced by the username as entered in the account details.
   
   Default: `file:$purple_user_dir/whatsmeow.db?_foreign_keys=on&_busy_timeout=3000`  
   Folder must exist, `whatsmeow.db` is created automatically.
