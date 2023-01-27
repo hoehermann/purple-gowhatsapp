@@ -170,12 +170,17 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   Note: File transfers for group chats are supported since libpurple 2.14.0. Some protocol bridges may want to set this to false.
   
 * `attachment-message`  
-  This system message is written to the conversation for each incoming attachment. It can have place-holders:
+  This system message is written to the conversation for each incoming attachment. It can have two `%s` place-holders which wil be fed into a call to `printf`.
   
+  1. The first `%s` will be replaced by the original sender (the participant, not the group chat).  
+  1. The second `%s` will be replaced by the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.
+
+  Default value is `Preparing to store "%s" sent by %s...`.
+
+  If built and used in a Linux environment with GLib 2.68 or newer, you can also use place-holders for more flexibility:
+
   * `$sender`: Denotes the original sender (the participant, not the group chat).  
   * `$filename`: Refers to the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.
-  
-  These place-holders need at least GLib 2.68. On win32, Pidgin is usually shipped with an older version. Do not expect place-holders to work on win32.
 
 * `get-icons`  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.

@@ -40,30 +40,36 @@ void xfer_release_blob(PurpleXfer * xfer) {
 static void gowhatsapp_xfer_announce(gowhatsapp_message_t *gwamsg) {
     const char * template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_MESSAGE_OPTION, GOWHATSAPP_ATTACHMENT_MESSAGE_DEFAULT);
     if (template != NULL && !purple_strequal(template, "")) {
+        // an attachment should not have any text
+        if (gwamsg->text != NULL) {
+            // output a warning if it does
+            purple_debug_warning(GOWHATSAPP_NAME, "gwamsg->text is not NULL in gowhatsapp_xfer_announce.\n");
+            g_free(gwamsg->text);
+        }
+        
         // resolve number for displaying name
         const char * alias = gwamsg->senderJid;
         PurpleBuddy * buddy = purple_find_buddy(gwamsg->account, gwamsg->senderJid);
         if (buddy != NULL) {
             alias = purple_buddy_get_contact_alias(buddy);
         }
+
+        gwamsg->text = g_strdup_printf(template, gwamsg->name, alias);
         
-        // prepare the template
-        GString * message = g_string_new(template);
-        // replace placeholders with actual data
         #if (GLIB_CHECK_VERSION(2, 68, 0))
+        // prepare the templated message
+        GString * message = g_string_new(gwamsg->text);
+        // free the templated message
+        g_free(gwamsg->text);
+        // replace placeholders with actual data
         g_string_replace(message, "$filename", gwamsg->name, 0);
         g_string_replace(message, "$sender", alias, 0);
-        #else
-        #pragma message "Warning: GLib version 2.68 needed for g_string_replace in attachment message template."
-        #endif
-        
-        if (gwamsg->text != NULL) {
-            // This should never happen. Output a warning if it does.
-            purple_debug_warning(GOWHATSAPP_NAME, "gwamsg->text is not NULL in gowhatsapp_xfer_announce.\n");
-            g_free(gwamsg->text);
-        }
         // get data from filled template
         gwamsg->text = g_string_free(message, FALSE);
+        #else
+        #pragma message "Note: GLib version 2.68 needed for g_string_replace in attachment message template."
+        #endif
+        
         // MEMCHECK: gwamsg->text will be released by process_message_bridge
         
         gowhatsapp_display_text_message(purple_account_get_connection(gwamsg->account), gwamsg, PURPLE_MESSAGE_SYSTEM);
