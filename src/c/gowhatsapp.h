@@ -13,10 +13,6 @@
 typedef struct {
     // reference to roomlist which is currently being populated in asynchronous calls
     PurpleRoomlist *roomlist;
-    
-    // user-supplied string for overriding the connections presence
-    // may only contain pointers to static strings or NULL
-    const char *presence_override; 
 } WhatsappProtocolData;
 
 // options

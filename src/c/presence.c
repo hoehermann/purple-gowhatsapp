@@ -92,11 +92,10 @@ gowhatsapp_subscribe_all_presence_updates(PurpleAccount *account)
 void
 gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
     const char *status_id = purple_status_get_id(status);
-
-    PurpleConnection *pc = purple_account_get_connection(account);
-    WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(pc);
-    if (wpd->presence_override != NULL) {
-        status_id = wpd->presence_override;
+    
+    const char *presence_override = purple_account_get_string(account, GOWHATSAPP_PRESENCE_OVERRIDE_KEY, NULL);
+    if (presence_override != NULL) {
+        status_id = presence_override;
     }
 
     gowhatsapp_go_send_presence(account, (char *)status_id); // cgo does not support const
@@ -115,10 +114,9 @@ gowhatsapp_subscribe_presence_updates(PurpleAccount *account, PurpleBuddy *buddy
     const PurpleStatus *status = purple_account_get_active_status(account);
     const char *status_id = purple_status_get_id(status);
     
-    PurpleConnection *pc = purple_account_get_connection(account);
-    WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(pc);
-    if (wpd->presence_override != NULL) {
-        status_id = wpd->presence_override;
+    const char *presence_override = purple_account_get_string(account, GOWHATSAPP_PRESENCE_OVERRIDE_KEY, NULL);
+    if (presence_override != NULL) {
+        status_id = presence_override;
     }
     
     if (purple_strequal(status_id, GOWHATSAPP_STATUS_STR_AVAILABLE)) {

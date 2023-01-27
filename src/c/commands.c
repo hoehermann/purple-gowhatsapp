@@ -50,15 +50,13 @@ static int execute_command_participants(PurpleAccount *account, const gchar *mes
  */
 static int execute_command_presence(PurpleAccount *account, PurpleConnection *pc, const gchar *message) {
     if (g_str_has_prefix(message, command_string_presence)) {
-        WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(pc);
         const char *presence_argument = message+strlen(command_string_presence);
-        // TODO: use purple_account_get/set_string for persistence in between restarts in Spectrum
         if (purple_strequal(presence_argument, GOWHATSAPP_STATUS_STR_AVAILABLE)) {
-            wpd->presence_override = GOWHATSAPP_STATUS_STR_AVAILABLE;
+            purple_account_set_string(account, GOWHATSAPP_PRESENCE_OVERRIDE_KEY, GOWHATSAPP_STATUS_STR_AVAILABLE);
         } else if (purple_strequal(presence_argument, GOWHATSAPP_STATUS_STR_AWAY)) {
-            wpd->presence_override = GOWHATSAPP_STATUS_STR_AWAY;
+            purple_account_set_string(account, GOWHATSAPP_PRESENCE_OVERRIDE_KEY, GOWHATSAPP_STATUS_STR_AWAY);
         } else {
-            wpd->presence_override = NULL;
+            purple_account_set_string(account, GOWHATSAPP_PRESENCE_OVERRIDE_KEY, NULL);
         }
         gowhatsapp_set_presence(account, purple_account_get_active_status(account));
         return 0;
