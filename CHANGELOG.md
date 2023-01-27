@@ -1,3 +1,12 @@
+# 1.10.0
+
+* Change: Incoming files are forwarded to the front-end even if they seem incomplete (was abort transfer).
+* Change: When checking linked content, do not rely on server-supplied content-type.
+* Change: Accept more kinds of ogg files to send as audio message (was very specific in regard to channels and sample-rate).
+* Change: Accept more kinds of mp4 files to send as video message (was disallow content with "edit" tags).
+* Change: Presence override is now persistend.
+* Change: File transfer anouncement template now also supports printf-style place-holders.
+
 # 1.9.0
 
 * Feature: Have some IRC-style commands.
