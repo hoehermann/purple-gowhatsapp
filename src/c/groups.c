@@ -214,7 +214,7 @@ gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **
         PurpleConversation *conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);
         if (conv != NULL) {
             // store the JID so it can be retrieved by get_chat_name
-            purple_conversation_set_data(conv, "name", g_strdup(remoteJid)); // MEMCHECK: strdup'ed value eventually released by gowhatsapp_free_name
+            purple_conversation_set_data(conv, "name", g_strdup(remoteJid)); // MEMCHECK: this leaks, but there is no mechanism to stop it
             conv_chat = purple_conversation_get_chat_data(conv);
             if (participants == NULL) {
                 // list of participants is empty, request it explicitly and release it immediately
@@ -228,16 +228,6 @@ gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **
         }
     }
     return conv_chat;
-}
-
-/*
- * purple_conversation_destroy does not implicitly release the data members.
- * We need to do it explicitly.
- */
-void gowhatsapp_free_name(PurpleConversation *conv) {
-    // TODO: find out why this is never called
-    g_free(purple_conversation_get_data(conv, "name"));
-    purple_conversation_set_data(conv, "name", NULL);
 }
 
 /*

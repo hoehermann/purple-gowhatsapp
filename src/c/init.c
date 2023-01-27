@@ -87,7 +87,6 @@ actions(PurplePlugin *plugin, gpointer context)
 static gboolean
 libpurple2_plugin_load(PurplePlugin *plugin)
 {
-    purple_signal_connect(purple_conversations_get_handle(), "deleting-conversation", plugin, PURPLE_CALLBACK(gowhatsapp_free_name), NULL);
     return TRUE;
 }
 
