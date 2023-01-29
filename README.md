@@ -166,8 +166,8 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
   If set to true (default), stickers will automatically be downloaded and may embedded in the conversation window if an appropriate webp GDK pixbuf loader is present.
 
 * `group-is-file-origin`  
-  It set to true (default), when a file is posted into a group chat, that chat will be the origin of the file. If set to false, the file will originate from the group chat *participant*.  
-  Note: File transfers for group chats are supported since libpurple 2.14.0. Some protocol bridges may want to set this to false.
+  It set to true (default), when a file is posted into a group chat, that chat will be the origin of the file. If set to false, the file will originate from the group chat *participant*. At time of writing, Bitlbee wants this to be false.  
+  Note: File transfers for group chats are supported since libpurple 2.14.0.
   
 * `attachment-message`  
   This system message is written to the conversation for each incoming attachment. It can have two `%s` place-holders which wil be fed into a call to `printf`.
