@@ -33,21 +33,19 @@ func check_mp4(data []byte) error {
 		// presence of Avc1 box (Box.Name "avc1") indicates h264
 		// see https://developer.apple.com/library/archive/documentation/QuickTime/QTFF/QTFFChap3/qtff3.html
 		// TODO: access h264 stream and check for yuv420
-		edits_ok := true
 		video_ok := false
 		audio_ok := true // TODO: actually check audio
 		if len(mp4.Moov.Traks) == 1 || len(mp4.Moov.Traks) == 2 {
 			trak := mp4.Moov.Traks[0]
 			video_ok = trak.Mdia.Minf.Stbl != nil && trak.Mdia.Minf.Stbl.Stsd.Avc1 != nil
-			edits_ok = edits_ok && trak.Edts == nil // I have no idea what this means, but WhatsApp seems to like it nil
 		}
-		if edits_ok && video_ok && audio_ok {
+		if video_ok && audio_ok {
 			return nil
 		} else {
-			return fmt.Errorf("An mp42 video file was provided, but it has not the correct format.\nFirst track avc1 (aka. h264) video. Second track mp4a (aka. aac) audio (optional).")
+			return fmt.Errorf("An mp42 video file was provided, but it has not the correct format. First track avc1 (aka. h264) video: %v Second track mp4a (aka. aac) audio (optional): %v", video_ok, audio_ok)
 		}
 	} else {
-		return fmt.Errorf("An mp4 video file was provided, but it has not the correct container.\nNeed brand: mp42, version: 0, fragmented: false.")
+		return fmt.Errorf("An mp4 video file was provided, but it has not the correct container. Need brand: mp42, version: 0, fragmented: false.")
 	}
 	/*
 	   handler.log.Infof("mp4: %+v", mp4)
