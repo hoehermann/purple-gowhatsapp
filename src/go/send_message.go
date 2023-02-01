@@ -72,9 +72,8 @@ func (handler *Handler) send_message(who string, message string, isGroup bool) {
 	if err != nil {
 		purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 	} else {
-		if handler.is_link_only_message(message) && handler.send_link_message(recipient, isGroup, message) {
-			// nothing to do here
-		} else {
+		is_link_only := handler.is_link_only_message(message)
+		if !is_link_only || !handler.send_link_message(recipient, isGroup, message) {
 			handler.send_text_message(recipient, isGroup, message)
 		}
 		// I have interacted with this recipient. Mark all messages they have sent as "read".
@@ -87,7 +86,7 @@ func (handler *Handler) check_url_trust(url string) bool {
 	if trusted_url_regex != "" {
 		matched, err := regexp.MatchString(trusted_url_regex, url)
 		if err != nil {
-			handler.log.Errorf("Checking URL trust failed due to %v,", err)
+			handler.log.Errorf("Checking URL trust failed due to %v.", err)
 			return false
 		}
 		return matched
@@ -97,7 +96,7 @@ func (handler *Handler) check_url_trust(url string) bool {
 
 /*
  * Checks wheter message contains a link to a file which can be sent as a
- * media message. Performs HTTP request, checks size and server-supplied mime-type.
+ * media message. Performs HTTP request, checks size.
  */
 func (handler *Handler) is_link_only_message(message string) bool {
 	max_file_size := purple_get_int(handler.account, C.GOWHATSAPP_EMBED_MAX_FILE_SIZE_OPTION, 0)
@@ -116,13 +115,7 @@ func (handler *Handler) is_link_only_message(message string) bool {
 		handler.log.Infof("HTTP HEAD request on '%s' returned status code %d.", message, res.StatusCode)
 		return false
 	}
-	switch res.Header.Get("Content-Type") {
-	case "image/jpeg", "application/ogg", "audio/ogg", "video/mp4":
-		return res.ContentLength <= int64(max_file_size)*1024*1024
-	default:
-		handler.log.Infof("Server returned content-type '%s' for '%s'. No media type available for this content.", res.Header.Get("Content-Type"), message)
-		return handler.check_url_trust(message)
-	}
+	return res.ContentLength <= int64(max_file_size)*1024*1024
 }
 
 /*
@@ -147,7 +140,8 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 	}
 	data := b.Bytes()
 	var msg *waProto.Message = nil
-	switch resp.Header.Get("Content-Type") {
+	mimetype := http.DetectContentType(data) // do not trust the server. he is stupid.
+	switch mimetype {
 	case "image/jpeg":
 		// send jpeg as ImageMessage
 		// no checks here
@@ -175,10 +169,12 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		}
 	default:
 		// send any other file type as DocumentMessage
-		// NOTE: for security reasons, this should be guarded by a whitelist, see check_url_trust
-		mimetype := resp.Header.Get("Content-Type")
-		filename := filepath.Base(resp.Request.URL.Path)
-		msg, err = handler.send_file_document(data, mimetype, filename)
+		if handler.check_url_trust(link) {
+			filename := filepath.Base(resp.Request.URL.Path)
+			msg, err = handler.send_file_document(data, mimetype, filename)
+		} else {
+			return false
+		}
 	}
 	if err != nil {
 		handler.log.Infof("Error while sending file: %s", err)
