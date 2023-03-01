@@ -1,5 +1,10 @@
 package main
 
+/*
+#include "../c/opusreader.h"
+*/
+import "C"
+
 import (
 	"context"
 	"fmt"
@@ -40,12 +45,13 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	case "image/jpeg":
 		msg, err = handler.send_file_image(data, mimetype)
 	case "application/ogg", "audio/ogg":
-		err = check_ogg(data)
-		if err == nil {
-			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus")
+		seconds := int64(C.opus_get_seconds(C.CBytes(data), C.size_t(len(data))))
+		handler.log.Infof("Opus length is %d seconds.", seconds)
+		if seconds >= 0 {
+			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus", uint32(seconds))
 		} else {
-			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s Sending file as document...", err))
-			err = nil
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("An ogg audio file was provided, but it was invalid. Sending file as document...", err))
+			err = nil // reset error for retrying to send as document
 		}
 	case "video/mp4":
 		err = check_mp4(data)
@@ -53,7 +59,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 			msg, err = handler.send_file_video(data, "video/mp4")
 		} else {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s Sending file as document...", err))
-			err = nil
+			err = nil // reset error for retrying to send as document
 		}
 	default:
 		// generic other file. nothing special to do here.
@@ -92,7 +98,7 @@ func (handler *Handler) send_file_image(data []byte, mimetype string) (*waProto.
 	return msg, nil
 }
 
-func (handler *Handler) send_file_audio(data []byte, mimetype string) (*waProto.Message, error) {
+func (handler *Handler) send_file_audio(data []byte, mimetype string, seconds uint32) (*waProto.Message, error) {
 	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaAudio)
 	if err != nil {
 		return nil, err
@@ -105,6 +111,8 @@ func (handler *Handler) send_file_audio(data []byte, mimetype string) (*waProto.
 		FileEncSha256: uploaded.FileEncSHA256,
 		FileSha256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
+		Seconds:       proto.Uint32(seconds),
+		//Waveform: TODO?
 	}}
 	return msg, nil
 }

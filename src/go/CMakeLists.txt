@@ -29,7 +29,6 @@ set(GO_SRCS
   mark_read.go
   presence.go
   profile.go
-  oggreader.go
   send_file_checks.go
   message_cache.go
   conversations.go

@@ -90,6 +90,8 @@ Dependencies:
 * make
 * go (1.18 or later)
 * gcc (6.3.0 or later)
+* libgdk-pixbuf-2.0 (optional)
+* liboggfile (optional)
 
 This project uses CMake.
 
@@ -254,9 +256,8 @@ A voice message must meet these criteria:
 Additional recommendations:
 
 * Channels: 1 (mono)
-* Sample-Rate: 48 kHz
 
-User reports say, 44.1 kHz 16 bit PCM (WAV) disguised as `audio/mp3` works fine, too.
+This feature is only available if the plug-in has been built with liboggfile.
 
 A video message must meet these criteria:
 

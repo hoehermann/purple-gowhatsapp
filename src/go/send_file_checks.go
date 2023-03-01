@@ -1,21 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/alfg/mp4"
 )
-
-func check_ogg(data []byte) error {
-	_, header, err := NewWith(bytes.NewReader(data)) // TODO: have oggreader in its package
-	if err != nil {
-		return fmt.Errorf("An ogg audio file was provided, but it could not be analyzed: %v.", err)
-	}
-	if header == nil {
-		return fmt.Errorf("An ogg audio file was provided, but the header was empty or was not an opus header.")
-	}
-	return nil
-}
 
 func check_mp4(data []byte) error {
 	mp4, err := mp4.OpenFromBytes(data)

@@ -2,6 +2,7 @@ package main
 
 /*
 #include "../c/constants.h"
+#include "../c/opusreader.h"
 */
 import "C"
 
@@ -149,12 +150,12 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		msg, err = handler.send_file_image(data, "image/jpeg")
 	case "application/ogg", "audio/ogg":
 		// send ogg file as AudioMessage
-		err = check_ogg(data)
-		if err == nil {
+		seconds := int64(C.opus_get_seconds(C.CBytes(data), C.size_t(len(data))))
+		if seconds >= 0 {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Compatible file detected. Forwarding as audio message…")
-			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus")
+			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus", uint32(seconds))
 		} else {
-			handler.log.Infof("File incompatible: %s", err)
+			handler.log.Infof("An ogg audio file was provided, but it was invalid.", err)
 			return false
 		}
 	case "video/mp4":
