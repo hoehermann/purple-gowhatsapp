@@ -8,9 +8,11 @@ import "C"
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/types"
+	"golang.org/x/net/http2"
 	"mime"
 	"strings"
 	"time"
@@ -147,7 +149,12 @@ func (handler *Handler) handle_attachment(message *waProto.Message, source types
 	}
 	if err != nil {
 		if data == nil || len(data) == 0 {
-			purple_display_system_message(handler.account, chat, source.IsGroup, fmt.Sprintf("Message contained an attachment, but the download failed: %v", err))
+			errmsg := fmt.Sprintf("Message contained an attachment, but the download failed: %v", err)
+			var h2se *http2.StreamError
+			if errors.As(err, &h2se) {
+				err = h2se.Cause
+			}
+			purple_display_system_message(handler.account, chat, source.IsGroup, errmsg)
 			return
 		} else {
 			handler.log.Warnf("Forwarding file %s to frontend regardless of error: %v", filename, err)
