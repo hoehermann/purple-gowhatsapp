@@ -128,6 +128,7 @@ Compiling with MSVC results in an unusable binary. NOT recommended.
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.  
+  *Note:* On headless clients such as Spectrum, the QR code will be wrapped in a message by a fake contact called "Logon QR Code". You may need to temporarily configure your UI to accept messages from unsolicited users for linking purposes.  
   Wait until the connection has been fully set up. Unfortunately, there is no progress indicator while keys are exchanged and old messages are fetched. Usually, a couple of seconds is enough. Some power users with many groups and contacts reported the process can take more than a minute. If the plug-in is not yet ready, outgoing messages may be dropped silently (see issue #142).
 
 #### Purple Settings

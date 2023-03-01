@@ -77,7 +77,8 @@ gowhatsapp_handle_qrcode(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
                 "Please scan this QR code with your phone and WhatsApp multi-device mode enabled:", gwamsg->text, gwamsg->name
             );
         }
-        purple_serv_got_im(pc, "Logon QR Code", msg_out, flags, time(NULL));
+        const gchar *who = "Logon QR Code";
+        purple_serv_got_im(pc, who, msg_out, flags, time(NULL));
         if (img_id > 0) {
             purple_imgstore_unref_by_id(img_id);
         }
