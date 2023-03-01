@@ -38,7 +38,7 @@ gboolean gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char
 gboolean gowhatsapp_message_is_new_enough(PurpleAccount *account, const time_t ts);
 
 // groups
-PurpleConvChat *gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **participants);
+PurpleConversation *gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **participants);
 void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data);
 char *gowhatsapp_get_chat_name(GHashTable *components);
 PurpleRoomlist *gowhatsapp_roomlist_get_list(PurpleConnection *pc);

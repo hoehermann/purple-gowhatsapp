@@ -39,14 +39,15 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
         flags |= PURPLE_MESSAGE_RECV;
     }
     if (gwamsg->isGroup) {
-        PurpleConvChat *chat = gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid, NULL);
-        if (chat != NULL) {
+        PurpleConversation *conv = gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid, NULL);
+        if (conv != NULL) {
             // participants in group chats have their senderJid supplied
             const char *who = gwamsg->senderJid;
             if (gwamsg->fromMe) {
                 who = purple_account_get_username(gwamsg->account);
             }
-            purple_conv_chat_write(chat, who, gwamsg->text, flags, gwamsg->timestamp);
+            PurpleConvChat *conv_chat = purple_conversation_get_chat_data(conv);
+            purple_conv_chat_write(conv_chat, who, gwamsg->text, flags, gwamsg->timestamp);
         }
     } else {
         if (gwamsg->fromMe) {

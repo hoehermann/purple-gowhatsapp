@@ -82,7 +82,7 @@ void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data) {
         const char *topic = g_hash_table_lookup(data, "topic");
         gowhatsapp_ensure_group_chat_in_blist(account, remoteJid, topic);
         // create conversation (important)
-        PurpleConvChat *chat = gowhatsapp_enter_group_chat(pc, remoteJid, NULL);
+        gowhatsapp_enter_group_chat(pc, remoteJid, NULL);
     }
 }
 
@@ -163,9 +163,12 @@ gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
         // adds the group to the buddy list (if fetching contacts is enabled, useful for human-readable titles)
         gowhatsapp_ensure_group_chat_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
         // this might be a delayed response to a query for participants of a currently active group chat
-        PurpleConvChat *conv_chat = purple_conversations_find_chat_with_account(gwamsg->remoteJid, gwamsg->account);
-        if (conv_chat != NULL) {
-            gowhatsapp_chat_set_participants(conv_chat, gwamsg->participants);
+        PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, gwamsg->remoteJid, gwamsg->account);
+        if (conv != NULL) {
+            PurpleConvChat *conv_chat = purple_conversation_get_chat_data(conv);
+            if (conv_chat != NULL) {
+                gowhatsapp_chat_set_participants(conv_chat, gwamsg->participants);
+            }
         }
         // automatically join all chats (if user wants to)
         if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_AUTO_JOIN_CHAT_OPTION, FALSE)) {
@@ -204,18 +207,18 @@ gowhatsapp_chat_set_participants(PurpleConvChat *conv_chat, char **participants)
  * The actual JID is stored in the conversation data hash table so it can 
  * be retrieved by get_chat_name (see below).
  */
-PurpleConvChat *
+PurpleConversation *
 gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **participants) 
 {
     PurpleAccount *account = purple_connection_get_account(pc);
-    PurpleConvChat *conv_chat = purple_conversations_find_chat_with_account(remoteJid, account);
-    if (conv_chat == NULL) {
+    PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, remoteJid, account);
+    if (conv == NULL) {
         // use hash of jid for chat id number
-        PurpleConversation *conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);
+        conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);
         if (conv != NULL) {
             // store the JID so it can be retrieved by get_chat_name
             purple_conversation_set_data(conv, "name", g_strdup(remoteJid)); // MEMCHECK: this leaks, but there is no mechanism to stop it
-            conv_chat = purple_conversation_get_chat_data(conv);
+            PurpleConvChat *conv_chat = purple_conversation_get_chat_data(conv);
             if (participants == NULL) {
                 // list of participants is empty, request it explicitly and release it immediately
                 char **participants = gowhatsapp_go_query_group_participants(account, (char *)remoteJid);
@@ -227,7 +230,7 @@ gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **
             }
         }
     }
-    return conv_chat;
+    return conv;
 }
 
 /*
