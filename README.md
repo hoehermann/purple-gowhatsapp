@@ -110,11 +110,16 @@ Additional dependencies:
 * [go 1.18 or newer (32 bit)](https://go.dev/dl/go1.18.9.windows-386.msi)
 * [gcc (32 bit)](https://osdn.net/projects/mingw/)
 
-go and gcc must be in `%PATH%`.
+go and gcc must be in `%PATH%`.  
 
-MSYS make and CMake generator "MSYS Makefiles" are recommended.  
+This is know to work with MSYS make and CMake generator "MSYS Makefiles".  
 The project can be opened using Microsoft Visual Studio 2022.  
 Compiling with MSVC results in an unusable binary. NOT recommended.  
+
+For sending opus in ogg audio files as voice messages, add a static win32 build of opusfile to the prefix path:
+
+    vcpkg.exe install opusfile:x86-mingw-static
+    cmake -G "MSYS Makefiles" -DCMAKE_PREFIX_PATH=wherever/vcpkg/installed/x86-mingw-static ..
 
 ### Installation
 

@@ -84,3 +84,22 @@ set(PIXBUF_LIBRARIES
     ${PIXBUF_LIB}
     PARENT_SCOPE
 )
+
+find_path(OPUSFILE_INCLUDE_DIR opusfile.h PATH_SUFFIXES opus)
+find_path(OGG_INCLUDE_DIR ogg/ogg.h)
+set(OPUSFILE_INCLUDE_DIRS
+    ${OPUSFILE_INCLUDE_DIR}
+    ${OPUSFILE_INCLUDE_DIR}/opus
+    ${OGG_INCLUDE_DIR}
+    PARENT_SCOPE
+)
+
+find_library(OPUSFILE_LIB opusfile)
+find_library(OPUS_LIB opus)
+find_library(OGG_LIB ogg)
+set(OPUSFILE_LIBRARIES
+    ${OPUSFILE_LIB}
+    ${OPUS_LIB}
+    ${OGG_LIB}
+    PARENT_SCOPE
+)
