@@ -39,24 +39,7 @@ ENDIF()
 IF(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll)
     file(ARCHIVE_EXTRACT INPUT ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_BINARY_ZIP} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 ENDIF()
-if (MSVC)
-    set(LIBPURPLE_LIB ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.lib)
-    add_custom_target(
-      libpurple_lib
-      DEPENDS ${LIBPURPLE_LIB}
-    )
-    add_custom_command(
-        OUTPUT ${LIBPURPLE_LIB}
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/dll2lib.bat 
-        ARGS 32 ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin
-        MAIN_DEPENDENCY ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll
-        COMMENT "Generating .lib file from .dll..."
-        USES_TERMINAL
-    )
-else()
-    set(LIBPURPLE_LIB ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll)
-endif()
+set(LIBPURPLE_LIB ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_DIRNAME}-win32bin/libpurple.dll)
 
 set(PURPLE_INCLUDE_DIRS
     ${GTK_INCLUDE_DIRS}
@@ -87,19 +70,23 @@ set(PIXBUF_LIBRARIES
 
 find_path(OPUSFILE_INCLUDE_DIR opusfile.h PATH_SUFFIXES opus)
 find_path(OGG_INCLUDE_DIR ogg/ogg.h)
+if(OPUSFILE_INCLUDE_DIR)
 set(OPUSFILE_INCLUDE_DIRS
     ${OPUSFILE_INCLUDE_DIR}
     ${OPUSFILE_INCLUDE_DIR}/opus
     ${OGG_INCLUDE_DIR}
     PARENT_SCOPE
 )
+endif()
 
 find_library(OPUSFILE_LIB opusfile)
 find_library(OPUS_LIB opus)
 find_library(OGG_LIB ogg)
+if(OPUSFILE_LIB)
 set(OPUSFILE_LIBRARIES
     ${OPUSFILE_LIB}
     ${OPUS_LIB}
     ${OGG_LIB}
     PARENT_SCOPE
 )
+endif()
