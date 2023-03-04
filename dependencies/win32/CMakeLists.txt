@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.18) # for file(ARCHIVE_EXTRACT ...)
 
-set(GTK_BUNDLE_ZIP gtk+-bundle_2.24.10-20120208_win32.zip) # TODO: find correct version. 2.14.7 is too old, see https://developer.pidgin.im/ticket/15526
+# Pidgin 2.14.12 is shipped with gtk+ 2.16.6 and glib 2.28.8
+set(GTK_BUNDLE_ZIP gtk+-bundle_2.16.6-20100912_win32.zip)  # NOTE: This contains glib 2.24.2
 IF(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${GTK_BUNDLE_ZIP})
     message(STATUS "Fetching ${GTK_BUNDLE_ZIP}...")
-    file(DOWNLOAD http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.24/${GTK_BUNDLE_ZIP} ${CMAKE_CURRENT_BINARY_DIR}/${GTK_BUNDLE_ZIP} SHOW_PROGRESS)
+    file(DOWNLOAD http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.16/${GTK_BUNDLE_ZIP} ${CMAKE_CURRENT_BINARY_DIR}/${GTK_BUNDLE_ZIP} SHOW_PROGRESS)
 ENDIF()
 IF(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/gtk/include/gtk-2.0/gtk/gtk.h)
     file(ARCHIVE_EXTRACT INPUT ${CMAKE_CURRENT_BINARY_DIR}/${GTK_BUNDLE_ZIP} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/gtk)
@@ -20,7 +21,7 @@ set(GTK_LIBRARY_DIRS
 find_file(GLIB_LIB "glib-2.0.lib" PATHS ${GTK_LIBRARY_DIRS})
 find_file(PIXBUF_LIB "gdk_pixbuf-2.0.lib" PATHS ${GTK_LIBRARY_DIRS})
 
-set(PIDGIN_VERSION 2.14.8)
+set(PIDGIN_VERSION 2.14.12)
 set(PIDGIN_DIRNAME pidgin-${PIDGIN_VERSION})
 set(PIDGIN_SOURCE_ZIP ${PIDGIN_DIRNAME}.tar.bz2)
 IF(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${PIDGIN_SOURCE_ZIP})
