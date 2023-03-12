@@ -128,10 +128,8 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 #### Set-Up
 
 * Create a new account  
-  You can enter an arbitrary username. 
-  It is recommended to use your own internationalized number, followed by `@s.whatsapp.net`.  
-  Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`.  
-  This way, you *recognize yourself in group chats* and Pidgin's logs look sane.
+  You must enter your phone's internationalized number followed by `@s.whatsapp.net`.  
+  Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`.
 
 * Upon login, a QR code is shown in a Pidgin request window.  
   Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.  

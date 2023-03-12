@@ -219,6 +219,7 @@ gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **
             // store the JID so it can be retrieved by get_chat_name
             purple_conversation_set_data(conv, "name", g_strdup(remoteJid)); // MEMCHECK: this leaks, but there is no mechanism to stop it
             PurpleConvChat *conv_chat = purple_conversation_get_chat_data(conv);
+            purple_conv_chat_set_nick(conv_chat, purple_account_get_username(account));
             if (participants == NULL) {
                 // list of participants is empty, request it explicitly and release it immediately
                 char **participants = gowhatsapp_go_query_group_participants(account, (char *)remoteJid);

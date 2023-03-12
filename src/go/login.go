@@ -109,6 +109,8 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		device = container.NewDevice()
 		// device.RegistrationID has been generated. sync it and continue (see next if below)
 		registrationId = device.RegistrationID
+	} else if device.ID.ToNonAD().String() != username {
+		purple_error(account, fmt.Sprintf("Your username '%s' does not match the main device's ID '%s'. Please adjust your username.", username, device.ID.ToNonAD().String()), ERROR_FATAL)
 	}
 
 	// check user-supplied registration id against the one stored in the device

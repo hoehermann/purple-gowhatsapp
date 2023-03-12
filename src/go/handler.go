@@ -113,7 +113,9 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		log.Infof("PairSuccess: %#v", evt)
 		log.Infof("client.Store: %#v", cli.Store)
 		if cli.Store.ID == nil {
-			purple_error(handler.account, fmt.Sprintf("Pairing succeded, but device ID is missing."), ERROR_FATAL)
+			purple_error(handler.account, "Pairing succeded, but device ID is missing.", ERROR_FATAL)
+		} else if evt.ID.ToNonAD().String() != handler.username {
+			purple_error(handler.account, fmt.Sprintf("Your username '%s' does not match the main device's ID '%s'. Please adjust your username.", handler.username, evt.ID.ToNonAD().String()), ERROR_FATAL)
 		} else {
 			set_credentials(handler.account, *cli.Store.ID, cli.Store.RegistrationID)
 			purple_pairing_succeeded(handler.account)
