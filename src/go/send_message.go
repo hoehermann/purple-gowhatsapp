@@ -52,8 +52,9 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 		// inject message back to self to indicate success
 		setting := purple_get_string(handler.account, C.GOWHATSAPP_ECHO_OPTION, C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS)
 		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS) {
-			ownJid := "" // TODO: find out if this messes up group chats
-			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, ownJid, nil, resp.Timestamp, message)
+			ownJid := handler.client.Store.ID.ToNonAD().String()
+			recipientJid := recipient.ToNonAD().String()
+			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, resp.Timestamp, message)
 		}
 		handler.addToCache(CachedMessage{id: resp.ID, text: message, timestamp: resp.Timestamp})
 	}

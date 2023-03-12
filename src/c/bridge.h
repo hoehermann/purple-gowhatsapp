@@ -79,8 +79,7 @@ struct gowhatsapp_message {
     char msgtype; /// message type – see above
     char subtype; /// loglevel, error severity, attachment type or online-state
     char isGroup; /// this is a group chat message
-    char fromMe; /// this is (a copy of) an outgoing message
-    char system; /// this is a system-message, not user-generated
+    char isOutgoing; /// this is an outgoing message (echo sent from this instance)
 };
 typedef struct gowhatsapp_message gowhatsapp_message_t;
 

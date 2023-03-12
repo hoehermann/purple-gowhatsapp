@@ -13,6 +13,7 @@
 #define purple_im_conversation_new(account, from) PURPLE_CONV_IM(purple_conversation_new(PURPLE_CONV_TYPE_IM, account, from))
 #define PURPLE_CONVERSATION(chatorim) ((chatorim) == NULL ? NULL : (chatorim)->conv)
 #define purple_serv_got_im serv_got_im
+#define purple_serv_got_chat_in serv_got_chat_in
 #define purple_connection_set_flags(pc, f) ((pc)->flags = (f))
 #define purple_connection_get_flags(pc) ((pc)->flags)
 #define purple_connection_get_protocol          purple_connection_get_prpl

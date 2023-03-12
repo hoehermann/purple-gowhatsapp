@@ -81,7 +81,7 @@ func (handler *Handler) handle_message(message *waProto.Message, id string, sour
 		handler.log.Warnf("Received a message without any text.")
 	} else {
 		// note: info.PushName always denotes the sender (not the chat)
-		purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, source.IsFromMe, source.Sender.ToNonAD().String(), name, timestamp, text)
+		purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, false, source.Sender.ToNonAD().String(), name, timestamp, text)
 		handler.addToCache(CachedMessage{id: id, text: text, timestamp: timestamp})
 		if !source.IsFromMe && !is_historical { // do not send receipt for own messages or historical messages
 			handler.mark_read_defer(id, source.Chat, source.Sender)
@@ -167,6 +167,6 @@ func (handler *Handler) handle_attachment(message *waProto.Message, source types
 			// so source is known even when receiving from group chats
 			filename = fmt.Sprintf("%s_%s", sender.User, filename)
 		}
-		purple_handle_attachment(handler.account, chat, source.IsGroup, sender.String(), source.IsFromMe, data_type, mimetype, filename, data)
+		purple_handle_attachment(handler.account, chat, source.IsGroup, sender.String(), false, data_type, mimetype, filename, data)
 	}
 }

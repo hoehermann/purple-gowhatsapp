@@ -293,16 +293,16 @@ func purple_disconnected(account *PurpleAccount) {
  * This will display a text message.
  * Single participants and group chats.
  */
-func purple_display_text_message(account *PurpleAccount, remoteJid string, isGroup bool, isFromMe bool, senderJid string, pushName *string, timestamp time.Time, text string) {
+func purple_display_text_message(account *PurpleAccount, remoteJid string, isGroup bool, isOutgoing bool, senderJid string, pushName *string, timestamp time.Time, text string) {
 	cmessage := C.struct_gowhatsapp_message{
-		account:   account,
-		msgtype:   C.char(C.gowhatsapp_message_type_text),
-		remoteJid: C.CString(remoteJid),
-		senderJid: C.CString(senderJid),
-		timestamp: C.time_t(timestamp.Unix()),
-		text:      C.CString(text),
-		isGroup:   bool_to_Cchar(isGroup),
-		fromMe:    bool_to_Cchar(isFromMe),
+		account:    account,
+		msgtype:    C.char(C.gowhatsapp_message_type_text),
+		remoteJid:  C.CString(remoteJid),
+		senderJid:  C.CString(senderJid),
+		timestamp:  C.time_t(timestamp.Unix()),
+		text:       C.CString(text),
+		isGroup:    bool_to_Cchar(isGroup),
+		isOutgoing: bool_to_Cchar(isOutgoing),
 	}
 	if pushName != nil {
 		cmessage.name = C.CString(*pushName)
@@ -349,18 +349,18 @@ func purple_update_name(account *PurpleAccount, remoteJid string, pushName strin
  * while in fact the file has already been received and they may only chose
  * where to store it.
  */
-func purple_handle_attachment(account *PurpleAccount, remoteJid string, isGroup bool, senderJid string, isFromMe bool, data_type C.int, mimetype *string, filename string, data []byte) {
+func purple_handle_attachment(account *PurpleAccount, remoteJid string, isGroup bool, senderJid string, isOutgoing bool, data_type C.int, mimetype *string, filename string, data []byte) {
 	cmessage := C.struct_gowhatsapp_message{
-		account:   account,
-		msgtype:   C.char(C.gowhatsapp_message_type_attachment),
-		subtype:   C.char(data_type),
-		remoteJid: C.CString(remoteJid),
-		isGroup:   bool_to_Cchar(isGroup),
-		senderJid: C.CString(senderJid),
-		fromMe:    bool_to_Cchar(isFromMe),
-		name:      C.CString(filename),
-		blob:      C.CBytes(data),
-		blobsize:  C.size_t(len(data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
+		account:    account,
+		msgtype:    C.char(C.gowhatsapp_message_type_attachment),
+		subtype:    C.char(data_type),
+		remoteJid:  C.CString(remoteJid),
+		isGroup:    bool_to_Cchar(isGroup),
+		senderJid:  C.CString(senderJid),
+		isOutgoing: bool_to_Cchar(isOutgoing),
+		name:       C.CString(filename),
+		blob:       C.CBytes(data),
+		blobsize:   C.size_t(len(data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
 	}
 	if mimetype != nil {
 		cmessage.text = C.CString(*mimetype)

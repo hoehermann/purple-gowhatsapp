@@ -1,17 +1,6 @@
 #include "gowhatsapp.h"
 #include "constants.h"
 
-static
-PurpleConversation *gowhatsapp_have_conversation(char *username, PurpleAccount *account) {
-    gowhatsapp_ensure_buddy_in_blist(account, username, NULL);
-
-    PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, username, account);
-    if (conv == NULL) {
-        conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, username); // MEMCHECK: caller takes ownership
-    }
-    return conv;
-}
-
 void
 gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags)
 {
@@ -31,35 +20,38 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
         }
     }
 
-    if (gwamsg->fromMe) {
-        // special handling of messages sent by self incoming from remote, addressing issue #32
-        // copied from EionRobb/purple-discord/blob/master/libdiscord.c
-        flags |= PURPLE_MESSAGE_SEND | PURPLE_MESSAGE_REMOTE_SEND | PURPLE_MESSAGE_DELAYED;
+    if (purple_strequal(purple_account_get_username(gwamsg->account), gwamsg->senderJid)) {
+        flags |= PURPLE_MESSAGE_SEND;
+        // Note: For outgoing messages (no matter if local echo or sent by other device),
+        // PURPLE_MESSAGE_SEND must be set due to how purple_conversation_write is implemented
+        if (!gwamsg->isOutgoing) {
+            // special handling of messages sent by self incoming from remote, addressing issue #32
+            // adjusted for Spectrum, see issue #130
+            flags |= PURPLE_MESSAGE_REMOTE_SEND;
+        }
     } else {
         flags |= PURPLE_MESSAGE_RECV;
     }
+    
     if (gwamsg->isGroup) {
         PurpleConversation *conv = gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid, NULL);
         if (conv != NULL) {
-            // participants in group chats have their senderJid supplied
-            const char *who = gwamsg->senderJid;
-            if (gwamsg->fromMe) {
-                who = purple_account_get_username(gwamsg->account);
-            }
-            PurpleConvChat *conv_chat = purple_conversation_get_chat_data(conv);
-            purple_conv_chat_write(conv_chat, who, gwamsg->text, flags, gwamsg->timestamp);
+            purple_serv_got_chat_in(pc, g_str_hash(gwamsg->remoteJid), gwamsg->senderJid, flags, gwamsg->text, gwamsg->timestamp);
         }
     } else {
-        if (gwamsg->fromMe) {
-            PurpleConversation *conv = gowhatsapp_have_conversation(gwamsg->remoteJid, gwamsg->account);
-            // display message sent from own account (but other device) here
-            purple_conversation_write(conv, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
+        if (flags & PURPLE_MESSAGE_SEND) {
+            // display message sent from own account (other device as well as local echo)
+            // cannot use purple_serv_got_im since it sets the flag PURPLE_MESSAGE_RECV
+            PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, gwamsg->remoteJid, gwamsg->account);
+            if (conv == NULL) {
+                conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, gwamsg->account, gwamsg->remoteJid); // MEMCHECK: caller takes ownership
+            }
+            purple_conv_im_write(purple_conversation_get_im_data(conv), gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
         } else {
-            // messages sometimes arrive before buddy has been
-            // created... this method will be missing a display
-            // name, but i don't think i ever saw one of them anyway
+            // messages sometimes arrive before buddy has been created
+            // a buddy created here may be missing a display name,
+            // but i don't think i ever saw one of them anyway
             gowhatsapp_ensure_buddy_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
-            // normal mode: direct incoming message
             purple_serv_got_im(pc, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
         }
     }
