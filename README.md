@@ -154,6 +154,7 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 
 * `send-receipt`  
   Selects when to send receipts "double blue tick" notifications:
+  
     * `immediately`: immediately upon message receival
     * `on-interact`: as the user interacts with the conversation window (currently buggy)
     * `on-answer`: as soon as the user sends an answer (default)
@@ -200,9 +201,12 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 * `echo-sent-messages`  
   Selects when to put an outgoing message into the local conversation window:
   
-    * `on-success`: After the WhatsApp *server* has received the message (default). Note: This does not indicate whether the message has been received by the *contact*.
+    * `internal`: After the WhatsApp server has received the message, and lock-up the UI until it does (default).
+    * `on-success`: After the WhatsApp server has received the message, but do not lock-up the UI (**use this for speed**).
     * `immediately`: Immediately after hitting send (message may not actually have been sent).
     * `never`: Never (some protocol bridges want this).
+    
+  Note: Neither of these indicate whether the message has been received by the *contact*.
 
 * `autojoin-chats`  
   Automatically join all chats representing the WhatsApp groups after connecting and every time group information is provided. This is useful for protocol bridges.

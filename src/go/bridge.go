@@ -78,15 +78,22 @@ func gowhatsapp_go_logout(account *PurpleAccount) {
 func gowhatsapp_go_send_message(account *PurpleAccount, who *C.char, message *C.char, is_group C.int) int {
 	handler, ok := handlers[account]
 	if ok {
-		go handler.send_message(C.GoString(who), C.GoString(message), Cint_to_bool(is_group))
-
 		setting := purple_get_string(handler.account, C.GOWHATSAPP_ECHO_OPTION, C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS)
-		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_IMMEDIATELY) {
-			// indicate immediate success, message is echoed back into conversation by purple
-			return 1
+		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_INTERNAL) {
+			if handler.send_message(C.GoString(who), C.GoString(message), Cint_to_bool(is_group)) {
+				return 1 // indicate success for purple
+			} else {
+				return -1 // indicate error for purple
+			}
 		} else {
-			// suppress message echo
-			return 0
+			go handler.send_message(C.GoString(who), C.GoString(message), Cint_to_bool(is_group))
+			if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_IMMEDIATELY) {
+				// indicate immediate success, message is echoed back into conversation by purple
+				return 1
+			} else {
+				// suppress message echo (settings NEVER or ON_SUCCESS)
+				return 0
+			}
 		}
 	}
 	return -107 // ENOTCONN, see libpurple/prpl.h

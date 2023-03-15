@@ -38,6 +38,7 @@ gowhatsapp_add_account_options(GList *account_options)
     
     {
         GList *choices = NULL;
+        choices = add_choice(choices, "Internal", GOWHATSAPP_ECHO_CHOICE_INTERNAL);
         choices = add_choice(choices, "On success", GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS);
         choices = add_choice(choices, "Immediately", GOWHATSAPP_ECHO_CHOICE_IMMEDIATELY);
         choices = add_choice(choices, "Never", GOWHATSAPP_ECHO_CHOICE_NEVER);

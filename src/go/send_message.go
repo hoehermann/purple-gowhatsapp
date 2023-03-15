@@ -40,14 +40,20 @@ func parseJID(arg string) (types.JID, error) {
 /*
  * Sends a plain text message to a recipient.
  *
- * Sending happens asynchronously. Upon success, message is fed back into client.
+ * Sending may happen asynchronously.
+ *
+ * Upon success, message is fed back into client iff
+ * GOWHATSAPP_ECHO_OPTION is set to GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS.
+ *
+ * Returns true on success.
  */
-func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, message string) {
+func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, message string) bool {
 	msg := &waProto.Message{Conversation: &message}
 	resp, err := handler.client.SendMessage(context.Background(), recipient, msg)
 	if err != nil {
 		errmsg := fmt.Sprintf("Error sending message: %v", err)
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, errmsg)
+		return false
 	} else {
 		// inject message back to self to indicate success
 		setting := purple_get_string(handler.account, C.GOWHATSAPP_ECHO_OPTION, C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS)
@@ -57,6 +63,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, resp.Timestamp, message)
 		}
 		handler.addToCache(CachedMessage{id: resp.ID, text: message, timestamp: resp.Timestamp})
+		return true
 	}
 }
 
@@ -68,18 +75,30 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
  * This feature must be enabled explicitly and the file must be small enough.
  *
  * Sending a message causes all previously received messages to become "read" (configurable).
+ *
+ * Returns true on success.
  */
-func (handler *Handler) send_message(who string, message string, isGroup bool) {
+func (handler *Handler) send_message(who string, message string, isGroup bool) bool {
 	recipient, err := parseJID(who)
 	if err != nil {
 		purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
+		return false
 	} else {
-		is_link_only := handler.is_link_only_message(message)
-		if !is_link_only || !handler.send_link_message(recipient, isGroup, message) {
-			handler.send_text_message(recipient, isGroup, message)
-		}
-		// I have interacted with this recipient. Mark all messages they have sent as "read".
+		// I am interacting with this recipient. Mark all messages they have sent as "read".
 		handler.mark_read_if_on_answer(recipient)
+		// now do the actual sending
+		if handler.is_link_only_message(message) {
+			// this is a link-only message – try to send the linked file, if compatible
+			if handler.send_link_message(recipient, isGroup, message) {
+				return true
+			} else {
+				// sending the link message failed. just send as a normal text message
+				return handler.send_text_message(recipient, isGroup, message)
+			}
+		} else {
+			// this is a normal message
+			return handler.send_text_message(recipient, isGroup, message)
+		}
 	}
 }
 
