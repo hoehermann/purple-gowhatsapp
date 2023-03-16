@@ -156,7 +156,7 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   Selects when to send receipts "double blue tick" notifications:
   
     * `immediately`: immediately upon message receival
-    * `on-interact`: as the user interacts with the conversation window (currently buggy)
+    * `on-interact`: as the user interacts with the conversation window (only usable with Pidgin)
     * `on-answer`: as soon as the user sends an answer (default)
     * `never`: never
 
