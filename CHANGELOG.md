@@ -1,3 +1,16 @@
+# 1.11.0
+
+* Feature: Outgoing voice messages now have a non-zero length.
+* Feature: More detailed error description for failed downloads.
+* Feature: Can now lock the UI while sending a message until the server answers (for Spectrum).
+* Change: Blocking message sending is now the default (was send asynchronously).
+* Change: Flag PURPLE_MESSAGE_DELAYED is no longer used.
+* Change: Sending an opus file as voice message is now conditional (depending on libopusfile).
+* Change: Incoming group messages now take the standard code-path, enabling sounds and other events on Pidin.
+* Change: Username must now exactly match the device JID.
+* Bugfix: Sending "read" receipts on interacting with the conversation window now actually works on Pidgin.
+* Bugfix: No longer mistaking an incoming file name for a contact name.
+
 # 1.10.0
 
 * Change: Incoming files are forwarded to the front-end even if they seem incomplete (was abort transfer).
