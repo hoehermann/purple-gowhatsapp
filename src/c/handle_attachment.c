@@ -37,42 +37,39 @@ void xfer_release_blob(PurpleXfer * xfer) {
     xfer->data = NULL;
 }
 
-static void gowhatsapp_xfer_announce(gowhatsapp_message_t *gwamsg) {
+static void gowhatsapp_xfer_announce(const gowhatsapp_message_t *gwamsg) {
     const char * template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_MESSAGE_OPTION, GOWHATSAPP_ATTACHMENT_MESSAGE_DEFAULT);
     if (template != NULL && !purple_strequal(template, "")) {
-        // an attachment should not have any text
-        if (gwamsg->text != NULL) {
-            // output a warning if it does
-            purple_debug_warning(GOWHATSAPP_NAME, "gwamsg->text is not NULL in gowhatsapp_xfer_announce.\n");
-            g_free(gwamsg->text);
-        }
-        
-        // resolve number for displaying name
-        const char * alias = gwamsg->senderJid;
+
+        // resolve jid for displaying name
+        const char * alias = gwamsg->senderJid; // use the jid by default
         PurpleBuddy * buddy = purple_find_buddy(gwamsg->account, gwamsg->senderJid);
         if (buddy != NULL) {
             alias = purple_buddy_get_contact_alias(buddy);
         }
-
-        gwamsg->text = g_strdup_printf(template, gwamsg->name, alias);
+        
+        gowhatsapp_message_t lgwamsg = *gwamsg; // create a local copy of the message struct
+        lgwamsg.text = NULL; // MEMCHECK: this pointer is a copy. the original will be released by caller
+        lgwamsg.text = g_strdup_printf(template, lgwamsg.name, alias); // MEMCHECK: is released here
         
         #if (GLIB_CHECK_VERSION(2, 68, 0))
         // prepare the templated message
-        GString * message = g_string_new(gwamsg->text);
+        GString * message = g_string_new(lgwamsg.text);
         // free the templated message
-        g_free(gwamsg->text);
+        g_free(lgwamsg.text);
         // replace placeholders with actual data
-        g_string_replace(message, "$filename", gwamsg->name, 0);
+        g_string_replace(message, "$filename", lgwamsg.name, 0);
         g_string_replace(message, "$sender", alias, 0);
         // get data from filled template
-        gwamsg->text = g_string_free(message, FALSE);
+        lgwamsg.text = g_string_free(message, FALSE);
         #else
-        #pragma message "Note: GLib version 2.68 needed for g_string_replace in attachment message template."
+        #pragma message "Note: GLib version 2.68 needed for g_string_replace attachment message template variables $filename and $sender."
         #endif
         
-        // MEMCHECK: gwamsg->text will be released by process_message_bridge
-        
-        gowhatsapp_display_text_message(purple_account_get_connection(gwamsg->account), gwamsg, PURPLE_MESSAGE_SYSTEM);
+        // unset lgwamsg.name so gowhatsapp_display_text_message does not mistake it for a pushname
+        lgwamsg.name = NULL; // MEMCHECK: this pointer is a copy. the original will be released by caller
+        gowhatsapp_display_text_message(purple_account_get_connection(lgwamsg.account), &lgwamsg, PURPLE_MESSAGE_SYSTEM);
+        g_free(lgwamsg.text);
     }
 }
 
@@ -81,10 +78,17 @@ void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg
     g_return_if_fail(pc != NULL);
     PurpleAccount *account = purple_connection_get_account(pc);
     
+    // an attachment should not have any text
+    if (gwamsg->text != NULL && *gwamsg->text != 0) {
+        // output a warning if it does
+        purple_debug_warning(GOWHATSAPP_NAME, "gwamsg->text set in xfer_download_attachment.\n");
+    }
+    
     gowhatsapp_xfer_announce(gwamsg);
-    const char * sender = gwamsg->senderJid;
+    
+    const char * sender = gwamsg->senderJid; // by default, the group chat participant is the sender
     if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_GROUP_IS_FILE_ORIGIN_OPTION, TRUE)) {
-        sender = gwamsg->remoteJid;
+        sender = gwamsg->remoteJid; // set sender to the group chat
     }
     
     PurpleXfer * xfer = purple_xfer_new(account, PURPLE_XFER_RECEIVE, sender);
