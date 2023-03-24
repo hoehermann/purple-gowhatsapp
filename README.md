@@ -202,7 +202,7 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   Selects when to put an outgoing message into the local conversation window:
   
     * `internal`: After the WhatsApp server has received the message, and lock-up the UI until it does (default).
-    * `on-success`: After the WhatsApp server has received the message, but do not lock-up the UI (**use this for speed**).
+    * `on-success`: After the WhatsApp server has received the message, but do not lock-up the UI **(use this for speed)**.
     * `immediately`: Immediately after hitting send (message may not actually have been sent).
     * `never`: Never (some protocol bridges want this).
     
@@ -319,7 +319,7 @@ As of writing, whatsmeow does not offer an interface to read the file in chunks.
 * [Peter "theassemblerguy" Bachmaier](https://github.com/theassemblerguy) for initiating the re-write
 * [yourealwaysbe](https://github.com/yourealwaysbe) for proper group chats, support and tests against [bitlee](https://github.com/bitlbee/bitlbee)
 * [vitalyster](https://github.com/vitalyster) for support, packaging and adjustments for [spectrum2](https://github.com/SpectrumIM/spectrum2)
-* Martin Sebald from [https://jabber.hot-chilli.net/](hot-chilli.net) for extensive stress-testing 
+* Martin Sebald from [hot-chilli.net](https://jabber.hot-chilli.net/) for extensive stress-testing 
 * [JimB](https://stackoverflow.com/users/32880/jimb) for golang insights
 * [HVV](https://www.hvv.de/) for providing free wifi at their stations
 
