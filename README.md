@@ -1,4 +1,4 @@
-# purple-whatsmeow
+# purple-gowhatsapp
 
 A libpurple/Pidgin plugin for WhatsApp. Being developed on Ubuntu 22.04. 
 
@@ -91,7 +91,7 @@ Dependencies:
 * go (1.18 or newer)
 * gcc (9.2.0 or newer)
 * libgdk-pixbuf-2.0 (optional)
-* liboggfile (optional)
+* libopusfile (optional)
 
 This project uses CMake.
 
