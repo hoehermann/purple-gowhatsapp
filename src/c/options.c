@@ -25,7 +25,7 @@ gowhatsapp_add_account_options(GList *account_options)
     {
         GList *choices = NULL;
         choices = add_choice(choices, "Immediately", GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY);
-        choices = add_choice(choices, "When interacting with conversation (buggy)", GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_INTERACT);
+        choices = add_choice(choices, "When interacting with conversation", GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_INTERACT);
         choices = add_choice(choices, "When sending a reply", GOWHATSAPP_SEND_RECEIPT_CHOICE_ON_ANSWER);
         choices = add_choice(choices, "Never", GOWHATSAPP_SEND_RECEIPT_CHOICE_NEVER);
         option = purple_account_option_list_new( // MEMCHECK: account_options takes ownership
