@@ -31,7 +31,15 @@ gowhatsapp_send_chat(
             if (is_command(message)) {
                 return execute_command(pc, message, who, conv);
             } else {
-                return send_message(pc, who, message, TRUE);
+                int ret = send_message(pc, who, message, TRUE);
+                if (ret > 0) {
+                    // Group chats need an explicit local echo since the implicit echo is implemented for direct messages only.
+                    // See https://keep.imfreedom.org/pidgin/pidgin/file/v2.14.12/libpurple/conversation.c#l191.
+                    PurpleConvChat *conv_chat = purple_conversation_get_chat_data(conv);
+                    PurpleAccount *account = purple_conversation_get_account(conv);
+                    purple_conv_chat_write(conv_chat, purple_account_get_username(account), message, flags, time(NULL));
+                }
+                return ret;
             }
         }
     }
