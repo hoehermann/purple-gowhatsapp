@@ -84,7 +84,7 @@ void gowhatsapp_receipts_init(PurpleConnection *pc);
 // commands
 enum gowhatsapp_command {
     GOWHATSAPP_COMMAND_NONE = 0,
-    GOWHATSAPP_COMMAND_VERSION,
+    GOWHATSAPP_COMMAND_VERSIONS,
     GOWHATSAPP_COMMAND_CONTACTS,
     GOWHATSAPP_COMMAND_PARTICIPANTS,
     GOWHATSAPP_COMMAND_PRESENCE,

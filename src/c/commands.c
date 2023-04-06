@@ -12,8 +12,8 @@ static const char* command_string_presence = "/presence";
  */
 enum gowhatsapp_command is_command(const char *message) {
     if (message[0] == '/') {
-        if (g_str_has_prefix(message, "/version")) {
-            return GOWHATSAPP_COMMAND_VERSION;
+        if (g_str_has_prefix(message, "/versions")) {
+            return GOWHATSAPP_COMMAND_VERSIONS;
         } else if (g_str_has_prefix(message, "/contacts")) {
             return GOWHATSAPP_COMMAND_CONTACTS;
         } else if (g_str_has_prefix(message, "/participants") || g_str_has_prefix(message, "/members")) {
@@ -65,14 +65,28 @@ static int execute_command_presence(PurpleAccount *account, PurpleConnection *pc
     }
 }
 
+static void conversation_write_versions(PurpleAccount *account, const gchar *who, PurpleConversation *conv) {
+    if (NULL == conv) {
+        conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
+    }
+    const gchar *version = purple_plugin_get_version(purple_find_prpl(purple_account_get_protocol_id(account)));
+    GHashTable *ui_info = purple_core_get_ui_info();
+    const gchar *ui_version = g_hash_table_lookup(ui_info, "version");
+    const gchar *ui_name = g_hash_table_lookup(ui_info, "name");
+    char *msg = g_strdup_printf("This is %s %s built against purple %d.%d.%d running on purple %d.%d.%d. Host application is %s %s.", GOWHATSAPP_PRPL_ID, version, PURPLE_MAJOR_VERSION, PURPLE_MINOR_VERSION, PURPLE_MICRO_VERSION, purple_major_version, purple_minor_version, purple_micro_version, ui_name, ui_version);
+    PurpleMessageFlags flags = PURPLE_MESSAGE_RECV|PURPLE_MESSAGE_NO_LOG;
+    purple_conversation_write(conv, who, msg, flags, time(NULL));
+    g_free(msg);
+}
+
 /*
  * Execute a command in the context of a conversation.
  */
 int execute_command(PurpleConnection *pc, const gchar *message, const gchar *who, PurpleConversation *conv) {
     PurpleAccount *account = purple_connection_get_account(pc);
     switch (is_command(message)) {
-        case GOWHATSAPP_COMMAND_VERSION: {
-            // TODO
+        case GOWHATSAPP_COMMAND_VERSIONS: {
+            conversation_write_versions(account, who, conv);
         } break;
         case GOWHATSAPP_COMMAND_CONTACTS: {
             gowhatsapp_go_get_contacts(account);
