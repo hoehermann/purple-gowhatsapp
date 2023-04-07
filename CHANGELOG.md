@@ -1,3 +1,8 @@
+# 1.11.1
+
+* Bugfix: /versions now actually prints version information.
+* Bugfix: Display message sent to a group chat when using `echo` setting `internal`.
+
 # 1.11.0
 
 * Feature: Outgoing voice messages now have a non-zero length.

@@ -287,6 +287,9 @@ Not all of these values are checked by the plug-in. Some of these criteria are g
 
 This plug-in supports a couple of "IRC-style" commands. The user can write them in any chat. These features are experimental hacks. They have been included due to user reuqets. Use them with care.
         
+* `/versions`  
+  Show version information.
+  
 * `/contacts`  
   Request re-download of all contacts. Only affects the buddy list if `fetch-contacts` is set to true.
 
