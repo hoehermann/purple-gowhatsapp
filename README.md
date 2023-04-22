@@ -112,7 +112,7 @@ Additional dependencies:
 
 go and gcc must be in `%PATH%`.  
 
-This is know to work with MSYS make and CMake generator "MSYS Makefiles".  
+This is known to work with MSYS make and CMake generator "MSYS Makefiles".  
 The project can be opened using Microsoft Visual Studio 2022.  
 Compiling with MSVC results in an unusable binary. NOT recommended.  
 
