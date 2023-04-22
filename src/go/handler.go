@@ -121,6 +121,23 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			purple_pairing_succeeded(handler.account)
 			handler.prune_devices(*cli.Store.ID)
 		}
+	case *events.CallOffer:
+		bcm := evt.BasicCallMeta
+		chat := bcm.From.ToNonAD().String()
+		sender := bcm.CallCreator.ToNonAD().String()
+		text := "This contact is trying to call you, but WhatsApp Web does not support calls."
+		purple_display_text_message(handler.account, chat, false, false, sender, nil, bcm.Timestamp, text)
+	case *events.CallOfferNotice:
+		// same as CallOffer, but is a group
+		bcm := evt.BasicCallMeta
+		chat := bcm.From.ToNonAD().String()
+		sender := bcm.CallCreator.ToNonAD().String()
+		text := "This contact is trying to call you, but WhatsApp Web does not support calls."
+		purple_display_text_message(handler.account, chat, true, false, sender, nil, bcm.Timestamp, text)
+	case *events.CallRelayLatency:
+		// related to calls. ignore silently.
+	case *events.CallTerminate:
+		// related to calls. ignore silently.
 	//case *events.JoinedGroup:
 	// TODO
 	// received when being added to a group directly
