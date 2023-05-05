@@ -139,10 +139,8 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 #### Purple Settings
 
 * `qrcode-size`  
-  The size of the QR code shown for login purposes, in pixels (default: 256).
-  
-* `plain-text-login`  
-  If set to true (default: false), QR code will be delivered as a text message (for text-only clients).
+  The size of the QR code shown for login purposes, in pixels (default: 256). 
+  When set to zero, the QR code will be delivered as a text message.
   
 * `fetch-contacts`  
   If set to true (default), buddy list will be populated with contacts sent by server. 
