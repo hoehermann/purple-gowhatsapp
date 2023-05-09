@@ -56,7 +56,7 @@ void
 gowhatsapp_handle_qrcode(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 {
     PurpleRequestUiOps *ui_ops = purple_request_get_ui_ops();
-    if (!ui_ops->request_fields || gwamsg->blobsize <= 0) {
+    if (!ui_ops || !ui_ops->request_fields || gwamsg->blobsize <= 0) {
         // The UI hasn't implemented the func we want, just output as a message instead
         PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
         gchar *msg_out;
