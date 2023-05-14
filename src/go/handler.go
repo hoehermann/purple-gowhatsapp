@@ -75,11 +75,14 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// connected – start downloading profile pictures now.
 		go handler.profile_picture_downloader()
 		handler.handle_connected()
+	case *events.Disconnected:
+		// TODO: Find out if it would be more sensible to handle this as a non-error disconnect.
+		purple_error(handler.account, "Disconnected.", ERROR_TRANSIENT)
 	case *events.StreamReplaced:
 		// TODO: find out when exactly this happens and how to handle it (fatal or transient error)
 		// working theory: when more than four devices are connected, WhatsApp servers drop the oldest connection
 		// NOTE: evt contains no data
-		purple_error(handler.account, "Connection stream has been replaced.", ERROR_TRANSIENT)
+		purple_error(handler.account, "Connection stream has been replaced. Reconnecting...", ERROR_TRANSIENT)
 	case *events.Message:
 		handler.handle_message(evt.Message, evt.Info.ID, evt.Info.MessageSource, &evt.Info.PushName, evt.Info.Timestamp, false)
 	case *events.Receipt:
