@@ -174,7 +174,8 @@ func (handler *Handler) handle_qrcode(codes []string) {
 			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 		}
 	}
-	purple_display_qrcode(handler.account, b.String(), code, png)
+	textal_qrcode := strings.ReplaceAll(b.String(), "\n", "<br/>\n")
+	purple_display_qrcode(handler.account, textal_qrcode, code, png)
 }
 
 /*
