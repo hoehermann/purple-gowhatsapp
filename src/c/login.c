@@ -77,8 +77,10 @@ void
 gowhatsapp_store_credentials(PurpleAccount *account, char *credentials)
 {
     // Pidgin stores the credentials in the account settings
-    // spectrum included special handling for this case
+    // since commit ee89203, spectrum supports this out of the box
     // in bitlbee, this has no effect
+    // TODO: ask spectrum maintainer if storing in password woukd okay, too
+    // or do not store credentials at all (just use the username for look-up)
     purple_account_set_string(account, GOWHATSAPP_CREDENTIALS_KEY, credentials);
     
     // bitlbee stores credentials in password field

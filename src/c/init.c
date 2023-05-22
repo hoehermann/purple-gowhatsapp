@@ -100,6 +100,7 @@ libpurple2_plugin_unload(PurplePlugin *plugin)
 static PurplePluginProtocolInfo prpl_info = {
     .struct_size = sizeof(PurplePluginProtocolInfo), // must be set for PURPLE_PROTOCOL_PLUGIN_HAS_FUNC to work across versions
     .options = OPT_PROTO_NO_PASSWORD, // with this set, Pidgin will neither ask for a password and also won't store it. Yet storing a password is necessary for compatibility with bitlbee. See login.c for more information.
+    // TODO: experiment with purple_account_set_remember_password and use password in Pidgin for consistency
     .list_icon = list_icon,
     .status_types = status_types, // this actually needs to exist, else the protocol cannot be set to "online"
     .set_status = gowhatsapp_set_presence,
