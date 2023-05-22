@@ -79,7 +79,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// TODO: find out when exactly this happens and how to handle it (fatal or transient error)
 		// working theory: when more than four devices are connected, WhatsApp servers drop the oldest connection
 		// NOTE: evt contains no data
-		purple_error(handler.account, "Connection stream has been replaced. Reconnecting...", ERROR_TRANSIENT)
+		purple_error(handler.account, "Connection stream has been replaced.", ERROR_TRANSIENT)
 	case *events.Message:
 		handler.handle_message(evt.Message, evt.Info.ID, evt.Info.MessageSource, &evt.Info.PushName, evt.Info.Timestamp, false)
 	case *events.Receipt:

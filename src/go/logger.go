@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	waLog "go.mau.fi/whatsmeow/util/log"
-	"strings"
 )
 
 type purpleLogger struct {
@@ -27,16 +26,8 @@ func (l *purpleLogger) Warnf(msg string, args ...interface{}) {
 	purple_debug(3, l.formatf(msg, args...))
 }
 func (l *purpleLogger) Errorf(msg string, args ...interface{}) {
-	// an error is an error. do not log, but forward error to purple.
-	// this is useful for exposing low-level problems to the user
-	errorString := l.formatf(msg, args...)
-	errorLevel := ERROR_FATAL
-	if strings.Contains(errorString, "Error reading from websocket") {
-		// this is triggered by network error, it is non-fatal
-		// checking for "connection reset by peer" or "close 1006" would be more appropriate, but these messages are locale dependent
-		errorLevel = ERROR_TRANSIENT
-	}
-	purple_error(l.account, errorString, errorLevel)
+	// TODO: find out which calls to Log.Errorf need to be handled with purple_error
+	purple_debug(4, l.formatf(msg, args...))
 }
 
 func (l *purpleLogger) Sub(topic string) waLog.Logger {
