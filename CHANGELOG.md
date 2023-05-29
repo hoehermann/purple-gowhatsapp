@@ -1,3 +1,14 @@
+# 1.12.0
+
+* Feature: When receiving a voice-call, a message is displayed (voice calls are not supported).
+* Feature: When receiving a poll, a message is displayed (polls are not supported).
+* Feature: Support for sending disappearing messages (global setting).
+* Change: Errors are only logged (was trigger disconnect).
+* Change: Explicit disconnect events are handled (was ignore).
+* Change: Textual QR-code now contains <br> tags (was newline only).
+* Change: IRC-style commands now start with ? to avoid confusion with actual commands (was start with /).
+* Change: The connection is marked as "connected" after fetching contacts for Spectrum (was immediately after connection established).
+
 # 1.11.1
 
 * Bugfix: /versions now actually prints version information.
