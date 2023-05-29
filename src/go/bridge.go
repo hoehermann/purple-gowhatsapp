@@ -231,6 +231,13 @@ func gowhatsapp_go_get_contacts(account *PurpleAccount) {
 					}
 					C.gowhatsapp_process_message_bridge(cmessage)
 				}
+				// send one "nil" contact to indicate end of list
+				cmessage := C.struct_gowhatsapp_message{
+					account:   account,
+					msgtype:   C.char(C.gowhatsapp_message_type_name),
+					remoteJid: nil,
+				}
+				C.gowhatsapp_process_message_bridge(cmessage)
 			}
 		}()
 	} else {

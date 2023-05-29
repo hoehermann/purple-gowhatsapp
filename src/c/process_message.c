@@ -55,16 +55,25 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             break;
         case gowhatsapp_message_type_connected:
             gowhatsapp_close_qrcode(gwamsg->account);
-            purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
-            gowhatsapp_set_presence(gwamsg->account, purple_account_get_active_status(gwamsg->account));
-            gowhatsapp_assume_all_buddies_online(gwamsg->account); // this affects existing buddies only
-            // after connecting, fetch contacts
-            // calling it after gowhatsapp_assume_all_buddies_online is fine,
-            // since the results are handled asynchronously anyway
+            // after connecting, fetch contacts.
+            // results will come in asyncronously, see next case
             gowhatsapp_go_get_contacts(gwamsg->account);
-            // NOTE: It looks like Spectrum wants all contacts to be updated before entering any group chat.
-            // this is not guaranteed due to the asynchronous nature of request handling
-            gowhatsapp_roomlist_get_list(pc);
+            break;
+        case gowhatsapp_message_type_name:
+            if (NULL == gwamsg->remoteJid) {
+                // The end of the list of contacts was reached.
+                // The connection can now be regarded as "connected".
+                // This does not happen immediately since Spectrum will automatically call roomlist_get_list
+                // as soon as the connection ha been established. However, it needs all contacts to be updated
+                // before entering any group chat. Or the group chat participants' names will not be resolved.
+                purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
+                // subscribe for presence updates so buddies may be "online"
+                gowhatsapp_set_presence(gwamsg->account, purple_account_get_active_status(gwamsg->account));
+                // For Pidgin, we also want to query the room list automatically (so group chats may be added to the buddy list).
+                gowhatsapp_roomlist_get_list(pc);
+            } else {
+                gowhatsapp_ensure_buddy_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
+            }
             break;
         case gowhatsapp_message_type_disconnected:
             purple_connection_set_state(pc, PURPLE_CONNECTION_DISCONNECTED);
@@ -75,9 +84,6 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             break;
         case gowhatsapp_message_type_system:
             gowhatsapp_display_text_message(pc, gwamsg, PURPLE_MESSAGE_SYSTEM);
-            break;
-        case gowhatsapp_message_type_name:
-            gowhatsapp_ensure_buddy_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
             break;
         case gowhatsapp_message_type_typing:
             serv_got_typing(pc, gwamsg->remoteJid, 0, PURPLE_TYPING);
