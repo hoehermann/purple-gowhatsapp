@@ -93,6 +93,7 @@ void
 gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
     const char *status_id = purple_status_get_id(status);
     
+    // presence override, see execute_command_presence
     const char *presence_override = purple_account_get_string(account, GOWHATSAPP_PRESENCE_OVERRIDE_KEY, NULL);
     if (presence_override != NULL) {
         status_id = presence_override;
@@ -114,6 +115,7 @@ gowhatsapp_subscribe_presence_updates(PurpleAccount *account, PurpleBuddy *buddy
     const PurpleStatus *status = purple_account_get_active_status(account);
     const char *status_id = purple_status_get_id(status);
     
+    // presence override, see execute_command_presence
     const char *presence_override = purple_account_get_string(account, GOWHATSAPP_PRESENCE_OVERRIDE_KEY, NULL);
     if (presence_override != NULL) {
         status_id = presence_override;
