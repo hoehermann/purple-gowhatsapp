@@ -5,22 +5,22 @@
  * These functions implement some irc-style commands for advanced use in protocol bridges like Spectrum.
  */
 
-static const char* command_string_presence = "/presence";
+static const char* command_string_presence = "?presence";
 
 /*
  * Returns a non-zero value if the message looks like a command.
  */
 enum gowhatsapp_command is_command(const char *message) {
-    if (message[0] == '/') {
-        if (g_str_has_prefix(message, "/versions")) {
+    if (message[0] == '?') {
+        if (g_str_has_prefix(message, "?versions")) {
             return GOWHATSAPP_COMMAND_VERSIONS;
-        } else if (g_str_has_prefix(message, "/contacts")) {
+        } else if (g_str_has_prefix(message, "?contacts")) {
             return GOWHATSAPP_COMMAND_CONTACTS;
-        } else if (g_str_has_prefix(message, "/participants") || g_str_has_prefix(message, "/members")) {
+        } else if (g_str_has_prefix(message, "?participants") || g_str_has_prefix(message, "?members")) {
             return GOWHATSAPP_COMMAND_PARTICIPANTS;
         } else if (g_str_has_prefix(message, command_string_presence)) {
             return GOWHATSAPP_COMMAND_PRESENCE;
-        } else if (g_str_has_prefix(message, "/logout")) {
+        } else if (g_str_has_prefix(message, "?logout")) {
             return GOWHATSAPP_COMMAND_LOGOUT;
         }
     }
@@ -33,7 +33,7 @@ enum gowhatsapp_command is_command(const char *message) {
 static int execute_command_participants(PurpleAccount *account, const gchar *message, const gchar *who, PurpleConversation *conv) {
     PurpleConvChat *conv_chat = NULL;
     if (who == NULL || conv == NULL || (conv_chat = purple_conversation_get_chat_data(conv)) == NULL) {
-        purple_debug_warning(GOWHATSAPP_NAME, "Trying to execute command /participants with incomplete data. who: %s, conv_chat: %p\n", who, conv_chat);
+        purple_debug_warning(GOWHATSAPP_NAME, "Trying to execute command ?participants with incomplete data. who: %s, conv_chat: %p\n", who, conv_chat);
         return -1;
     } else {
         char **participants = gowhatsapp_go_query_group_participants(account, (char *)who);
@@ -47,6 +47,8 @@ static int execute_command_participants(PurpleAccount *account, const gchar *mes
  * Overrides the outgoing presence string.
  * 
  * This means the plug-ins active state can differ from the presence advertised to WhatsApp servers.
+ * 
+ * This has been requested by Peter Bachmaier.
  */
 static int execute_command_presence(PurpleAccount *account, PurpleConnection *pc, const gchar *message) {
     if (g_str_has_prefix(message, command_string_presence)) {
