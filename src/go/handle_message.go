@@ -77,6 +77,12 @@ func (handler *Handler) handle_message(message *waProto.Message, id string, sour
 		}
 	}
 
+	if message.GetPollCreationMessage() != nil || message.GetPollCreationMessageV2() != nil || message.GetPollCreationMessageV3() != nil {
+		text = "created a poll, but this plug-in cannot display polls."
+		// TODO: display poll content
+		// TODO: also use GetPollUpdateMessage()
+	}
+
 	if text == "" {
 		handler.log.Warnf("Received a message without any text.")
 	} else {
