@@ -55,7 +55,6 @@ void gowhatsapp_free_name(PurpleConversation *conv);
 void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, char *remoteJid, char *display_name);
 PurpleChat * gowhatsapp_ensure_group_chat_in_blist(PurpleAccount *account, const char *remoteJid, const char *topic);
 PurpleGroup * gowhatsapp_get_purple_group();
-void gowhatsapp_assume_all_buddies_online(PurpleAccount *account);
 PurpleChat * gowhatsapp_find_blist_chat(PurpleAccount *account, const char *jid);
 void gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group);
 

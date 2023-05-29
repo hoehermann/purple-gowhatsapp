@@ -26,17 +26,6 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
     }
 }
 
-void
-gowhatsapp_assume_all_buddies_online(PurpleAccount *account)
-{
-    g_return_if_fail(account != NULL);
-    GSList *buddies = purple_find_buddies(account, NULL);
-    while (buddies != NULL) {
-        gowhatsapp_assume_buddy_online(account, buddies->data);
-        buddies = g_slist_delete_link(buddies, buddies);
-    }
-}
-
 /*
  * Ensure buddy in the buddy list.
  * Only has effect if "fetch contacts" is enabled.
@@ -55,9 +44,10 @@ void gowhatsapp_ensure_buddy_in_blist(
         PurpleGroup *group = gowhatsapp_get_purple_group();
         buddy = purple_buddy_new(account, remoteJid, display_name); // MEMCHECK: blist takes ownership
         purple_blist_add_buddy(buddy, NULL, group, NULL);
-        gowhatsapp_assume_buddy_online(account, buddy);
         gowhatsapp_subscribe_presence_updates(account, buddy);
     }
+	
+    gowhatsapp_assume_buddy_online(account, buddy);
 
     // update name after checking against local alias and persisted name
     const char *local_alias = purple_buddy_get_alias(buddy);
