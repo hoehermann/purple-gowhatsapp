@@ -12,6 +12,7 @@ import (
 	"fmt"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/types"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -49,6 +50,18 @@ func parseJID(arg string) (types.JID, error) {
  */
 func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, message string) bool {
 	msg := &waProto.Message{Conversation: &message}
+	expiration_days := purple_get_int(handler.account, C.GOWHATSAPP_EXPIRATION_OPTION, 0)
+	if expiration_days > 0 {
+		expiration_seconds := uint32(expiration_days) * 24 * 60 * 60
+		msg = &waProto.Message{
+			ExtendedTextMessage: &waProto.ExtendedTextMessage{
+				Text: &message,
+				ContextInfo: &waProto.ContextInfo{
+					Expiration: proto.Uint32(expiration_seconds),
+				},
+			},
+		}
+	}
 	resp, err := handler.client.SendMessage(context.Background(), recipient, msg)
 	if err != nil {
 		errmsg := fmt.Sprintf("Error sending message: %v", err)

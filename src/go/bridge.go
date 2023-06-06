@@ -80,12 +80,14 @@ func gowhatsapp_go_send_message(account *PurpleAccount, who *C.char, message *C.
 	if ok {
 		setting := purple_get_string(handler.account, C.GOWHATSAPP_ECHO_OPTION, C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS)
 		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_INTERNAL) {
+			// blocking mode
 			if handler.send_message(C.GoString(who), C.GoString(message), Cint_to_bool(is_group)) {
 				return 1 // indicate success for purple
 			} else {
 				return -1 // indicate error for purple
 			}
 		} else {
+			// non-blocking mode
 			go handler.send_message(C.GoString(who), C.GoString(message), Cint_to_bool(is_group))
 			if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_IMMEDIATELY) {
 				// indicate immediate success, message is echoed back into conversation by purple
