@@ -27,7 +27,6 @@ Standard features:
 
 Major differences from the go-whatsapp vesion:
 
-* Messages are sent asynchronously.
 * Incoming messages are not filtered (formerly by Daniele Rogora, now whatsmeow keeps track of already received messages internally).
 * Note: Under the hood, gowhatsapp and whatsmeow use completely different prototocls. For this reason, one must establish a new session (scan QR-code) when switching. All old (non-multi-device) sessions will be invalidated. This is a technical requirement.
 * Note: This is not a perfect drop-in replacement for the plug-in with the gowhatsapp back-end. For this reason, it has a different ID: `prpl-hehoe-whatsmeow`
@@ -39,6 +38,7 @@ Other improvements:
 * Logging happens via purple.
 * Messages which only consist of a single URL may be sent as media messages (disabled by default).
 * Account can be logged out via purple action.
+* Reactions are displayed as messages.
 * There is an "away" state.
   * For compatibility with the auto-responder plug-in.
   * Other devices (i.e. the main phone) display notifications while plug-in connection is "away".
@@ -57,6 +57,10 @@ Known issues:
   * A [webp pixbuf loader](https://github.com/aruiz/webp-pixbuf-loader) must be present at runtime.
   * GDK pixbuf headers must be available at build time else presence of loader cannot be checked.
   * Stickers are not animated.
+* Special messages:
+  * Voice calls are not supported (a warning is displayed).
+  * Votes are not supported (a warning is displayed).
+  * Other special messages are irgnored silently.
 
 Other planned features:
 
