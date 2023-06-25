@@ -11,7 +11,7 @@ IF(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/gtk/include/gtk-2.0/gtk/gtk.h)
 ENDIF()
 set(GTK_INCLUDE_DIRS 
     ${CMAKE_CURRENT_BINARY_DIR}/gtk/include
-    ${CMAKE_CURRENT_BINARY_DIR}/gtk/include/glib-2.0 
+    ${CMAKE_CURRENT_BINARY_DIR}/gtk/include/glib-2.0
     ${CMAKE_CURRENT_BINARY_DIR}/gtk/include/gtk-2.0/gtk
     ${CMAKE_CURRENT_BINARY_DIR}/gtk/lib/glib-2.0/include
 )
