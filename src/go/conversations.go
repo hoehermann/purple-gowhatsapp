@@ -14,6 +14,7 @@ import (
  */
 func (handler *Handler) handle_historical_conversations(conversations []*waProto.Conversation) {
 	for _, conversation := range conversations {
+		// TODO: simplify this by using handler.client.ParseWebMessage
 		//s, _ := json.MarshalIndent(conversation, "", "  ")
 		//handler.log.Infof("Received Conversation:\n\n%s\n\n", s)
 		if conversation != nil && conversation.Id != nil {
