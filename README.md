@@ -97,6 +97,9 @@ Dependencies:
 * libgdk-pixbuf-2.0 (optional)
 * libopusfile (optional)
 
+  For Ubuntu, or Debian compliant Linux flavors, use the apt package manager to install these dependencies first :
+  `sudo apt install pidgin pkg-config cmake make golang gcc libgdk-pixbuf2.0-dev libopusfile-dev`
+
 This project uses CMake.
 
     mkdir build
