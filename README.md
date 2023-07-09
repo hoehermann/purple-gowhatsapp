@@ -6,6 +6,10 @@ This is a re-write of [purple-gowhatsapp](https://github.com/hoehermann/purple-g
 
 ![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")
 
+### Download
+
+* [Nightly Build](https://buildbot.hehoe.de/purple-whatsmeow/builds/) (Windows, Ubuntu).
+
 ### Features
 
 Standard features:
@@ -80,11 +84,7 @@ These features will not be worked on:
 
 ### Building
 
-#### Pre-Built Binaries
-
-* [Nightly Build](https://buildbot.hehoe.de/purple-whatsmeow/builds/) (Windows, Ubuntu).
-
-#### Instructions
+#### Linux
 
 Dependencies: 
 
