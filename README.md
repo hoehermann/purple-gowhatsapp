@@ -103,6 +103,7 @@ For Ubuntu, or Debian compliant Linux flavors, use the apt package manager to in
 
 This project uses CMake.
 
+    git submodule update --init
     mkdir build
     cd build
     cmake ..
@@ -121,8 +122,7 @@ Additional dependencies:
 go and gcc must be in `%PATH%`.  
 
 This is known to work with MSYS make and CMake generator "MSYS Makefiles".  
-The project can be opened using Microsoft Visual Studio 2022.  
-Compiling with MSVC results in an unusable binary. NOT recommended.  
+At time of writing, cgo does not support MSVC.
 
 For sending opus in ogg audio files as voice messages, add a static win32 build of opusfile to the prefix path:
 
