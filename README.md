@@ -105,6 +105,10 @@ This project uses CMake.
     cmake --build .
     sudo make install/strip
 
+Need to package Debian compliant amd64. Move to the build directory and run:
+
+	cpack
+
 #### Windows Specific
 
 CMake will try to set-up a development environment automatically. 
