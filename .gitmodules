@@ -1,0 +1,3 @@
+[submodule "submodules/purple-cmake"]
+	path = submodules/purple-cmake
+	url = https://github.com/hoehermann/purple-cmake-template

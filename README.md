@@ -6,6 +6,10 @@ This is a re-write of [purple-gowhatsapp](https://github.com/hoehermann/purple-g
 
 ![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")
 
+### Download
+
+* [Nightly Build](https://buildbot.hehoe.de/purple-whatsmeow/builds/) (Windows, Ubuntu).
+
 ### Features
 
 Standard features:
@@ -80,11 +84,7 @@ These features will not be worked on:
 
 ### Building
 
-#### Pre-Built Binaries
-
-* [Nightly Build](https://buildbot.hehoe.de/purple-whatsmeow/builds/) (Windows, Ubuntu).
-
-#### Instructions
+#### Linux
 
 Dependencies: 
 
@@ -97,8 +97,13 @@ Dependencies:
 * libgdk-pixbuf-2.0 (optional)
 * libopusfile (optional)
 
+For Ubuntu, or Debian compliant Linux flavors, use the apt package manager to install these dependencies first:
+
+    sudo apt install pidgin pkg-config cmake make golang gcc libgdk-pixbuf2.0-dev libopusfile-dev
+
 This project uses CMake.
 
+    git submodule update --init
     mkdir build
     cd build
     cmake ..
@@ -121,8 +126,7 @@ Additional dependencies:
 go and gcc must be in `%PATH%`.  
 
 This is known to work with MSYS make and CMake generator "MSYS Makefiles".  
-The project can be opened using Microsoft Visual Studio 2022.  
-Compiling with MSVC results in an unusable binary. NOT recommended.  
+At time of writing, cgo does not support MSVC.
 
 For sending opus in ogg audio files as voice messages, add a static win32 build of opusfile to the prefix path:
 
