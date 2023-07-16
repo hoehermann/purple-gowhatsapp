@@ -13,12 +13,16 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} mod tidy
 )
 
+# custom target for downloading modules explicitly
 add_custom_target(download-modules
   COMMENT "Fetching go modules..."
   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/go.mod"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   COMMAND ${CMAKE_COMMAND} -E env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} mod download
 )
+
+# custom target for cleaning module cache
+# see https://github.com/hoehermann/purple-gowhatsapp/issues/170
 add_custom_target(clean-modcache
   COMMENT "Cleaning go module cache..."
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
