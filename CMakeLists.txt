@@ -1,16 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.18) # needed on win32
 
-set(PROJECT_NAME "purple-gowhatsapp" C)
-set(VERSION_MAJOR "1")
-set(VERSION_MINOR "12")
-set(VERSION_PATCH "0")
-set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
-
-# For now, we won't be doing any cross-compiling, so specifying amd64 here will cover most cases.
-# If you have a different processor and need to cross-compile, say, ARM, then this won't build the package you need until it's modified.
-set(ARCHITECTURE "amd64")
-
-project(${PROJECT_NAME})
+project("purple-gowhatsapp" C)
 
 set(Purple_DIR "${CMAKE_CURRENT_SOURCE_DIR}/submodules/purple-cmake" CACHE PATH "Where to find purple-config.cmake")
 find_package(Purple REQUIRED)
@@ -43,27 +33,12 @@ endif()
 message(STATUS "OPUSFILE_INCLUDE_DIRS: ${OPUSFILE_INCLUDE_DIRS}")
 message(STATUS "OPUSFILE_LIBRARIES: ${OPUSFILE_LIBRARIES}")
 
+# read version string from file
+file(READ "${CMAKE_SOURCE_DIR}/VERSION" VERSION)
+
 add_subdirectory(src/go)
 add_subdirectory(src/c)
 
 install(DIRECTORY "pixmaps" DESTINATION "${PURPLE_DATA_DIR}" FILES_MATCHING PATTERN "*.png")
 
-# package settings
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Whatsapp protocol plug-in for libpurple with pidgin")
-set(CPACK_PACKAGE_VENDOR "Bryant Eadon")
-set(CPACK_PACKAGE_DESCRIPTION "whatsmeow is a go-based whatsapp protocol plug-in for libpurple based on the whatsapp business apis.")
-set(CPACK_PACKAGE_CONTACT "bryant@balancebitsconsulting.com")
-set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${ARCHITECTURE}")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
-set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libpurple0 (>= 2.10.0), libglib2.0-0 (>= 2.24), libjson-glib-1.0-0 (>= 0.8.0)")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Bryant Eadon") #required
-
-set(PACK "DEB" CACHE STRING "Generate a Package")
-set(CPACK_GENERATOR ${PACK})
-
-include(CPack)
+include(cpack.cmake)
