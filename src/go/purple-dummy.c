@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "../c/bridge.h"
+#include "../c/opusreader.h"
 
 /*
  * This module implements dummy bodies for C functions to be called by cgo.
@@ -60,7 +61,7 @@ const PurpleProxyInfo * gowhatsapp_account_get_proxy(void *account) {
 };
 */
 
-int opus_get_seconds(const unsigned char *data, size_t size) {
-    (void) data;
-    (void) size;
+struct opusfile_info opusfile_get_info(void *data, size_t size) {
+  struct opusfile_info info = {.length_seconds = -1}; // use negative length to indicate error
+  return info;
 }

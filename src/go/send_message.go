@@ -183,10 +183,11 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		msg, err = handler.send_file_image(data, "image/jpeg")
 	case "application/ogg", "audio/ogg":
 		// send ogg file as AudioMessage
-		seconds := int64(C.opus_get_seconds(C.CBytes(data), C.size_t(len(data))))
+		opusfile_info := C.opusfile_get_info(C.CBytes(data), C.size_t(len(data)))
+		seconds := int64(opusfile_info.length_seconds)
 		if seconds >= 0 {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Compatible file detected. Forwarding as audio message…")
-			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus", uint32(seconds))
+			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus", uint32(seconds), opusfile_info.waveform)
 		} else {
 			handler.log.Infof("An ogg audio file was provided, but it was invalid.", err)
 			return false

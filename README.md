@@ -266,7 +266,13 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 
 WhatsApp is very picky about media messages. This is actually a good thing for ensuring compatibility on all devices and clients (Android, iOS, all browsers for WhatsApp Web…).
 
+##### Image Message
+
 An image may be sent as an image message (JPEG, `image/jpeg`). This is relatively straight-forward.
+
+##### Voice Message
+
+This feature is only available if the plug-in has been built with liboggfile.
 
 A voice message must meet these criteria:
 
@@ -278,7 +284,9 @@ Additional recommendations:
 
 * Channels: 1 (mono)
 
-This feature is only available if the plug-in has been built with liboggfile.
+This kind of message is also known as "push to talk" (PTT). While it is possible to send other audio formats as non-voice audio messages, this plug-in only considers data for voice messages. Everything else is send as a document message.
+
+##### Video Message
 
 A video message must meet these criteria:
 
@@ -292,6 +300,10 @@ A video message must meet these criteria:
     * Codec: `aac` (not checked)
 
 Not all of these values are checked by the plug-in. Some of these criteria are guessed and may not actually be WhatsApp restrictions.
+
+##### Document Message
+
+A file is sent as-is.
 
 #### Proxy Support
 

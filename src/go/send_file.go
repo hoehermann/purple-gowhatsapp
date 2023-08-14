@@ -45,10 +45,11 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	case "image/jpeg":
 		msg, err = handler.send_file_image(data, mimetype)
 	case "application/ogg", "audio/ogg":
-		seconds := int64(C.opus_get_seconds(C.CBytes(data), C.size_t(len(data))))
+		opusfile_info := C.opusfile_get_info(C.CBytes(data), C.size_t(len(data)))
+		seconds := int64(opusfile_info.length_seconds)
 		handler.log.Infof("Opus length is %d seconds.", seconds)
 		if seconds >= 0 {
-			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus", uint32(seconds))
+			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus", uint32(seconds), opusfile_info.waveform)
 		} else {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("An ogg audio file was provided, but it was invalid. Sending file as document...", err))
 			err = nil // reset error for retrying to send as document
@@ -98,10 +99,14 @@ func (handler *Handler) send_file_image(data []byte, mimetype string) (*waProto.
 	return msg, nil
 }
 
-func (handler *Handler) send_file_audio(data []byte, mimetype string, seconds uint32) (*waProto.Message, error) {
+func (handler *Handler) send_file_audio(data []byte, mimetype string, seconds uint32, c_waveform [C.WAVEFORM_SAMPLES_COUNT]C.char) (*waProto.Message, error) {
 	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaAudio)
 	if err != nil {
 		return nil, err
+	}
+	waveform := make([]byte, C.WAVEFORM_SAMPLES_COUNT)
+	for i := range c_waveform {
+		waveform[i] = byte(c_waveform[i]) // convert while copying
 	}
 	msg := &waProto.Message{AudioMessage: &waProto.AudioMessage{
 		Url:           proto.String(uploaded.URL),
@@ -112,7 +117,8 @@ func (handler *Handler) send_file_audio(data []byte, mimetype string, seconds ui
 		FileSha256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
 		Seconds:       proto.Uint32(seconds),
-		//Waveform: TODO?
+		Ptt:           proto.Bool(true),
+		Waveform:      waveform,
 	}}
 	return msg, nil
 }
