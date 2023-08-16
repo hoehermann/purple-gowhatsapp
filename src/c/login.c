@@ -18,6 +18,9 @@ gowhatsapp_login(PurpleAccount *account)
     
     WhatsappProtocolData *wpd = g_new0(WhatsappProtocolData, 1); // MEMCHECK: released in gowhatsapp_close
     purple_connection_set_protocol_data(pc, wpd);
+
+    // keep track on when the connection was (requested to be) established for discarding old messages
+    wpd->connected_at_timestamp = time(NULL) - 1;
     
     char *proxy_address = NULL;
     PurpleProxyInfo *proxy_info = purple_proxy_get_setup(account);

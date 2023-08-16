@@ -176,6 +176,10 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 * `fetch-history`  
   If set to true (default: false), the history of conversations will be displayed. This feature is experimental. WhatsApp servers send the history once during the linking process. Messages will appear out-of-order. Files will be downloaded again. If used when linking for the first time (without prior population of the buddy list), it may add name-less contacts to the buddy list.
 
+* `discard-old-messages`  
+  If set to true (default: false), messages older than the connection will be discarded.  
+  Note: This is implemented without time-zone information. This might not work as expected when chatting with someone in a different time-zone.
+
 * `inline-images`  
   If set to true (default), images will automatically be downloaded and embedded in the conversation window.
   

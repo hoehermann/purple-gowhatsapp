@@ -93,6 +93,13 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
 
     option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
+        "Discard old messages",
+        GOWHATSAPP_DISCARD_OLD_MESSAGES_OPTION,
+        FALSE
+        );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
         "Inline images",
         GOWHATSAPP_INLINE_IMAGES_OPTION,
         TRUE

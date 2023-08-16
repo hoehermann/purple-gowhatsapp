@@ -6,6 +6,19 @@ static const char *gowhatsapp_message_type_string[] = {
     FOREACH_MESSAGE_TYPE(GENERATE_STRING)
 };
 
+static gboolean gowhatsapp_message_is_old(gowhatsapp_message_t *gwamsg) {
+    WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(purple_account_get_connection(gwamsg->account));
+    if (wpd->connected_at_timestamp > gwamsg->timestamp) {
+        const gboolean discard_old_messages = purple_account_get_bool(gwamsg->account, GOWHATSAPP_DISCARD_OLD_MESSAGES_OPTION, FALSE);
+        purple_debug_info(GOWHATSAPP_NAME, "This message is older than the connection.\n");
+        if (discard_old_messages) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+
 /*
  * Interprets a message received from whatsmeow. Handles login success and failure. Forwards errors.
  */
@@ -80,7 +93,9 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_close_qrcode(gwamsg->account);
             break;
         case gowhatsapp_message_type_text:
-            gowhatsapp_display_text_message(pc, gwamsg, 0);
+            if (!gowhatsapp_message_is_old(gwamsg)) {
+                gowhatsapp_display_text_message(pc, gwamsg, 0);
+            }
             break;
         case gowhatsapp_message_type_system:
             gowhatsapp_display_text_message(pc, gwamsg, PURPLE_MESSAGE_SYSTEM);
@@ -95,7 +110,9 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_handle_presence(gwamsg->account, gwamsg->remoteJid, gwamsg->subtype, gwamsg->timestamp);
             break;
         case gowhatsapp_message_type_attachment:
-            gowhatsapp_handle_attachment(pc, gwamsg);
+            if (!gowhatsapp_message_is_old(gwamsg)) {
+                gowhatsapp_handle_attachment(pc, gwamsg);
+            }
             break;
         case gowhatsapp_message_type_profile_picture:
             gowhatsapp_handle_profile_picture(gwamsg);

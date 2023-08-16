@@ -13,6 +13,8 @@
 typedef struct {
     // reference to roomlist which is currently being populated in asynchronous calls
     PurpleRoomlist *roomlist;
+    // when this connection was established
+    time_t connected_at_timestamp;
 } WhatsappProtocolData;
 
 // options
