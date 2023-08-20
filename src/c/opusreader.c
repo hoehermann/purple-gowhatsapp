@@ -14,28 +14,21 @@
  * Assumes a one channel input.
  */
 static void opusfile_make_waveform(OggOpusFile * of, ogg_int64_t samples_count, char *waveform) {
-  // TODO: read file in small chunks to not exhaust memory
-  const ogg_int64_t bufsize = sizeof(float)*samples_count;
-  float * pcm = g_malloc0(bufsize); // MEMCHECK: released here
-  float * pcm_cursor = pcm;
-  for (
-    int samples_read_count = op_read_float(of, pcm_cursor, samples_count, NULL); 
-    samples_read_count > 0;
-    pcm_cursor += samples_read_count, samples_read_count = op_read_float(of, pcm_cursor, samples_count-(pcm-pcm_cursor), NULL)
-  ) {
-    // TODO: check number of channels here
-  }
-  
-  // sum up sample values into waveform bins
-  pcm_cursor = pcm;
   float waveform_float[WAVEFORM_SAMPLES_COUNT] = {};
-  for (ogg_int64_t waveform_index = 0; waveform_index < WAVEFORM_SAMPLES_COUNT; waveform_index++) { 
-    const ogg_int64_t sample_index_max = samples_count/WAVEFORM_SAMPLES_COUNT; // note: this may drop some of the last samples
-    for (ogg_int64_t sample_index = 0; sample_index < sample_index_max; sample_index++) {
-      waveform_float[waveform_index] += fabs(*pcm_cursor++);
+  ogg_int64_t samples_per_waveform_bin = samples_count/WAVEFORM_SAMPLES_COUNT;
+  ogg_int64_t total_samples_position = 0;
+  float pcm[120*48]; // minimum buffer size according to https://opus-codec.org/docs/opusfile_api-0.7/group__stream__decoding.html
+  int samples_read_count = op_read_float(of, pcm, samples_count, NULL); 
+  // read samples to sum up sample values into waveform bins
+  while (samples_read_count > 0) {
+    for (int sample_index = 0; sample_index < samples_read_count; sample_index++) {
+      ogg_int64_t waveform_index = total_samples_position/samples_per_waveform_bin; // note: this may drop some of the last samples
+      waveform_float[waveform_index] += fabs(pcm[sample_index]);
+      total_samples_position++;
     }
+    // next iteration
+    samples_read_count = op_read_float(of, pcm, samples_count, NULL);
   }
-  free(pcm);
   
   // find maximum for normalization
   float max = 0.0f;
@@ -58,9 +51,11 @@ struct opusfile_info opusfile_get_info(void *data, size_t size) {
   int error;
   OggOpusFile * of = op_open_memory(data, size, &error); // MEMCHECK: released here
   if (of != NULL) {
-    ogg_int64_t samples_count = op_pcm_total(of, -1);
-    info.length_seconds = samples_count/48000;
-    opusfile_make_waveform(of, samples_count, info.waveform);
+    if (op_channel_count(of,-1) == 1) { // only one-channel recordings are supported
+      ogg_int64_t samples_count = op_pcm_total(of, -1);
+      info.length_seconds = samples_count/48000;
+      opusfile_make_waveform(of, samples_count, info.waveform);
+    }
     op_free(of);
   }
   return info;
