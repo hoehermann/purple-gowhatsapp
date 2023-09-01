@@ -1,3 +1,10 @@
+# 1.13.0
+
+* Feature: Old messages can be discarded.
+* Feature: Support for cpack for generating a Debian package.
+* Change: Audio files are now checked more thoroughly and then sent as "Push To Talk" voice messages (was generic audio message).
+* Change: Now using a submodule for managing win32 builds.
+
 # 1.12.0
 
 * Feature: When receiving a voice-call, a message is displayed (voice calls are not supported).
