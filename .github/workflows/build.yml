@@ -16,10 +16,9 @@ jobs:
       with:
         go-version: '1.21' # I want latest, but I need to select some arbitrary version for installing the 32bit variant, see https://github.com/actions/setup-go/issues/347#issuecomment-1699466025
         architecture: x32
-        go-version-file: ./src/go/go.mod.in
-        #cache: false # cannot work since this project uses neither go.sum nor a fixed go.mod
+        cache: false # cannot work since this project does not make use of the go.sum file
 
-    - name: Set up MinGW
+    - name: MinGW
       uses: egor-tensin/setup-mingw@v2
       with:
         platform: x86
@@ -32,14 +31,12 @@ jobs:
         token: ${{ github.token }}
 
     - name: Configure
-      #shell: msys2 {0}
       run: cmake -S . -B build -D CMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF
-      # -D CMAKE_C_COMPILER=i686-w64-mingw32-gcc
 
     - name: Build
       run: cmake --build build
 
-    - name: Strip Symbols
+    - name: Strip
       run: strip -s build/src/c/libwhatsmeow.dll
 
     - name: Upload
