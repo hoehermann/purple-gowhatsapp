@@ -65,6 +65,8 @@ Known issues:
   * Voice calls are not supported (a warning is displayed).
   * Votes are not supported (a warning is displayed).
   * Other special messages are irgnored silently.
+* No support for mark-up in outgoing messages.
+  Note: Due to the internal use of [purple_markup_strip_html](https://docs.imfreedom.org/pidgin2/util_8h.html#a0f02bb7e180bb04fb74c8f39564902ee), you need to use a br-tag instead of newline. Pidgin does that automatically, but other clients might not.
 
 Other planned features:
 
