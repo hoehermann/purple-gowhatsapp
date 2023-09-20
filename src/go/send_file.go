@@ -41,6 +41,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	var msg *waProto.Message = nil
 	mimetype := http.DetectContentType(data)
 	handler.log.Infof("Attachment mime type is %s.", mimetype)
+	// TODO: redundant implementation in send_link_message. merge.
 	switch mimetype {
 	case "image/jpeg":
 		msg, err = handler.send_file_image(data, mimetype)

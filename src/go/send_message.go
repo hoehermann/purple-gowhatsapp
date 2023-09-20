@@ -175,12 +175,13 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 	data := b.Bytes()
 	var msg *waProto.Message = nil
 	mimetype := http.DetectContentType(data) // do not trust the server. he is stupid.
+	// TODO: redundant implementation in send_file_bytes. merge.
 	switch mimetype {
 	case "image/jpeg":
 		// send jpeg as ImageMessage
 		// no checks here
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Compatible file detected. Forwarding as image message…")
-		msg, err = handler.send_file_image(data, "image/jpeg")
+		msg, err = handler.send_file_image(data, mimetype)
 	case "application/ogg", "audio/ogg":
 		// send ogg file as AudioMessage
 		opusfile_info := C.opusfile_get_info(C.CBytes(data), C.size_t(len(data)))
