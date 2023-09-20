@@ -19,6 +19,7 @@ static void opusfile_make_waveform(OggOpusFile * of, ogg_int64_t samples_count, 
   ogg_int64_t total_samples_position = 0;
   float pcm[120*48]; // minimum buffer size according to https://opus-codec.org/docs/opusfile_api-0.7/group__stream__decoding.html
   int samples_read_count = op_read_float(of, pcm, samples_count, NULL); 
+
   // read samples to sum up sample values into waveform bins
   while (samples_read_count > 0) {
     for (int sample_index = 0; sample_index < samples_read_count; sample_index++) {
@@ -36,13 +37,11 @@ static void opusfile_make_waveform(OggOpusFile * of, ogg_int64_t samples_count, 
     if (max < waveform_float[waveform_index]) {
       max = waveform_float[waveform_index];
     }
-    //printf("Intensity #%d before normalization is %f\n", waveform_index, waveform_float[waveform_index]);
   }
   
   // normalize and convert to percent
   for (int waveform_index = 0; waveform_index < WAVEFORM_SAMPLES_COUNT; waveform_index++) {
     waveform[waveform_index] = (char)(waveform_float[waveform_index]/max*100);
-    //printf("Intensity #%d after normalization is %d\n", waveform_index, (int)waveform[waveform_index]);
   }
 }
 
@@ -51,12 +50,16 @@ struct opusfile_info opusfile_get_info(void *data, size_t size) {
   int error;
   OggOpusFile * of = op_open_memory(data, size, &error); // MEMCHECK: released here
   if (of != NULL) {
-    if (op_channel_count(of,-1) == 1) { // only one-channel recordings are supported
+    if (op_channel_count(of, -1) == 1) { // only one-channel recordings are supported
       ogg_int64_t samples_count = op_pcm_total(of, -1);
       info.length_seconds = samples_count/48000;
       opusfile_make_waveform(of, samples_count, info.waveform);
+    } else {
+      //printf("op_channel_count returned %d instead of 1.\n", op_channel_count(of, -1));
     }
     op_free(of);
+  } else {
+    //printf("op_open_memory returned NULL. error is %d.\n", error);
   }
   return info;
 }
