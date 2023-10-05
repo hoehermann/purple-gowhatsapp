@@ -10,6 +10,9 @@ message(STATUS "PURPLE_LIBRARIES: ${PURPLE_LIBRARIES}")
 message(STATUS "PURPLE_PLUGIN_DIR: ${PURPLE_PLUGIN_DIR}")
 message(STATUS "PURPLE_DATA_DIR: ${PURPLE_DATA_DIR}")
 
+# TODO: add support for
+# find_package(OpusFile CONFIG REQUIRED)
+# target_link_libraries(main PRIVATE OpusFile::opusfile)
 find_package(PkgConfig QUIET)
 if (${PKG_CONFIG_FOUND})
     pkg_check_modules(PIXBUF gdk-pixbuf-2.0)
