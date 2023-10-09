@@ -21,13 +21,9 @@ jobs:
     - name: Install x86 GCC
       run: C:\msys64\usr\bin\pacman.exe --sync --needed --noconfirm mingw-w64-i686-gcc mingw-w64-i686-gcc
       
-    #- name: Add x86 GCC to PATH
-    #  run: echo C:\msys64\mingw32\bin >> $GITHUB_PATH
-      
     - name: Add x86 GCC to PATH
       shell: pwsh
-      run: |
-        echo "C:\msys64\mingw32\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      run: echo "C:\msys64\mingw32\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       
     - name: vcpkg
       uses: johnwason/vcpkg-action@v5
@@ -36,20 +32,8 @@ jobs:
         triplet: 'x86-mingw-static'
         token: ${{ github.token }}
 
-    #- name: Add vcpkg's ninja to PATH
-    #  run: echo ${{ github.workspace }}\vcpkg\downloads\tools\ninja\* >> $GITHUB_PATH
-
-    - name: Output GCC Version
-      run: |
-        echo $env:PATH
-        $env:PATH="C:/msys64/mingw32/bin;"+$env:PATH
-        (Get-Command gcc)
-        gcc --version
-
     - name: Configure
-      run: |
-        $env:PATH="C:/msys64/mingw32/bin;"+$env:PATH
-        cmake -S . -B build -D CMAKE_BUILD_TYPE=Debug -G "MSYS Makefiles" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/vcpkg/installed/x86-mingw-static -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF
+      run: cmake -S . -B build -D CMAKE_BUILD_TYPE=Debug -G "MSYS Makefiles" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/vcpkg/installed/x86-mingw-static -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF
 
     - name: Build
       run: cmake --build build
