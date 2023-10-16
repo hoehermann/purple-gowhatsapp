@@ -19,7 +19,7 @@ Standard features:
 * Receiving files (images, videos, voice, document, stickers).
 * Received images are displayed in the conversation window (optional).
 * Sending images as image messages.
-* Sending ogg audio files as voice messages.
+* Sending opus audio files as voice messages.
 * Sending mp4 video files as video messages.
 * Sending other files as documents.
 * Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures ([Markus "nihilus" Gothe](https://github.com/nihilus) for [Peter "theassemblerguy" Bachmaier](https://github.com/theassemblerguy)).
