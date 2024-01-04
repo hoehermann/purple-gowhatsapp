@@ -33,10 +33,12 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
         flags |= PURPLE_MESSAGE_RECV;
     }
     
+    // WhatsApp is a plain-text protocol, but Pidgin expects HTML
+    gchar * text = purple_markup_escape_text(gwamsg->text, -1);
     if (gwamsg->isGroup) {
         PurpleConversation *conv = gowhatsapp_enter_group_chat(pc, gwamsg->remoteJid, NULL);
         if (conv != NULL) {
-            purple_serv_got_chat_in(pc, g_str_hash(gwamsg->remoteJid), gwamsg->senderJid, flags, gwamsg->text, gwamsg->timestamp);
+            purple_serv_got_chat_in(pc, g_str_hash(gwamsg->remoteJid), gwamsg->senderJid, flags, text, gwamsg->timestamp);
         }
     } else {
         if (flags & PURPLE_MESSAGE_SEND) {
@@ -46,13 +48,14 @@ gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwam
             if (conv == NULL) {
                 conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, gwamsg->account, gwamsg->remoteJid); // MEMCHECK: caller takes ownership
             }
-            purple_conv_im_write(purple_conversation_get_im_data(conv), gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
+            purple_conv_im_write(purple_conversation_get_im_data(conv), gwamsg->remoteJid, text, flags, gwamsg->timestamp);
         } else {
             // messages sometimes arrive before buddy has been created
             // a buddy created here may be missing a display name,
             // but i don't think i ever saw one of them anyway
             gowhatsapp_ensure_buddy_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
-            purple_serv_got_im(pc, gwamsg->remoteJid, gwamsg->text, flags, gwamsg->timestamp);
+            purple_serv_got_im(pc, gwamsg->remoteJid, text, flags, gwamsg->timestamp);
         }
     }
+    g_free(text);
 }

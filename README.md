@@ -70,12 +70,14 @@ Known issues:
 
 Other planned features:
 
+* Support [WhatsApp formatting](https://faq.whatsapp.com/539178204879377/).
 * Display receipts in conversation window.
 * Join group chat via link.
 * View group icon.
 * Gracefully handle group updates.
 * Action to refresh groups.
 * Support [sending mentions](https://github.com/tulir/whatsmeow/discussions/259).
+* Support replying to a specific message.
 
 These features will not be worked on:
 
