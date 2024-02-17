@@ -96,7 +96,7 @@ Dependencies:
 * pkg-config
 * cmake (3.8 or newer)
 * make
-* go (1.18 or newer)
+* go (1.20 or newer)
 * gcc (9.2.0 or newer)
 * libgdk-pixbuf-2.0 (optional)
 * libopusfile (optional)
@@ -124,7 +124,7 @@ CMake will try to set-up a development environment automatically.
 
 Additional dependencies:
 
-* [go 1.18 or newer (32 bit)](https://go.dev/dl/go1.18.9.windows-386.msi)
+* [go 1.20 or newer (32 bit)](https://go.dev/dl/go1.20.13.windows-386.msi)
 * [gcc 9.2.0 or newer (32 bit)](https://osdn.net/projects/mingw/)
 
 go and gcc must be in `%PATH%`.  
