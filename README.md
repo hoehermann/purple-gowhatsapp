@@ -242,7 +242,7 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   
   By default, the driver will be `sqlite3` for a file-backed SQLite database. This is not recommended for multi-account-applications (e.g. spectrum or bitlbee) due to a [limitation in the driver](https://github.com/mattn/go-sqlite3/issues/209). The file-system (see addess option) must support locking and be responsive. Network shares (especially SMB) **do not work**.
   
-  If the setting starts with `postgres:`, the suffix will be passed to [database/sql.Open](https://pkg.go.dev/database/sql#Open) as `dataSourceName` for the [pq](https://github.com/lib/pq) PostgreSQL driver. At time of writing, there are no further drivers [supported by whatsmeow](https://github.com/tulir/whatsmeow/blob/b078a9e/store/sqlstore/container.go#L34). Support for MySQL/MariaDB has been [requested](https://github.com/tulir/whatsmeow/pull/48). 
+  If the setting starts with `postgres:`, the suffix will be passed to [database/sql.Open](https://pkg.go.dev/database/sql#Open) as `dataSourceName` for the [pq](https://github.com/lib/pq) PostgreSQL driver. At time of writing, there are no further drivers [supported by whatsmeow](https://github.com/tulir/whatsmeow/blob/4313827/store/sqlstore/container.go#L38). Support for MySQL/MariaDB has been [requested](https://github.com/tulir/whatsmeow/pull/48). 
 
 * `embed-max-file-size`  
   When set to a value greater than 0 (default, in megabytes), the plug-in tries to detect link-only messages such as `https://example.com/voicemessage.oga` for forwarding.

@@ -8,7 +8,6 @@ import "C"
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal/v3"
@@ -52,10 +51,11 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		dialect = "postgres"
 		max_open_conns = 0
 		address = strings.Replace(address, "postgres:", "", -1)
-	} else if strings.HasPrefix(address, "mysql:") {
-		dialect = "mysql"
-		max_open_conns = 0
-		address = strings.Replace(address, "mysql:", "", -1)
+		// } else if strings.HasPrefix(address, "mysql:") {
+		// dialect = "mysql"
+		// max_open_conns = 0
+		// address = strings.Replace(address, "mysql:", "", -1)
+		// disabled until https://github.com/tulir/whatsmeow/pull/48 has been merged
 	} else {
 		// nothing else, see https://github.com/tulir/whatsmeow/blob/b078a9e/store/sqlstore/container.go#L34
 		// and https://github.com/tulir/whatsmeow/blob/4ea4925/mdtest/main.go#L44
