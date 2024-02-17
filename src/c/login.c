@@ -51,6 +51,7 @@ gowhatsapp_login(PurpleAccount *account)
         purple_debug_info(GOWHATSAPP_NAME, "Using proxy address %s.\n", proxy_address);
     } else {
         purple_debug_info(GOWHATSAPP_NAME, "No proxy set in purple. The go runtime might pick up the https_proxy environment variable regardless.\n");
+        // TODO: To disable reading proxy info from environment variables, use cli.SetProxy(nil)
     }
     
     const char *credentials = purple_account_get_string(account, GOWHATSAPP_CREDENTIALS_KEY, NULL);
