@@ -92,24 +92,30 @@ gowhatsapp_add_account_options(GList *account_options)
         );
     account_options = g_list_append(account_options, option);
 
-    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
-        "Discard old messages",
-        GOWHATSAPP_DISCARD_OLD_MESSAGES_OPTION,
-        FALSE
+    {
+        GList *choices = NULL;
+        choices = add_choice(choices, "embed in conversation window", GOWHATSAPP_IMAGES_CHOICE_INLINE);
+        choices = add_choice(choices, "do file transfer", GOWHATSAPP_IMAGES_CHOICE_XFER);
+        choices = add_choice(choices, "do both", GOWHATSAPP_IMAGES_CHOICE_BOTH);
+        option = purple_account_option_list_new( // MEMCHECK: account_options takes ownership
+            "What to do with incoming images",
+            GOWHATSAPP_HANDLE_IMAGES_OPTION,
+            choices
         );
-    account_options = g_list_append(account_options, option);
-
-    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
-        "Inline images",
-        GOWHATSAPP_INLINE_IMAGES_OPTION,
-        TRUE
-        );
-    account_options = g_list_append(account_options, option);
+        account_options = g_list_append(account_options, option);
+    }
     
     option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
         "Inline stickers (needs webp loader)",
         GOWHATSAPP_INLINE_STICKERS_OPTION,
         TRUE
+        );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
+        "Discard old messages",
+        GOWHATSAPP_DISCARD_OLD_MESSAGES_OPTION,
+        FALSE
         );
     account_options = g_list_append(account_options, option);
 

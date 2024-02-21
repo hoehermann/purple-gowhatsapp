@@ -116,7 +116,7 @@ This project uses CMake.
 
 Need to package Debian compliant amd64. Move to the build directory and run:
 
-	cpack
+    cpack
 
 #### Windows Specific
 
@@ -184,8 +184,12 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   If set to true (default: false), messages older than the connection will be discarded.  
   Note: This is implemented without time-zone information. This might not work as expected when chatting with someone in a different time-zone.
 
-* `inline-images`  
-  If set to true (default), images will automatically be downloaded and embedded in the conversation window.
+* `handle-images`  
+  What to do with images:
+  
+    * `inline`: embed in the conversation window
+    * `xfer`: treat as file download
+    * `both`: do both
   
 * `inline-stickers`  
   If set to true (default), stickers will automatically be downloaded and may embedded in the conversation window if an appropriate webp GDK pixbuf loader is present.

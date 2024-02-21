@@ -113,21 +113,30 @@ void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg
 void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
     const gboolean is_image = gwamsg->subtype == gowhatsapp_attachment_type_image;
     const gboolean is_sticker = gwamsg->subtype == gowhatsapp_attachment_type_sticker;
-    const gboolean inline_images = purple_account_get_bool(gwamsg->account, GOWHATSAPP_INLINE_IMAGES_OPTION, TRUE);
+    const gchar * handle_images = purple_account_get_string(gwamsg->account, GOWHATSAPP_HANDLE_IMAGES_OPTION, GOWHATSAPP_IMAGES_CHOICE_INLINE);
+    const gboolean inline_images = purple_strequal(handle_images, GOWHATSAPP_IMAGES_CHOICE_INLINE) || purple_strequal(handle_images, GOWHATSAPP_IMAGES_CHOICE_BOTH);
+    const gboolean xfer_images = purple_strequal(handle_images, GOWHATSAPP_IMAGES_CHOICE_XFER) || purple_strequal(handle_images, GOWHATSAPP_IMAGES_CHOICE_BOTH);
     const gboolean inline_stickers = purple_account_get_bool(gwamsg->account, GOWHATSAPP_INLINE_STICKERS_OPTION, TRUE);
     const gboolean inline_this = (is_image && inline_images) || (is_sticker && inline_stickers);
     int img_id = 0;
     if (inline_this && pixbuf_is_loadable_image_mimetype(gwamsg->text)) {
         img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL); // MEMCHECK: released including gwamsg->blob by purple_imgstore_unref_by_id (see below)
         if (img_id > 0) {
-            gwamsg->blob = NULL; // MEMCHECK: not our memory to free any more
+            // at this point, the image data in gwamsg->blob is not our memory to free any more
+            if (xfer_images) {
+                // user wants us to offer the image also as xfer, that is why we need a copy of the blob
+                // by overwriting the pointer, we lose the adress, but that is okay since PurpleStoredImage took ownership
+                gwamsg->blob = g_memdup2(gwamsg->blob, gwamsg->blobsize);
+            } else {
+                gwamsg->blob = NULL; // MEMCHECK: see comment above
+            }
             gchar * text = g_strdup_printf("<img id=\"%u\"/>", img_id); // MEMCHECK: released here
-            gowhatsapp_display_message_common(pc, gwamsg->senderJid, gwamsg->remoteJid, NULL, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, NULL, PURPLE_MESSAGE_IMAGES);
+            gowhatsapp_display_message_common(pc, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, NULL, PURPLE_MESSAGE_IMAGES);
             g_free(text);
             purple_imgstore_unref_by_id(img_id);
         }
     }
-    if (img_id == 0) {
+    if (gwamsg->blob != NULL) {
         xfer_download_attachment(pc, gwamsg); // MEMCHECK: xfer system takes ownership
     }
 }
