@@ -34,6 +34,7 @@ void gowhatsapp_process_message(gowhatsapp_message_t *gwamsg);
 
 // display_message
 void gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags);
+void gowhatsapp_display_message_common(PurpleConnection *pc, const gchar * senderJid, const gchar * remoteJid, const gchar * text, const time_t timestamp, const gboolean isGroup, const gboolean isOutgoing, const gchar * name, PurpleMessageFlags flags);
 
 // message_filtering
 gboolean gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message_id);
@@ -54,7 +55,7 @@ void gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
 void gowhatsapp_free_name(PurpleConversation *conv);
 
 // blist
-void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, char *remoteJid, char *display_name);
+void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *remoteJid, const char *display_name);
 PurpleChat * gowhatsapp_ensure_group_chat_in_blist(PurpleAccount *account, const char *remoteJid, const char *topic);
 PurpleGroup * gowhatsapp_get_purple_group();
 PurpleChat * gowhatsapp_find_blist_chat(PurpleAccount *account, const char *jid);

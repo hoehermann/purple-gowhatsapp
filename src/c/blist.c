@@ -32,7 +32,7 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
  * Updates alias non-destructively.
  */
 void gowhatsapp_ensure_buddy_in_blist(
-    PurpleAccount *account, char *remoteJid, char *display_name
+    PurpleAccount *account, const char *remoteJid, const char *display_name
 ) {
     if (!purple_account_get_bool(account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE)) {
         return;

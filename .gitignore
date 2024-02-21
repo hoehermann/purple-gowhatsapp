@@ -1,8 +1,10 @@
 .vs
+.vscode
 CMakeSettings.json
 out
 
 build
+ignore
 
-go.sum
-go.mod
+src/go/go.sum
+src/go/go.mod

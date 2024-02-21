@@ -121,11 +121,9 @@ void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gw
         img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL); // MEMCHECK: released including gwamsg->blob by purple_imgstore_unref_by_id (see below)
         if (img_id > 0) {
             gwamsg->blob = NULL; // MEMCHECK: not our memory to free any more
-            // strip information from mis-used fields so they are not wrongly interpreted by gowhatsapp_display_text_message
-            g_free(gwamsg->name); gwamsg->name = NULL; 
-            g_free(gwamsg->text); gwamsg->text = NULL; 
-            gwamsg->text = g_strdup_printf("<img id=\"%u\"/>", img_id); // MEMCHECK: g_strdup'ed string released by caller
-            gowhatsapp_display_text_message(pc, gwamsg, PURPLE_MESSAGE_IMAGES);
+            gchar * text = g_strdup_printf("<img id=\"%u\"/>", img_id); // MEMCHECK: released here
+            gowhatsapp_display_message_common(pc, gwamsg->senderJid, gwamsg->remoteJid, NULL, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, NULL, PURPLE_MESSAGE_IMAGES);
+            g_free(text);
             purple_imgstore_unref_by_id(img_id);
         }
     }
