@@ -4,6 +4,7 @@
 void gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags) {
     g_return_if_fail(pc != NULL);
     // WhatsApp is a plain-text protocol, but Pidgin expects HTML
+    // NOTE: This turns newlines into br-tags which may mess up textual representation of QR-codes
     gchar * text = purple_markup_escape_text(gwamsg->text, -1);
     gowhatsapp_display_message_common(pc, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, flags);
     g_free(text);
