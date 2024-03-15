@@ -67,6 +67,8 @@ Known issues:
   * Other special messages are irgnored silently.
 * No support for mark-up in outgoing messages.
   Note: Due to the internal use of [purple_markup_strip_html](https://docs.imfreedom.org/pidgin2/util_8h.html#a0f02bb7e180bb04fb74c8f39564902ee), you need to use a br-tag instead of newline. Pidgin does that automatically, but other clients might not.
+* Emojis:
+  WhatsApp supports many emojis in text message bodies and reactions. The smiley themes shipped with Pidgin do not cover all emojis. You can install a smiley theme or a font which does, for example the [Google Noto Color Emoji](https://fonts.google.com/noto/specimen/Noto+Color+Emoji) font. On Ubuntu, this is provided by the `fonts-noto-color-emoji` package. There is currently no experience if that works on Windows as well. Feedback is welcome.
 
 Other planned features:
 
