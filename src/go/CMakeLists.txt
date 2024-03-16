@@ -1,7 +1,7 @@
 # assume go is in path
-set(CMAKE_Go_COMPILER go)
+set(CMAKE_Go_COMPILER "go" CACHE STRING "Path to the go compiler binary")
 # have a self-contained GOPATH
-set(GOPATH "${CMAKE_CURRENT_BINARY_DIR}/go")
+set(GOPATH "${CMAKE_CURRENT_BINARY_DIR}/_go")
 
 # hack to depend on latest version using go mod tidy
 add_custom_command(
