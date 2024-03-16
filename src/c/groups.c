@@ -160,12 +160,15 @@ gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
     gowhatsapp_roomlist_add_room(pc, gwamsg->remoteJid, gwamsg->name);
     // these all cannot handle the group list end marker
     if (gwamsg->remoteJid != NULL) {
+        purple_debug_info(GOWHATSAPP_NAME, "Received information about group %s.\n", gwamsg->remoteJid);
         // adds the group to the buddy list (if fetching contacts is enabled, useful for human-readable titles)
         gowhatsapp_ensure_group_chat_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
         // this might be a delayed response to a query for participants of a currently active group chat
         PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, gwamsg->remoteJid, gwamsg->account);
+        purple_debug_info(GOWHATSAPP_NAME, "Conversation for group %s is %p.\n", gwamsg->remoteJid, conv);
         if (conv != NULL) {
             PurpleConvChat *conv_chat = purple_conversation_get_chat_data(conv);
+            purple_debug_info(GOWHATSAPP_NAME, "Chat for group %s is %p.\n", gwamsg->remoteJid, conv_chat);
             if (conv_chat != NULL) {
                 gowhatsapp_chat_set_participants(conv_chat, gwamsg->participants);
             }
@@ -210,11 +213,14 @@ gowhatsapp_chat_set_participants(PurpleConvChat *conv_chat, char **participants)
 PurpleConversation *
 gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **participants) 
 {
+    purple_debug_info(GOWHATSAPP_NAME, "gowhatsapp_enter_group_chat(…) called.\n");
     PurpleAccount *account = purple_connection_get_account(pc);
     PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, remoteJid, account);
+    purple_debug_info(GOWHATSAPP_NAME, "Before joining, conversation for group %s is %p.\n", remoteJid, conv);
     if (conv == NULL) {
         // use hash of jid for chat id number
         conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);
+        purple_debug_info(GOWHATSAPP_NAME, "After joining, conversation for group %s is %p.\n", remoteJid, conv);
         if (conv != NULL) {
             // store the JID so it can be retrieved by get_chat_name
             purple_conversation_set_data(conv, "name", g_strdup(remoteJid)); // MEMCHECK: this leaks, but there is no mechanism to stop it
