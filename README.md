@@ -65,7 +65,7 @@ Known issues:
   * Voice calls are not supported (a warning is displayed).
   * Votes are not supported (a warning is displayed).
   * Other special messages are irgnored silently.
-* No support for mark-up in outgoing messages.
+* No support for mark-up in outgoing messages.  
   Note: Due to the internal use of [purple_markup_strip_html](https://docs.imfreedom.org/pidgin2/util_8h.html#a0f02bb7e180bb04fb74c8f39564902ee), you need to use a br-tag instead of newline. Pidgin does that automatically, but other clients might not.
 * Emojis:
   WhatsApp supports many emojis in text message bodies and reactions. The smiley themes shipped with Pidgin do not cover all emojis. You can install a smiley theme or a font which does, for example the [Google Noto Color Emoji](https://fonts.google.com/noto/specimen/Noto+Color+Emoji) font. On Ubuntu, this is provided by the `fonts-noto-color-emoji` package. There is currently no experience if that works on Windows as well. Feedback is welcome.
@@ -134,10 +134,10 @@ go and gcc must be in `%PATH%`.
 This is known to work with MSYS make and CMake generator "MSYS Makefiles".  
 At time of writing, cgo does not support MSVC.
 
-For sending opus in ogg audio files as voice messages, add a static win32 build of opusfile to the prefix path:
+For sending opus in ogg audio files as voice messages, add a static win32 build of opusfile to CMake's prefix path or use vcpkg's toolchain file:
 
     vcpkg.exe install opusfile:x86-mingw-static
-    cmake -G "MSYS Makefiles" -DCMAKE_PREFIX_PATH=wherever/vcpkg/installed/x86-mingw-static ..
+    cmake -DCMAKE_TOOLCHAIN_FILE="wherever/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF -G "MSYS Makefiles" ..
 
 ### Installation
 

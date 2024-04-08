@@ -20,11 +20,11 @@ jobs:
 
     - name: Install x86 GCC
       run: C:\msys64\usr\bin\pacman.exe --sync --needed --noconfirm mingw-w64-i686-gcc mingw-w64-i686-gcc
-      
+
     - name: Add x86 GCC to PATH
       shell: pwsh
       run: echo "C:\msys64\mingw32\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      
+
     - name: vcpkg
       uses: johnwason/vcpkg-action@v6
       with:
@@ -33,7 +33,7 @@ jobs:
         token: ${{ github.token }}
 
     - name: Configure
-      run: cmake -S . -B build -D CMAKE_BUILD_TYPE=Debug -G "MSYS Makefiles" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/vcpkg/installed/x86-mingw-static -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF
+      run: cmake -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Debug -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF -S . -B build -G "MSYS Makefiles" -DCMAKE_SHARED_LINKER_FLAGS="-static-libgcc"
 
     - name: Build
       run: cmake --build build
