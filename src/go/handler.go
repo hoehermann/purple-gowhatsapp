@@ -83,6 +83,11 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// working theory: when more than four devices are connected, WhatsApp servers drop the oldest connection
 		// NOTE: evt contains no data
 		purple_error(handler.account, "Connection stream has been replaced. Reconnecting...", ERROR_TRANSIENT)
+	case *events.KeepAliveTimeout:
+		// ignore the lost connection since whatsmeow is pretty good at re-establishing
+		// though trying to send a message will end with a time-out
+		// TODO: reflect this stte in the UI, maybe by setting purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
+		log.Warnf("KeepAlive timed out. Reconnecting in background...")
 	case *events.Message:
 		handler.handle_message(evt.Message, evt.Info.ID, evt.Info.MessageSource, &evt.Info.PushName, evt.Info.Timestamp, false)
 	case *events.Receipt:
