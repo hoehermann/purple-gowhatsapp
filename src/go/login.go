@@ -16,6 +16,7 @@ import (
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
+	"google.golang.org/protobuf/proto"
 	"strconv"
 	"strings"
 )
@@ -76,6 +77,8 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		purple_error(account, fmt.Sprintf("Failed to upgrade database: %w", err), ERROR_FATAL)
 		return
 	}
+
+	store.DeviceProps.Os = proto.String("purple-whatsmeow")
 
 	// find device (and session) information in database
 	// expects user-supplied credentials to be in the form "deviceJid|registrationId".
