@@ -211,10 +211,15 @@ PurpleConversation *
 gowhatsapp_enter_group_chat(PurpleConnection *pc, const char *remoteJid, char **participants) 
 {
     PurpleAccount *account = purple_connection_get_account(pc);
-    PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, remoteJid, account);
-    if (conv == NULL) {
+    PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, remoteJid, account); // alternatively: purple_find_chat(pc, g_str_hash(remoteJid));
+    if (conv == NULL || (conv != NULL && purple_conversation_get_data(conv, "want-to-rejoin"))) {
         // use hash of jid for chat id number
         conv = serv_got_joined_chat(pc, g_str_hash(remoteJid), remoteJid);
+        if (purple_conversation_get_data(conv, "want-to-rejoin")) {
+            // now that we did rejoin, remove the flag
+            // directly accessing conv->data feels wrong, but there is no interface to do so
+            g_hash_table_remove(conv->data, "want-to-rejoin");
+        }
         if (conv != NULL) {
             // store the JID so it can be retrieved by get_chat_name
             purple_conversation_set_data(conv, "name", g_strdup(remoteJid)); // MEMCHECK: this leaks, but there is no mechanism to stop it
