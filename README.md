@@ -8,7 +8,8 @@ This is a re-write of [purple-gowhatsapp](https://github.com/hoehermann/purple-g
 
 ### Download
 
-* [Nightly Build](https://buildbot.hehoe.de/purple-whatsmeow/builds/) (Windows, Ubuntu).
+* [Latest Build for Windows](https://nightly.link/hoehermann/purple-gowhatsapp/workflows/build/whatsmeow/libwhatsmeow.dll.zip)
+* [Nightly Build for Ubuntu 22.04](https://buildbot.hehoe.de/purple-whatsmeow/builds/)
 
 ### Features
 
