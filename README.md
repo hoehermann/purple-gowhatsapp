@@ -136,13 +136,8 @@ Additional dependencies:
 * [go 1.20 or newer (32 bit)](https://go.dev/dl/go1.20.13.windows-386.msi)
 * [gcc 13.2 (32 bit)](https://packages.msys2.org/package/mingw-w64-i686-gcc)
 
-This is known to work with MSYS make and CMake generator "MSYS Makefiles". go and gcc must be in `%PATH%`.
-
-Other compilers:
-
-* At time of writing, cgo does not support MSVC.  
-* gcc 9.2.0 is known to work, but any gcc 7.1.0 or newer needs static linkage of `libgcc` for distribution of binary. The project checks this setting.
-* [gcc 4.7.2 (32 bit)](https://sourceforge.net/projects/mingw/files/MinGW/Base/gcc/Version4/gcc-4.7.2-1/) is recommended by Pidgin, but has not been tested.
+This is known to work with MSYS make and CMake generator "MSYS Makefiles". go and gcc must be in `%PATH%`.  
+At time of writing, cgo does not support MSVC.
 
 For sending opus in ogg audio files as voice messages, add a static win32 build of opusfile to CMake's prefix path or use vcpkg's toolchain file:
 

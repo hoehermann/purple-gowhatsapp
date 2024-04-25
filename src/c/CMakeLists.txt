@@ -30,7 +30,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE PLUGIN_VERSION=${VERSION})
 target_include_directories(${TARGET_NAME} PRIVATE ${GO_WHATSAPP_INCLUDE_DIRS} ${PURPLE_INCLUDE_DIRS} ${PIXBUF_INCLUDE_DIRS} ${OPUSFILE_INCLUDE_DIRS})
 target_link_libraries(${TARGET_NAME} PRIVATE ${GO_WHATSAPP_LIBRARIES} ${PURPLE_LIBRARIES} ${PIXBUF_LIBRARIES} ${OPUSFILE_LINK_LIBRARIES})
 set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "lib")
-if (WIN32)
+if (WIN32 AND CMAKE_COMPILER_IS_GNUCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7.2) # might actually work without this up to 7.1.0, but I did not check
     target_link_options(${TARGET_NAME} PRIVATE "-static-libgcc")
 endif()
 
