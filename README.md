@@ -117,9 +117,15 @@ This project uses CMake.
     cmake --build .
     sudo make install/strip
 
-Need to package Debian compliant amd64. Move to the build directory and run:
+Note: If you configure the project for using user-specific installation paths before building, you may install without sudo:
+
+    cmake -DPURPLE_DATA_DIR:PATH=~/.local/share -DPURPLE_PLUGIN_DIR:PATH=~/.purple/plugins ..
+
+In the build directory, you can also create a Debian package:
 
     cpack
+
+You should not do that with user-specific paths, obviously.
 
 #### Windows Specific
 
@@ -128,12 +134,15 @@ CMake will try to set-up a development environment automatically.
 Additional dependencies:
 
 * [go 1.20 or newer (32 bit)](https://go.dev/dl/go1.20.13.windows-386.msi)
-* [gcc 9.2.0 or newer (32 bit)](https://osdn.net/projects/mingw/)
+* [gcc 13.2 (32 bit)](https://packages.msys2.org/package/mingw-w64-i686-gcc)
 
-go and gcc must be in `%PATH%`.  
+This is known to work with MSYS make and CMake generator "MSYS Makefiles". go and gcc must be in `%PATH%`.
 
-This is known to work with MSYS make and CMake generator "MSYS Makefiles".  
-At time of writing, cgo does not support MSVC.
+Other compilers:
+
+* At time of writing, cgo does not support MSVC.  
+* gcc 9.2.0 is known to work, but any gcc 7.1.0 or newer needs static linkage of `libgcc` for distribution of binary. The project checks this setting.
+* [gcc 4.7.2 (32 bit)](https://sourceforge.net/projects/mingw/files/MinGW/Base/gcc/Version4/gcc-4.7.2-1/) is recommended by Pidgin, but has not been tested.
 
 For sending opus in ogg audio files as voice messages, add a static win32 build of opusfile to CMake's prefix path or use vcpkg's toolchain file:
 
@@ -142,7 +151,7 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 
 ### Installation
 
-* Place the binary in your Pidgin's plugin directory (`~/.purple/plugins` on Linux).
+* Place the binary in your Pidgin's plugin directory (on Linux, that is `~/.purple/plugins`).
 
 #### Set-Up
 
