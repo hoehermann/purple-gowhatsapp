@@ -1,3 +1,15 @@
+# 1.14.0
+
+* Update: Requires Go 1.20.
+* Feature: Release is also available with version-pinned dependencies.
+* Feature: Remove mysql driver.
+* Feature: Installation into user's home directory (Linux only).
+* Change: Incoming images can be shown in-line, offered as a file-transfer or both ("both" is new).
+* Change: KeepAliveTimeout is ignored (was terminate connection).
+* Bugfix: Upon re-connect chats currently open in Pidgin can be re-joined implicitly.
+* Bugfix: Incoming newlines are converted to br-tags as it is the custom in libpurple.
+* Bugfix: libgcc is now linked statically when building for win32 with GCC later than 4.7.2.
+
 # 1.13.0
 
 * Feature: Old messages can be discarded.
