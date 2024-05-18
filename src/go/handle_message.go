@@ -26,7 +26,17 @@ func (handler *Handler) handle_message(message *waProto.Message, id string, sour
 		// or other undesired behaviour such as just being annoying
 		return
 	}
-	text := message.GetConversation()
+
+	text := ""
+
+	if pm := message.GetProtocolMessage(); pm != nil {
+		if em := pm.GetEditedMessage(); em != nil {
+			message = em
+			text = "[EDIT] "
+		}
+	}
+
+	text += message.GetConversation()
 
 	etm := message.ExtendedTextMessage
 	if etm != nil {
