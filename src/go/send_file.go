@@ -8,14 +8,15 @@ import "C"
 import (
 	"context"
 	"fmt"
-	"go.mau.fi/whatsmeow"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
-	"go.mau.fi/whatsmeow/types"
-	"google.golang.org/protobuf/proto"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"go.mau.fi/whatsmeow"
+	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/types"
+	"google.golang.org/protobuf/proto"
 )
 
 // based on https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go
@@ -52,7 +53,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 		if seconds >= 0 {
 			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus", uint32(seconds), opusfile_info.waveform)
 		} else {
-			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("An ogg audio file was provided, but it was invalid. Sending file as document...", err))
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("An ogg audio file was provided, but it was invalid due to %v. Sending file as document...", err))
 			err = nil // reset error for retrying to send as document
 		}
 	case "video/mp4":
@@ -89,12 +90,12 @@ func (handler *Handler) send_file_image(data []byte, mimetype string) (*waProto.
 		return nil, err
 	}
 	msg := &waProto.Message{ImageMessage: &waProto.ImageMessage{
-		Url:           proto.String(uploaded.URL),
+		URL:           proto.String(uploaded.URL),
 		DirectPath:    proto.String(uploaded.DirectPath),
 		MediaKey:      uploaded.MediaKey,
 		Mimetype:      proto.String(mimetype),
-		FileEncSha256: uploaded.FileEncSHA256,
-		FileSha256:    uploaded.FileSHA256,
+		FileEncSHA256: uploaded.FileEncSHA256,
+		FileSHA256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
 	return msg, nil
@@ -110,15 +111,15 @@ func (handler *Handler) send_file_audio(data []byte, mimetype string, seconds ui
 		waveform[i] = byte(c_waveform[i]) // convert while copying
 	}
 	msg := &waProto.Message{AudioMessage: &waProto.AudioMessage{
-		Url:           proto.String(uploaded.URL),
+		URL:           proto.String(uploaded.URL),
 		DirectPath:    proto.String(uploaded.DirectPath),
 		MediaKey:      uploaded.MediaKey,
 		Mimetype:      proto.String(mimetype),
-		FileEncSha256: uploaded.FileEncSHA256,
-		FileSha256:    uploaded.FileSHA256,
+		FileEncSHA256: uploaded.FileEncSHA256,
+		FileSHA256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
 		Seconds:       proto.Uint32(seconds),
-		Ptt:           proto.Bool(true),
+		PTT:           proto.Bool(true),
 		Waveform:      waveform,
 	}}
 	return msg, nil
@@ -130,12 +131,12 @@ func (handler *Handler) send_file_video(data []byte, mimetype string) (*waProto.
 		return nil, err
 	}
 	msg := &waProto.Message{VideoMessage: &waProto.VideoMessage{
-		Url:           proto.String(uploaded.URL),
+		URL:           proto.String(uploaded.URL),
 		DirectPath:    proto.String(uploaded.DirectPath),
 		MediaKey:      uploaded.MediaKey,
 		Mimetype:      proto.String(mimetype),
-		FileEncSha256: uploaded.FileEncSHA256,
-		FileSha256:    uploaded.FileSHA256,
+		FileEncSHA256: uploaded.FileEncSHA256,
+		FileSHA256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
 	return msg, nil
@@ -148,12 +149,12 @@ func (handler *Handler) send_file_document(data []byte, mimetype string, filenam
 	}
 	msg := &waProto.Message{DocumentMessage: &waProto.DocumentMessage{
 		Title:         proto.String(filename),
-		Url:           proto.String(uploaded.URL),
+		URL:           proto.String(uploaded.URL),
 		DirectPath:    proto.String(uploaded.DirectPath),
 		MediaKey:      uploaded.MediaKey,
 		Mimetype:      proto.String(mimetype),
-		FileEncSha256: uploaded.FileEncSHA256,
-		FileSha256:    uploaded.FileSHA256,
+		FileEncSHA256: uploaded.FileEncSHA256,
+		FileSHA256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
 	return msg, nil

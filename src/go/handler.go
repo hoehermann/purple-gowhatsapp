@@ -7,14 +7,15 @@ import "C"
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/appstate"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
-	"net/http"
-	"time"
 )
 
 type CachedMessage struct {
@@ -91,9 +92,9 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	case *events.Message:
 		handler.handle_message(evt.Message, evt.Info.ID, evt.Info.MessageSource, &evt.Info.PushName, evt.Info.Timestamp, false)
 	case *events.Receipt:
-		if evt.Type == events.ReceiptTypeRead || evt.Type == events.ReceiptTypeReadSelf {
+		if evt.Type == types.ReceiptTypeRead || evt.Type == types.ReceiptTypeReadSelf {
 			log.Infof("%v was read by %s at %s", evt.MessageIDs, evt.SourceString(), evt.Timestamp)
-		} else if evt.Type == events.ReceiptTypeDelivered {
+		} else if evt.Type == types.ReceiptTypeDelivered {
 			log.Infof("%s was delivered to %s at %s", evt.MessageIDs[0], evt.SourceString(), evt.Timestamp)
 		}
 	case *events.Presence:
@@ -102,13 +103,11 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// this happens after initial logon via QR code (after AppStateSyncComplete)
 		pushnames := evt.Data.GetPushnames()
 		for _, p := range pushnames {
-			if p.Id != nil && p.Pushname != nil {
-				purple_update_name(handler.account, *p.Id, *p.Pushname)
+			if p.ID != nil && p.Pushname != nil {
+				purple_update_name(handler.account, *p.ID, *p.Pushname)
 			}
 		}
-		if purple_get_bool(handler.account, C.GOWHATSAPP_FETCH_HISTORY_OPTION, false) {
-			handler.handle_historical_conversations(evt.Data.GetConversations())
-		}
+		// TODO: handle historical conversations obtained by evt.Data.GetConversations() utilising client.ParseWebMessage
 	case *events.ChatPresence:
 		handler.handle_chat_presence(evt)
 	case *events.AppState:

@@ -1,3 +1,10 @@
+# 1.15.0
+
+* Update: Depends on whatsmeow v0.0.0-20240521160649-74c49f5a7d31 or later.
+* Update: Requires Go 1.21 due to changes in whatsmeow.
+* Feature: Fetching the conversation history is no longer an option.
+* Feature: Display incoming message edits.
+
 # 1.14.0
 
 * Update: Requires Go 1.20.

@@ -3,9 +3,10 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"go.mau.fi/whatsmeow"
 	"io"
 	"net/http"
+
+	"go.mau.fi/whatsmeow"
 )
 
 type ProfilePictureRequest struct {
@@ -62,6 +63,10 @@ func (handler *Handler) profile_picture_downloader() {
 			continue
 		}
 		req, err := http.NewRequest("GET", ppi.URL, nil)
+		if err != nil {
+			log.Warnf("Unable to construct request for profile pictore for %s: %#v", pdr.who, err)
+			continue
+		}
 		if pdr.picture_date != "" {
 			// include date of local picture in request
 			// NOTE: this should no longer be necessary since we include the ExistingID in GetProfilePictureParams now

@@ -53,8 +53,9 @@ jobs:
     needs: build
 
     steps:
-    - name: Release
-      uses: ncipollo/release-action@v1
+    - uses: actions/checkout@v4 # so CHANGELOG.md is available
+    
+    - uses: ncipollo/release-action@v1
       with:
         artifacts: libwhatsmeow.dll
         bodyFile: CHANGELOG.md

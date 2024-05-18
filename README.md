@@ -99,7 +99,7 @@ Dependencies:
 * pkg-config
 * cmake (3.8 or newer)
 * make
-* go (1.20 or newer)
+* go (1.21 or newer)
 * gcc (9.2.0 or newer)
 * libgdk-pixbuf-2.0 (optional)
 * libopusfile (optional)
@@ -133,7 +133,7 @@ CMake will try to set-up a development environment automatically.
 
 Additional dependencies:
 
-* [go 1.20 or newer (32 bit)](https://go.dev/dl/go1.20.13.windows-386.msi)
+* [go 1.21 or newer (32 bit)](https://go.dev/dl/go1.22.3.windows-386.msi)
 * [gcc 13.2 (32 bit)](https://packages.msys2.org/package/mingw-w64-i686-gcc)
 
 This is known to work with MSYS make and CMake generator "MSYS Makefiles". go and gcc must be in `%PATH%`.  
@@ -183,9 +183,6 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 
 * `message-cache-size`  
   Stores a number (default: 100) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions.
-
-* `fetch-history`  
-  If set to true (default: false), the history of conversations will be displayed. This feature is experimental. WhatsApp servers send the history once during the linking process. Messages will appear out-of-order. Files will be downloaded again. If used when linking for the first time (without prior population of the buddy list), it may add name-less contacts to the buddy list.
 
 * `discard-old-messages`  
   If set to true (default: false), messages older than the connection will be discarded.  
