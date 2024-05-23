@@ -47,7 +47,6 @@ set(GO_SRCS
   profile.go
   send_file_checks.go
   message_cache.go
-  conversations.go
   groups.go
 )
 set(OUTPUT_PREFIX purple-go-whatsapp)

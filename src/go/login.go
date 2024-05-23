@@ -8,6 +8,9 @@ import "C"
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
+
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal/v3"
@@ -17,8 +20,7 @@ import (
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/proto"
-	"strconv"
-	"strings"
+	waProto "go.mau.fi/whatsmeow/binary/proto"
 )
 
 /*
@@ -74,11 +76,19 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	container := sqlstore.NewWithDB(db, dialect, dbLog)
 	err = container.Upgrade()
 	if err != nil {
-		purple_error(account, fmt.Sprintf("Failed to upgrade database: %w", err), ERROR_FATAL)
+		purple_error(account, fmt.Sprintf("Failed to upgrade database: %v", err), ERROR_FATAL)
 		return
 	}
 
+	// set our name (displayed in "linked devices")
 	store.DeviceProps.Os = proto.String("purple-whatsmeow")
+
+	// limit fetching history since we cannot even parse it
+	store.DeviceProps.HistorySyncConfig = &waProto.DeviceProps_HistorySyncConfig{
+		FullSyncDaysLimit:   proto.Uint32(1),
+		FullSyncSizeMbLimit: proto.Uint32(1),
+		StorageQuotaMb:      proto.Uint32(1),
+	}
 
 	// find device (and session) information in database
 	// expects user-supplied credentials to be in the form "deviceJid|registrationId".
@@ -89,12 +99,12 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	if len(creds) == 2 {
 		deviceJid, err := parseJID(creds[0])
 		if err != nil {
-			purple_error(account, fmt.Sprintf("Supplied device ID %s is not valid: %#v", err), ERROR_FATAL)
+			purple_error(account, fmt.Sprintf("Supplied device ID %v is not valid: %#v", deviceJid, err), ERROR_FATAL)
 			return
 		}
 		rId, err := strconv.ParseUint(creds[1], 16, 32)
 		if err != nil {
-			purple_error(account, fmt.Sprintf("Unable to parse registration ID: ", err), ERROR_FATAL)
+			purple_error(account, fmt.Sprintf("Unable to parse registration ID: %#v", err), ERROR_FATAL)
 			return
 		}
 		registrationId = uint32(rId)
@@ -102,7 +112,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		device, err = container.GetDevice(deviceJid)
 		if err != nil {
 			// this is in case of database errors, presumably
-			purple_error(account, fmt.Sprintf("Unable to read device from database: %v", err), ERROR_FATAL)
+			purple_error(account, fmt.Sprintf("Unable to read device from database: %#v", err), ERROR_FATAL)
 			return
 		}
 	}
@@ -123,7 +133,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	// so it is not sufficient to know a person's device ID to hijack their account
 	// there is nothing special about the RegistrationID. any of the fields could be used.
 	if device.RegistrationID != registrationId {
-		purple_error(account, fmt.Sprintf("Incorrect credentials."), ERROR_FATAL)
+		purple_error(account, "Incorrect credentials.", ERROR_FATAL)
 		return
 	}
 

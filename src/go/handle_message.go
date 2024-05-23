@@ -10,12 +10,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
-	"go.mau.fi/whatsmeow/types"
-	"golang.org/x/net/http2"
 	"mime"
 	"strings"
 	"time"
+
+	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/types"
+	"golang.org/x/net/http2"
 )
 
 func (handler *Handler) handle_message(message *waProto.Message, id string, source types.MessageSource, name *string, timestamp time.Time, is_historical bool) {
@@ -67,10 +68,10 @@ func (handler *Handler) handle_message(message *waProto.Message, id string, sour
 	}
 
 	rm := message.GetReactionMessage()
-	if rm != nil && rm.Text != nil && rm.Key != nil && rm.Key.Id != nil {
+	if rm != nil && rm.Text != nil && rm.Key != nil && rm.Key.ID != nil {
 		quote := ""
 		for i := range handler.cachedMessages {
-			if handler.cachedMessages[i].id == *rm.Key.Id {
+			if handler.cachedMessages[i].id == rm.Key.GetID() {
 				message := &handler.cachedMessages[i]
 				quote = fmt.Sprintf("message \"%.50s\" from %s", message.text, message.timestamp.Format(time.RFC822))
 				// TODO: truncate string when storing, not when displaying
@@ -78,7 +79,7 @@ func (handler *Handler) handle_message(message *waProto.Message, id string, sour
 			}
 		}
 		if quote == "" {
-			quote = fmt.Sprintf("unknown message with ID %s", *rm.Key.Id)
+			quote = fmt.Sprintf("unknown message with ID %s", rm.Key.GetID())
 		}
 		if *rm.Text == "" {
 			text += fmt.Sprintf("removed their reaction to %s.", quote)
@@ -133,20 +134,20 @@ func (handler *Handler) handle_attachment(message *waProto.Message, source types
 	im := message.GetImageMessage()
 	if im != nil {
 		data, err = handler.client.Download(im)
-		filename = hex.EncodeToString(im.FileSha256) + extension_from_mimetype(im.Mimetype)
+		filename = hex.EncodeToString(im.GetFileSHA256()) + extension_from_mimetype(im.Mimetype)
 		data_type = C.gowhatsapp_attachment_type_image
 		mimetype = im.Mimetype
 	}
 	vm := message.GetVideoMessage()
 	if vm != nil {
 		data, err = handler.client.Download(vm)
-		filename = hex.EncodeToString(vm.FileSha256) + extension_from_mimetype(vm.Mimetype)
+		filename = hex.EncodeToString(vm.GetFileSHA256()) + extension_from_mimetype(vm.Mimetype)
 		data_type = C.gowhatsapp_attachment_type_video
 	}
 	am := message.GetAudioMessage()
 	if am != nil {
 		data, err = handler.client.Download(am)
-		filename = hex.EncodeToString(am.FileSha256) + extension_from_mimetype(am.Mimetype)
+		filename = hex.EncodeToString(am.GetFileSHA256()) + extension_from_mimetype(am.Mimetype)
 		data_type = C.gowhatsapp_attachment_type_audio
 	}
 	dm := message.GetDocumentMessage()
@@ -159,16 +160,17 @@ func (handler *Handler) handle_attachment(message *waProto.Message, source types
 	sm := message.GetStickerMessage()
 	if sm != nil {
 		data, err = handler.client.Download(sm)
-		filename = hex.EncodeToString(sm.FileSha256) + extension_from_mimetype(sm.Mimetype)
+		filename = hex.EncodeToString(sm.GetFileSHA256()) + extension_from_mimetype(sm.Mimetype)
 		data_type = C.gowhatsapp_attachment_type_sticker
 		mimetype = sm.Mimetype
 	}
 	if err != nil {
-		if data == nil || len(data) == 0 {
+		if len(data) == 0 {
 			errmsg := fmt.Sprintf("Message contained an attachment, but the download failed: %v", err)
 			var h2se *http2.StreamError
 			if errors.As(err, &h2se) {
 				err = h2se.Cause
+				errmsg = fmt.Sprintf("%s %v", errmsg, err)
 			}
 			purple_display_system_message(handler.account, chat, source.IsGroup, errmsg)
 			return
