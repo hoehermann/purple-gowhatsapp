@@ -46,16 +46,10 @@ jobs:
       with:
         path: build/src/c/libwhatsmeow.dll
         name: libwhatsmeow.dll
-
-  release:
-    if: contains(github.ref, 'tags/v')
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-    - uses: actions/checkout@v4 # so CHANGELOG.md is available
     
-    - uses: ncipollo/release-action@v1
+    - name: Create Release
+      if: contains(github.ref, 'tags/v')
+      uses: ncipollo/release-action@v1
       with:
         artifacts: libwhatsmeow.dll
         bodyFile: CHANGELOG.md
