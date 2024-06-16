@@ -16,11 +16,11 @@ import (
 	"github.com/mdp/qrterminal/v3"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/proto/waCompanionReg"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/proto"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
 )
 
 /*
@@ -84,7 +84,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	store.DeviceProps.Os = proto.String("purple-whatsmeow")
 
 	// limit fetching history since we cannot even parse it
-	store.DeviceProps.HistorySyncConfig = &waProto.DeviceProps_HistorySyncConfig{
+	store.DeviceProps.HistorySyncConfig = &waCompanionReg.DeviceProps_HistorySyncConfig{
 		FullSyncDaysLimit:   proto.Uint32(1),
 		FullSyncSizeMbLimit: proto.Uint32(1),
 		StorageQuotaMb:      proto.Uint32(1),
