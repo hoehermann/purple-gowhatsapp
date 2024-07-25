@@ -193,14 +193,13 @@ func (handler *Handler) generate_pairing_code() (string, error) {
  * send a list of codes which can be turned into QR codes for scanning with the offical app.
  */
 func (handler *Handler) handle_qrcode(qrcodes []string) {
-	var stringBuilder strings.Builder
 	pairing_code, err := handler.generate_pairing_code()
 	if err != nil {
 		purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 	}
 	qrcode_data := qrcodes[0] // use only first code for now
 	// TODO: emit events to destroy and update the code in the ui
-	fmt.Fprintf(&stringBuilder, "Enter pairing code %s or scan this code to log in:\n%s\n", pairing_code, qrcode_data)
+	var stringBuilder strings.Builder
 	qrterminal.GenerateHalfBlock(qrcode_data, qrterminal.L, &stringBuilder)
 	size := purple_get_int(handler.account, C.GOWHATSAPP_QRCODE_SIZE_OPTION, 256)
 	var png []byte
@@ -210,7 +209,7 @@ func (handler *Handler) handle_qrcode(qrcodes []string) {
 			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 		}
 	}
-	purple_display_qrcode(handler.account, stringBuilder.String(), qrcode_data, png)
+	purple_display_qrcode(handler.account, pairing_code, qrcode_data, stringBuilder.String(), png)
 }
 
 /*

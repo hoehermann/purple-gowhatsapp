@@ -15,7 +15,7 @@ This is a re-write of [purple-gowhatsapp](https://github.com/hoehermann/purple-g
 
 Standard features:
 
-* Connecting to existing account via QR-code.
+* Connecting to existing account via QR code or 8-character code.
 * Receiving messages, sending messages.
 * Receiving files (image, video and note, audio and voice, document, sticker).
 * Received images are displayed in the conversation window (optional).
@@ -154,8 +154,8 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   You must enter your phone's internationalized number followed by `@s.whatsapp.net`.  
   Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`.
 
-* Upon login, a QR code is shown in a Pidgin request window.  
-  Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.  
+* Upon login, a QR code and the 8-character code is shown in a Pidgin request window.  
+  Using your phone's camera, scan the code within 20 seconds or enter the 8-character code on your main device – just like you would do with WhatsApp Web.  
   *Note:* On headless clients such as Spectrum, the QR code will be wrapped in a message by a fake contact called "Logon QR Code". You may need to temporarily configure your UI to accept messages from unsolicited users for linking purposes.  
   Wait until the connection has been fully set up. Unfortunately, there is no progress indicator while keys are exchanged and old messages are fetched. Usually, a couple of seconds is enough. Some power users with many groups and contacts reported the process can take more than a minute. If the plug-in is not yet ready, outgoing messages may be dropped silently (see issue #142).
 

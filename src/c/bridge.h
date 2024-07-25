@@ -71,6 +71,9 @@ struct gowhatsapp_message {
     char *remoteJid; /// conversation identifier (may be a single contact or a group)
     char *senderJid; /// message author's identifier (useful in group chats)
     char *text; /// the message payload (interpretation depends on type)
+    char *pairing_code; /// 6-character pairing code
+    char *pairing_qrdata; /// the pairing QR-code raw data
+    char *pairing_qrterminal; /// graphical QR for printing on a terminal
     char *name; /// remote user's name (chosen by them) or filename (in case of attachment)
     void *blob; /// binary payload (used for inlining images)
     char **participants; /// list of participants (for group chats)
