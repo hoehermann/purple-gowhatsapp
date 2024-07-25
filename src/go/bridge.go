@@ -163,6 +163,7 @@ func gowhatsapp_go_query_group_participants(account *PurpleAccount, groupid *C.c
 		if groupid != nil {
 			go_groupid := C.GoString(groupid)
 			jid, err := parseJID(go_groupid)
+			// TODO: check that jid actually is a group jid, see https://github.com/hoehermann/purple-gowhatsapp/issues/195
 			if err == nil {
 				return participants_to_ntcstrarray(handler.query_group_participants_retry(jid, 1, 10, 0))
 			} else {

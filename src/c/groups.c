@@ -106,7 +106,7 @@ gowhatsapp_roomlist_get_list(PurpleConnection *pc) {
     g_return_val_if_fail(wpd != NULL, NULL);
     PurpleRoomlist *roomlist = wpd->roomlist;
     if (roomlist != NULL) {
-        purple_debug_info(GOWHATSAPP_NAME, "Already getting roomlist.");
+        purple_debug_info(GOWHATSAPP_NAME, "Already getting roomlist.\n");
         return roomlist;
     }
     roomlist = purple_roomlist_new(account); // MEMCHECK: caller takes ownership

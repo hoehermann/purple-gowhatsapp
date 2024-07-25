@@ -17,9 +17,9 @@ Standard features:
 
 * Connecting to existing account via QR-code.
 * Receiving messages, sending messages.
-* Receiving files (images, videos, voice, document, stickers).
+* Receiving files (image, video and note, audio and voice, document, sticker).
 * Received images are displayed in the conversation window (optional).
-* Sending images as image messages.
+* Sending JPEG images as image messages.
 * Sending opus audio files as voice messages.
 * Sending mp4 video files as video messages.
 * Sending other files as documents.

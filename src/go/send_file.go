@@ -21,7 +21,7 @@ import (
 
 // based on https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go
 func (handler *Handler) send_file(who string, filename string) string {
-	isGroup := false // can only send to single contacts for now
+	isGroup := false // TODO: there is a gowhatsapp_chat_send_file, respect the group chat.
 	recipient, err := parseJID(who)
 	if err != nil {
 		return fmt.Sprintf("%#v", err)

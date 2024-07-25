@@ -50,6 +50,7 @@ void gowhatsapp_ensure_buddy_in_blist(
     gowhatsapp_assume_buddy_online(account, buddy);
 
     // update name after checking against local alias and persisted name
+    // TODO: merge changes from purple-presage
     const char *local_alias = purple_buddy_get_alias(buddy);
     const char *server_alias = purple_blist_node_get_string(&buddy->node, "server_alias");
     if (display_name != NULL && !purple_strequal(local_alias, display_name) && !purple_strequal(server_alias, display_name)) {

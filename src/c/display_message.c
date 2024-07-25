@@ -53,10 +53,8 @@ void gowhatsapp_display_message_common(
     }
     
     if (isGroup) {
-        PurpleConversation *conv = gowhatsapp_enter_group_chat(pc, remoteJid, NULL);
-        if (conv != NULL) {
-            purple_serv_got_chat_in(pc, g_str_hash(remoteJid), senderJid, flags, text, timestamp);
-        }
+        gowhatsapp_enter_group_chat(pc, remoteJid, NULL);
+        purple_serv_got_chat_in(pc, g_str_hash(remoteJid), senderJid, flags, text, timestamp);
     } else {
         if (flags & PURPLE_MESSAGE_SEND) {
             // display message sent from own account (other device as well as local echo)

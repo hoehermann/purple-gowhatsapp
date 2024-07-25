@@ -121,7 +121,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             gowhatsapp_handle_group(pc, gwamsg);
             break;
         default:
-            purple_debug_info(GOWHATSAPP_NAME, "handling this message type is not implemented");
+            purple_debug_info(GOWHATSAPP_NAME, "Handling this message type is not implemented.\n");
             g_free(gwamsg->blob);
     }
 }
