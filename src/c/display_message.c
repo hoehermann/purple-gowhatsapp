@@ -1,12 +1,18 @@
 #include "gowhatsapp.h"
 #include "constants.h"
 
-void gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags) {
-    g_return_if_fail(pc != NULL);
+void gowhatsapp_display_text_message(PurpleConnection *connection, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags) {
+    g_return_if_fail(connection != NULL);
     // WhatsApp is a plain-text protocol, but Pidgin expects HTML
-    // NOTE: This turns newlines into br-tags which may mess up textual representation of QR-codes
     gchar * text = purple_markup_escape_text(gwamsg->text, -1);
-    gowhatsapp_display_message_common(pc, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, flags);
+    PurpleAccount *account = purple_connection_get_account(connection);
+    if (purple_account_get_bool(account, GOWHATSAPP_DISPLAY_MESSAGE_ID_OPTION, FALSE)) {
+        // for https://github.com/Juliaria08
+        gchar * text_with_id = g_strdup_printf("%s <span lang=\"id\">%s</span>", text, gwamsg->messageId);
+        g_free(text);
+        text = text_with_id;
+    }
+    gowhatsapp_display_message_common(connection, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, flags);
     g_free(text);
 }
 
@@ -53,10 +59,8 @@ void gowhatsapp_display_message_common(
     }
     
     if (isGroup) {
-        PurpleConversation *conv = gowhatsapp_enter_group_chat(pc, remoteJid, NULL);
-        if (conv != NULL) {
-            purple_serv_got_chat_in(pc, g_str_hash(remoteJid), senderJid, flags, text, timestamp);
-        }
+        gowhatsapp_enter_group_chat(pc, remoteJid, NULL);
+        purple_serv_got_chat_in(pc, g_str_hash(remoteJid), senderJid, flags, text, timestamp);
     } else {
         if (flags & PURPLE_MESSAGE_SEND) {
             // display message sent from own account (other device as well as local echo)

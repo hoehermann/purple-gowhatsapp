@@ -18,7 +18,7 @@ gowhatsapp_close_qrcode(PurpleAccount *account)
 }
 
 static void
-gowhatsapp_display_qrcode(PurpleAccount *account, const char * challenge, void * image_data, size_t image_data_len)
+gowhatsapp_display_qrcode(PurpleAccount *account, const char *pairing_code, const char *qr_data, void * image_data, size_t image_data_len)
 {
     g_return_if_fail(account != NULL);
 
@@ -26,19 +26,27 @@ gowhatsapp_display_qrcode(PurpleAccount *account, const char * challenge, void *
     PurpleRequestFieldGroup *group = purple_request_field_group_new(NULL);
     purple_request_fields_add_group(fields, group);
 
-    PurpleRequestField *string_field = purple_request_field_string_new("qr_string", "QR Code Data", challenge, FALSE);
-    purple_request_field_group_add_field(group, string_field);
-    PurpleRequestField *image_field = purple_request_field_image_new("qr_image", "QR Code Image", image_data, image_data_len);
-    purple_request_field_group_add_field(group, image_field);
+    {
+        PurpleRequestField *string_code = purple_request_field_string_new("pairing_code", "Pairing Code", pairing_code, FALSE);
+        purple_request_field_group_add_field(group, string_code);
+    }
+    {
+        PurpleRequestField *string_field = purple_request_field_string_new("qr_data", "QR Code Data", qr_data, FALSE);
+        purple_request_field_group_add_field(group, string_field);
+    }
+    {
+        PurpleRequestField *image_field = purple_request_field_image_new("qr_image", "QR Code Image", image_data, image_data_len);
+        purple_request_field_group_add_field(group, image_field);
+    }
 
     const char *username = purple_account_get_username(account);
-    char *secondary = g_strdup_printf("WhatsApp account %s (multi-device mode must be enabled)", username); // MEMCHECK: released here
+    char *secondary = g_strdup_printf("WhatsApp account %s", username); // MEMCHECK: released here
 
     gowhatsapp_close_qrcode(account);
     purple_request_fields(
         account, /*handle*/
         "Logon QR Code", /*title*/
-        "Please scan this QR code with your phone", /*primary*/
+        "Please enter pairing code or scan the QR code", /*primary*/
         secondary, /*secondary*/
         fields, /*fields*/
         "OK", G_CALLBACK(null_cb), /*OK*/
@@ -59,33 +67,37 @@ gowhatsapp_handle_qrcode(PurpleConnection *pc, gowhatsapp_message_t *gwamsg)
     if (!ui_ops || !ui_ops->request_fields || gwamsg->blobsize <= 0) {
         // The UI hasn't implemented the func we want, just output as a message instead
         PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
-        gchar *msg_out;
         int img_id = 0;
         if (gwamsg->blobsize > 0) {
             img_id = purple_imgstore_add_with_id(gwamsg->blob, gwamsg->blobsize, NULL); // MEMCHECK: released including gwamsg->blob by purple_imgstore_unref_by_id (see below)
         }
+        gchar *msg_img = NULL;
         if (img_id > 0) {
             gwamsg->blob = NULL; // MEMCHECK: not our memory to free any more
-            msg_out = g_strdup_printf( // MEMCHECK: msg_out released here (see below)
-                "%s<br /><img id=\"%u\" alt=\"%s\"/><br />%s", 
-                "Please scan this QR code with your phone and WhatsApp multi-device mode enabled:", img_id, gwamsg->text, gwamsg->name
-            );
+            msg_img = g_strdup_printf("<img id=\"%u\"/>", img_id); // MEMCHECK: released here (see below)
             flags |= PURPLE_MESSAGE_IMAGES;
         } else {
-            msg_out = g_strdup_printf( // MEMCHECK: msg_out released here (see below)
-                "%s<br />%s<br />%s", 
-                "Please scan this QR code with your phone and WhatsApp multi-device mode enabled:", gwamsg->text, gwamsg->name
-            );
+            // NOTE: This turns the newlines into br-tags. Front-ends should know what they are doing.
+            gchar * qrterminal_html = purple_markup_escape_text(gwamsg->pairing_qrterminal, -1); // MEMCHECK: released here (see below)
+            msg_img = g_strdup_printf("Your UI does not handle images. The next lines emulate the QR code with text characters. If viewed with a mono-spaced font, scanning may succeed. In case you see the raw HTML (with br-tags), you need to convert them into newlines first.<br/>%s", qrterminal_html); // MEMCHECK: released here (see below)
+            g_free(qrterminal_html);
         }
+        gchar *msg_out = g_strdup_printf(
+            "Please enter pairing code %s or scan the QR code with your phone.<br/>%s<br/>In case the QR code above does not work, this is the challenge data. Use the QR code generator of your choice to turn it into an image:<br/>%s",
+            gwamsg->pairing_code,
+            msg_img,
+            gwamsg->pairing_qrdata
+        ); // MEMCHECK: released here (see below)
+        g_free(msg_img);
         const gchar *who = "Logon QR Code";
         purple_serv_got_im(pc, who, msg_out, flags, time(NULL));
+        g_free(msg_out);
         if (img_id > 0) {
             purple_imgstore_unref_by_id(img_id);
         }
-        g_free(msg_out);
     } else {
         PurpleAccount *account = purple_connection_get_account(pc);
-        gowhatsapp_display_qrcode(account, gwamsg->text, gwamsg->blob, gwamsg->blobsize);
+        gowhatsapp_display_qrcode(account, gwamsg->pairing_code, gwamsg->pairing_qrdata, gwamsg->blob, gwamsg->blobsize);
     }
     g_free(gwamsg->blob);
 }

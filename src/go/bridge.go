@@ -163,6 +163,7 @@ func gowhatsapp_go_query_group_participants(account *PurpleAccount, groupid *C.c
 		if groupid != nil {
 			go_groupid := C.GoString(groupid)
 			jid, err := parseJID(go_groupid)
+			// TODO: check that jid actually is a group jid, see https://github.com/hoehermann/purple-gowhatsapp/issues/195
 			if err == nil {
 				return participants_to_ntcstrarray(handler.query_group_participants_retry(jid, 1, 10, 0))
 			} else {
@@ -258,16 +259,18 @@ func gowhatsapp_go_request_profile_picture(account *PurpleAccount, who *C.char, 
 }
 
 /*
- * This will display a QR code via PurpleRequest API.
+ * This will display a QR code via PurpleRequest API
+ * or in a conversation window (depending on UI features and user settings).
  */
-func purple_display_qrcode(account *PurpleAccount, terminal string, challenge string, png []byte) {
+func purple_display_qrcode(account *PurpleAccount, piring_code string, qr_data string, qr_terminal string, png []byte) {
 	cmessage := C.struct_gowhatsapp_message{
-		account:  account,
-		msgtype:  C.char(C.gowhatsapp_message_type_login),
-		text:     C.CString(challenge),
-		name:     C.CString(terminal),
-		blob:     C.CBytes(png),
-		blobsize: C.size_t(len(png)),
+		account:            account,
+		msgtype:            C.char(C.gowhatsapp_message_type_login),
+		pairing_code:       C.CString(piring_code),
+		pairing_qrdata:     C.CString(qr_data),
+		pairing_qrterminal: C.CString(qr_terminal),
+		blob:               C.CBytes(png),
+		blobsize:           C.size_t(len(png)),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
@@ -309,7 +312,7 @@ func purple_disconnected(account *PurpleAccount) {
  * This will display a text message.
  * Single participants and group chats.
  */
-func purple_display_text_message(account *PurpleAccount, remoteJid string, isGroup bool, isOutgoing bool, senderJid string, pushName *string, timestamp time.Time, text string) {
+func purple_display_text_message(account *PurpleAccount, remoteJid string, isGroup bool, isOutgoing bool, senderJid string, pushName *string, timestamp time.Time, text string, id *string) {
 	cmessage := C.struct_gowhatsapp_message{
 		account:    account,
 		msgtype:    C.char(C.gowhatsapp_message_type_text),
@@ -322,6 +325,9 @@ func purple_display_text_message(account *PurpleAccount, remoteJid string, isGro
 	}
 	if pushName != nil {
 		cmessage.name = C.CString(*pushName)
+	}
+	if id != nil {
+		cmessage.messageId = C.CString(*id)
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }

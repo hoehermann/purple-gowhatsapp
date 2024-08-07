@@ -15,11 +15,11 @@ This is a re-write of [purple-gowhatsapp](https://github.com/hoehermann/purple-g
 
 Standard features:
 
-* Connecting to existing account via QR-code.
+* Connecting to existing account via QR code or 8-character code.
 * Receiving messages, sending messages.
-* Receiving files (images, videos, voice, document, stickers).
+* Receiving files (image, video and note, audio and voice, document, sticker).
 * Received images are displayed in the conversation window (optional).
-* Sending images as image messages.
+* Sending JPEG images as image messages.
 * Sending opus audio files as voice messages.
 * Sending mp4 video files as video messages.
 * Sending other files as documents.
@@ -154,8 +154,8 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   You must enter your phone's internationalized number followed by `@s.whatsapp.net`.  
   Example: `123456789` from Germany would use `49123456789@s.whatsapp.net`.
 
-* Upon login, a QR code is shown in a Pidgin request window.  
-  Using your phone's camera, scan the code within 20 seconds – just like you would do with WhatsApp Web.  
+* Upon login, a QR code and the 8-character code is shown in a Pidgin request window.  
+  Using your phone's camera, scan the code within 20 seconds or enter the 8-character code on your main device – just like you would do with WhatsApp Web.  
   *Note:* On headless clients such as Spectrum, the QR code will be wrapped in a message by a fake contact called "Logon QR Code". You may need to temporarily configure your UI to accept messages from unsolicited users for linking purposes.  
   Wait until the connection has been fully set up. Unfortunately, there is no progress indicator while keys are exchanged and old messages are fetched. Usually, a couple of seconds is enough. Some power users with many groups and contacts reported the process can take more than a minute. If the plug-in is not yet ready, outgoing messages may be dropped silently (see issue #142).
 
@@ -233,6 +233,9 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
     * `never`: Never (some protocol bridges want this).
     
   Note: Neither of these indicate whether the message has been received by the *contact*.
+
+* `display-message-id`  
+  If set to true, the ID of a text message will be appended to the displayed text. For outgoing messages, this only has effect if `echo-sent-messages` is set to `on-success`.
 
 * `autojoin-chats`  
   Automatically join all chats representing the WhatsApp groups after connecting and every time group information is provided. This is useful for protocol bridges.
@@ -335,7 +338,7 @@ This plug-in supports a couple of "IRC-style" commands. The user can write them 
   Request the current list of participants. Can only be used in group chat conversations.
 
 * `?presenceavailable`, `?presenceunavailable`, `?presence`  
-  Overrides the presence which is being sent to WhatsApp servers. The displayed connection state may no longer match the advertised connection state. This can be used to appear unavailable while still being able to receive messages for logging or notification purposes. Using this command may result in unexpected behaviour. Use `/presence` (without a suffix) to give back control to the plug-in's internals.
+  Overrides the presence which is being sent to WhatsApp servers. The displayed connection state may no longer match the advertised connection state. This can be used to appear unavailable while still being able to receive messages for logging or notification purposes. Using this command may result in unexpected behaviour. Use `?presence` (without a suffix) to give back control to the plug-in's internals.
 
 * `?logout`  
   Performs a log-out. The QR-code will be requested upon connecting again.

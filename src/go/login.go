@@ -16,11 +16,11 @@ import (
 	"github.com/mdp/qrterminal/v3"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/proto/waCompanionReg"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/proto"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
 )
 
 /*
@@ -84,7 +84,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	store.DeviceProps.Os = proto.String("purple-whatsmeow")
 
 	// limit fetching history since we cannot even parse it
-	store.DeviceProps.HistorySyncConfig = &waProto.DeviceProps_HistorySyncConfig{
+	store.DeviceProps.HistorySyncConfig = &waCompanionReg.DeviceProps_HistorySyncConfig{
 		FullSyncDaysLimit:   proto.Uint32(1),
 		FullSyncSizeMbLimit: proto.Uint32(1),
 		StorageQuotaMb:      proto.Uint32(1),
@@ -165,29 +165,51 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	err = handler.client.Connect()
 	if err != nil {
 		purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_TRANSIENT)
+		return
 	}
+}
+
+/*
+ * Generates an pairing 8-character pairing code.
+ */
+func (handler *Handler) generate_pairing_code() (string, error) {
+	own_jid, err := parseJID(handler.username)
+	if err != nil {
+		return "", fmt.Errorf("„%s“ is not a valid WhatsApp JID.", handler.username)
+	}
+	phone := own_jid.ToNonAD().User
+	showPushNotification := true
+	// cannot use store.DeviceProps.Os here, since "only common browsers/OSes are allowed",
+	// see https://pkg.go.dev/go.mau.fi/whatsmeow#Client.PairPhone
+	// Firefox on Linux chosen arbitrarily
+	clientDisplayName := "Firefox (Linux)"
+	clientType := whatsmeow.PairClientFirefox
+	pairing_code, err := handler.client.PairPhone(phone, showPushNotification, clientType, clientDisplayName)
+	return pairing_code, err
 }
 
 /*
  * After calling client.Connect() with a pristine device ID, WhatsApp servers
  * send a list of codes which can be turned into QR codes for scanning with the offical app.
  */
-func (handler *Handler) handle_qrcode(codes []string) {
-	code := codes[0] // use only first code for now
+func (handler *Handler) handle_qrcode(qrcodes []string) {
+	pairing_code, err := handler.generate_pairing_code()
+	if err != nil {
+		purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
+	}
+	qrcode_data := qrcodes[0] // use only first code for now
 	// TODO: emit events to destroy and update the code in the ui
-	var png []byte
-	var err error
-	var b strings.Builder
-	fmt.Fprintf(&b, "Scan this code to log in:\n%s\n", code)
-	qrterminal.GenerateHalfBlock(code, qrterminal.L, &b)
+	var stringBuilder strings.Builder
+	qrterminal.GenerateHalfBlock(qrcode_data, qrterminal.L, &stringBuilder)
 	size := purple_get_int(handler.account, C.GOWHATSAPP_QRCODE_SIZE_OPTION, 256)
+	var png []byte
 	if size > 0 {
-		png, err = qrcode.Encode(code, qrcode.Medium, size)
+		png, err = qrcode.Encode(qrcode_data, qrcode.Medium, size)
 		if err != nil {
 			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 		}
 	}
-	purple_display_qrcode(handler.account, b.String(), code, png)
+	purple_display_qrcode(handler.account, pairing_code, qrcode_data, stringBuilder.String(), png)
 }
 
 /*

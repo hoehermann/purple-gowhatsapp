@@ -167,6 +167,14 @@ gowhatsapp_add_account_options(GList *account_options)
         FALSE
         );
     account_options = g_list_append(account_options, option);
+    
+    // for https://github.com/Juliaria08
+    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
+        "Display message ID",
+        GOWHATSAPP_DISPLAY_MESSAGE_ID_OPTION,
+        FALSE
+        );
+    account_options = g_list_append(account_options, option);
 
     return account_options;
 }
