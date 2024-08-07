@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/proto"
@@ -62,7 +63,8 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			},
 		}
 	}
-	resp, err := handler.client.SendMessage(context.Background(), recipient, msg)
+	msgID := handler.client.GenerateMessageID()
+	resp, err := handler.client.SendMessage(context.Background(), recipient, msg, whatsmeow.SendRequestExtra{ID: msgID})
 	if err != nil {
 		errmsg := fmt.Sprintf("Error sending message: %v", err)
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, errmsg)
@@ -73,7 +75,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS) {
 			ownJid := handler.client.Store.ID.ToNonAD().String()
 			recipientJid := recipient.ToNonAD().String()
-			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, resp.Timestamp, message)
+			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, resp.Timestamp, message, &msgID)
 		}
 		handler.addToCache(CachedMessage{id: resp.ID, text: message, timestamp: resp.Timestamp})
 		return true

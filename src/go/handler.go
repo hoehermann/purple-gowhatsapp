@@ -133,14 +133,14 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		chat := bcm.From.ToNonAD().String()
 		sender := bcm.CallCreator.ToNonAD().String()
 		text := "This contact is trying to call you, but WhatsApp Web does not support calls."
-		purple_display_text_message(handler.account, chat, false, false, sender, nil, bcm.Timestamp, text)
+		purple_display_text_message(handler.account, chat, false, false, sender, nil, bcm.Timestamp, text, nil)
 	case *events.CallOfferNotice:
 		// same as CallOffer, but is a group
 		bcm := evt.BasicCallMeta
 		chat := bcm.From.ToNonAD().String()
 		sender := bcm.CallCreator.ToNonAD().String()
 		text := "This contact is trying to call you, but WhatsApp Web does not support calls."
-		purple_display_text_message(handler.account, chat, true, false, sender, nil, bcm.Timestamp, text)
+		purple_display_text_message(handler.account, chat, true, false, sender, nil, bcm.Timestamp, text, nil)
 	case *events.CallRelayLatency:
 		// related to calls. ignore silently.
 	case *events.CallTerminate:

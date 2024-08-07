@@ -107,7 +107,7 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 		handler.log.Warnf("Received a message without any text.")
 	} else {
 		// note: info.PushName always denotes the sender (not the chat)
-		purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, false, source.Sender.ToNonAD().String(), name, timestamp, text)
+		purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, false, source.Sender.ToNonAD().String(), name, timestamp, text, &id)
 		handler.addToCache(CachedMessage{id: id, text: text, timestamp: timestamp})
 		if !source.IsFromMe && !is_historical { // do not send receipt for own messages or historical messages
 			handler.mark_read_defer(id, source.Chat, source.Sender)

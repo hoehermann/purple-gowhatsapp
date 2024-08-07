@@ -70,6 +70,7 @@ struct gowhatsapp_message {
     PurpleAccount *account; /// pointer identifying the account
     char *remoteJid; /// conversation identifier (may be a single contact or a group)
     char *senderJid; /// message author's identifier (useful in group chats)
+    char *messageId; /// message ID
     char *text; /// the message payload (interpretation depends on type)
     char *pairing_code; /// 6-character pairing code
     char *pairing_qrdata; /// the pairing QR-code raw data

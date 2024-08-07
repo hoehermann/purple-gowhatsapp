@@ -234,6 +234,9 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
     
   Note: Neither of these indicate whether the message has been received by the *contact*.
 
+* `display-message-id`  
+  If set to true, the ID of a text message will be appended to the displayed text. For outgoing messages, this only has effect if `echo-sent-messages` is set to `on-success`.
+
 * `autojoin-chats`  
   Automatically join all chats representing the WhatsApp groups after connecting and every time group information is provided. This is useful for protocol bridges.
   
@@ -335,7 +338,7 @@ This plug-in supports a couple of "IRC-style" commands. The user can write them 
   Request the current list of participants. Can only be used in group chat conversations.
 
 * `?presenceavailable`, `?presenceunavailable`, `?presence`  
-  Overrides the presence which is being sent to WhatsApp servers. The displayed connection state may no longer match the advertised connection state. This can be used to appear unavailable while still being able to receive messages for logging or notification purposes. Using this command may result in unexpected behaviour. Use `/presence` (without a suffix) to give back control to the plug-in's internals.
+  Overrides the presence which is being sent to WhatsApp servers. The displayed connection state may no longer match the advertised connection state. This can be used to appear unavailable while still being able to receive messages for logging or notification purposes. Using this command may result in unexpected behaviour. Use `?presence` (without a suffix) to give back control to the plug-in's internals.
 
 * `?logout`  
   Performs a log-out. The QR-code will be requested upon connecting again.

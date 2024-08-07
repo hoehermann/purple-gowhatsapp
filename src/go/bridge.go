@@ -312,7 +312,7 @@ func purple_disconnected(account *PurpleAccount) {
  * This will display a text message.
  * Single participants and group chats.
  */
-func purple_display_text_message(account *PurpleAccount, remoteJid string, isGroup bool, isOutgoing bool, senderJid string, pushName *string, timestamp time.Time, text string) {
+func purple_display_text_message(account *PurpleAccount, remoteJid string, isGroup bool, isOutgoing bool, senderJid string, pushName *string, timestamp time.Time, text string, id *string) {
 	cmessage := C.struct_gowhatsapp_message{
 		account:    account,
 		msgtype:    C.char(C.gowhatsapp_message_type_text),
@@ -325,6 +325,9 @@ func purple_display_text_message(account *PurpleAccount, remoteJid string, isGro
 	}
 	if pushName != nil {
 		cmessage.name = C.CString(*pushName)
+	}
+	if id != nil {
+		cmessage.messageId = C.CString(*id)
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
