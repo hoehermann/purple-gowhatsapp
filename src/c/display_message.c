@@ -5,14 +5,7 @@ void gowhatsapp_display_text_message(PurpleConnection *connection, gowhatsapp_me
     g_return_if_fail(connection != NULL);
     // WhatsApp is a plain-text protocol, but Pidgin expects HTML
     gchar * text = purple_markup_escape_text(gwamsg->text, -1);
-    PurpleAccount *account = purple_connection_get_account(connection);
-    if (purple_account_get_bool(account, GOWHATSAPP_DISPLAY_MESSAGE_ID_OPTION, FALSE)) {
-        // for https://github.com/Juliaria08
-        gchar * text_with_id = g_strdup_printf("%s <span lang=\"id\">%s</span>", text, gwamsg->messageId);
-        g_free(text);
-        text = text_with_id;
-    }
-    gowhatsapp_display_message_common(connection, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, flags);
+    gowhatsapp_display_message_common(connection, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, flags, gwamsg->messageId);
     g_free(text);
 }
 
@@ -25,7 +18,8 @@ void gowhatsapp_display_message_common(
     const gboolean isGroup,
     const gboolean isOutgoing,
     const gchar * name,
-    PurpleMessageFlags flags
+    PurpleMessageFlags flags,
+    const gchar * messageId
 ) {
     g_return_if_fail(pc != NULL);
     
@@ -57,10 +51,18 @@ void gowhatsapp_display_message_common(
     } else {
         flags |= PURPLE_MESSAGE_RECV;
     }
+
+    gchar * message_text = NULL;
+    if (purple_account_get_bool(account, GOWHATSAPP_DISPLAY_MESSAGE_ID_OPTION, FALSE)) {
+        // for https://github.com/Juliaria08
+        message_text = g_strdup_printf("%s <span lang=\"id\">%s</span>", text, messageId); // MEMCHECK: released here (see below)
+    } else {
+        message_text = g_strdup(text); // MEMCHECK: released here (see below)
+    }
     
     if (isGroup) {
         gowhatsapp_enter_group_chat(pc, remoteJid, NULL);
-        purple_serv_got_chat_in(pc, g_str_hash(remoteJid), senderJid, flags, text, timestamp);
+        purple_serv_got_chat_in(pc, g_str_hash(remoteJid), senderJid, flags, message_text, timestamp);
     } else {
         if (flags & PURPLE_MESSAGE_SEND) {
             // display message sent from own account (other device as well as local echo)
@@ -69,13 +71,15 @@ void gowhatsapp_display_message_common(
             if (conv == NULL) {
                 conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, remoteJid); // MEMCHECK: caller takes ownership
             }
-            purple_conv_im_write(purple_conversation_get_im_data(conv), remoteJid, text, flags, timestamp);
+            purple_conv_im_write(purple_conversation_get_im_data(conv), remoteJid, message_text, flags, timestamp);
         } else {
             // messages sometimes arrive before buddy has been created
             // a buddy created here may be missing a display name,
             // but i don't think i ever saw one of them anyway
             gowhatsapp_ensure_buddy_in_blist(account, remoteJid, name);
-            purple_serv_got_im(pc, remoteJid, text, flags, timestamp);
+            purple_serv_got_im(pc, remoteJid, message_text, flags, timestamp);
         }
     }
+    
+    g_free(message_text);
 }

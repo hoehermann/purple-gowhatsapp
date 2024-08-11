@@ -131,7 +131,7 @@ void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gw
                 gwamsg->blob = NULL; // MEMCHECK: see comment above
             }
             gchar * text = g_strdup_printf("<img id=\"%u\"/>", img_id); // MEMCHECK: released here
-            gowhatsapp_display_message_common(pc, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, NULL, PURPLE_MESSAGE_IMAGES);
+            gowhatsapp_display_message_common(pc, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, NULL, PURPLE_MESSAGE_IMAGES, gwamsg->messageId);
             g_free(text);
             purple_imgstore_unref_by_id(img_id);
         }

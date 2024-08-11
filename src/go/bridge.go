@@ -371,7 +371,7 @@ func purple_update_name(account *PurpleAccount, remoteJid string, pushName strin
  * while in fact the file has already been received and they may only chose
  * where to store it.
  */
-func purple_handle_attachment(account *PurpleAccount, remoteJid string, isGroup bool, senderJid string, isOutgoing bool, data_type C.int, mimetype *string, filename string, data []byte) {
+func purple_handle_attachment(account *PurpleAccount, remoteJid string, isGroup bool, senderJid string, isOutgoing bool, data_type C.int, mimetype *string, filename string, data []byte, id string) {
 	cmessage := C.struct_gowhatsapp_message{
 		account:    account,
 		msgtype:    C.char(C.gowhatsapp_message_type_attachment),
@@ -380,6 +380,7 @@ func purple_handle_attachment(account *PurpleAccount, remoteJid string, isGroup 
 		isGroup:    bool_to_Cchar(isGroup),
 		senderJid:  C.CString(senderJid),
 		isOutgoing: bool_to_Cchar(isOutgoing),
+		messageId:  C.CString(id),
 		name:       C.CString(filename),
 		blob:       C.CBytes(data),
 		blobsize:   C.size_t(len(data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)

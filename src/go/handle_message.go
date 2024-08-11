@@ -114,7 +114,7 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 			handler.mark_read_if_on_receival(source.Chat)
 		}
 	}
-	handler.handle_attachment(message, source)
+	handler.handle_attachment(message, id, source)
 }
 
 func extension_from_mimetype(mimeType *string) string {
@@ -129,7 +129,7 @@ func extension_from_mimetype(mimeType *string) string {
 }
 
 // based on https://github.com/FKLC/WhatsAppToDiscord/blob/master/WA2DC.go
-func (handler *Handler) handle_attachment(message *waE2E.Message, source types.MessageSource) {
+func (handler *Handler) handle_attachment(message *waE2E.Message, id string, source types.MessageSource) {
 	var (
 		data      []byte
 		err       error
@@ -210,6 +210,6 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, source types.M
 			// so source is known even when receiving from group chats
 			filename = fmt.Sprintf("%s_%s", sender.User, filename)
 		}
-		purple_handle_attachment(handler.account, chat, source.IsGroup, sender.String(), false, data_type, mimetype, filename, data)
+		purple_handle_attachment(handler.account, chat, source.IsGroup, sender.String(), false, data_type, mimetype, filename, data, id)
 	}
 }

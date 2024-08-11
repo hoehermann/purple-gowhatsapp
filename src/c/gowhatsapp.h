@@ -34,7 +34,7 @@ void gowhatsapp_process_message(gowhatsapp_message_t *gwamsg);
 
 // display_message
 void gowhatsapp_display_text_message(PurpleConnection *pc, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags);
-void gowhatsapp_display_message_common(PurpleConnection *pc, const gchar * senderJid, const gchar * remoteJid, const gchar * text, const time_t timestamp, const gboolean isGroup, const gboolean isOutgoing, const gchar * name, PurpleMessageFlags flags);
+void gowhatsapp_display_message_common(PurpleConnection *pc, const gchar * senderJid, const gchar * remoteJid, const gchar * text, const time_t timestamp, const gboolean isGroup, const gboolean isOutgoing, const gchar * name, PurpleMessageFlags flags, const gchar * messageId);
 
 // message_filtering
 gboolean gowhatsapp_append_message_id_if_not_exists(PurpleAccount *account, char *message_id);
