@@ -156,6 +156,8 @@ func (handler *Handler) is_link_only_message(message string) bool {
 
 /*
  * Downloads a file given as a HTTP link. Sends it to the recipient as a media message.
+ *
+ * This is a custom feature requested by https://github.com/theassemblerguy.
  */
 func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, link string) bool {
 	resp, err := http.Get(link)

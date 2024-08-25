@@ -3,6 +3,8 @@
 
 /*
  * These functions implement some irc-style commands for advanced use in protocol bridges like Spectrum.
+ * 
+ * This is a custom feature requested by https://github.com/theassemblerguy.
  */
 
 static const char* command_string_presence = "?presence";

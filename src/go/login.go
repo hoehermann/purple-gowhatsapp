@@ -131,6 +131,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	// where we cannot universally trust all local users.
 	// we must employ a mechanism that checks against some secret
 	// so it is not sufficient to know a person's device ID to hijack their account
+	// TODO: research if this is actually true. if not, then simplify the credential storage
 	// there is nothing special about the RegistrationID. any of the fields could be used.
 	if device.RegistrationID != registrationId {
 		purple_error(account, "Incorrect credentials.", ERROR_FATAL)
