@@ -27,6 +27,14 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 		// or other undesired behaviour such as just being annoying
 		return
 	}
+	if handler.blocklist != nil {
+		// TODO find out whether locally checking the blocklist is actually necessary or if WhatsApp servers do the filtering for us
+		for _, blockedJID := range handler.blocklist.JIDs {
+			if blockedJID.ToNonAD() == source.Sender.ToNonAD() {
+				handler.log.Infof("Ignoring message from %s since they are on the blocklist.", source.Sender.ToNonAD().String())
+			}
+		}
+	}
 	text := ""
 	{
 		if pm := message.GetProtocolMessage(); pm != nil {

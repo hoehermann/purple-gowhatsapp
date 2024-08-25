@@ -37,6 +37,7 @@ type Handler struct {
 	cachedMessages   []CachedMessage                               // for looking up reactions and quotes
 	pictureRequests  chan ProfilePictureRequest
 	httpClient       *http.Client // for executing picture requests
+	blocklist        *types.Blocklist
 }
 
 /*
@@ -76,6 +77,13 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// connected – start downloading profile pictures now.
 		go handler.profile_picture_downloader()
 		handler.handle_connected()
+		blocklist, err := cli.GetBlocklist()
+		if err == nil {
+			log.Infof("Blocklist contains %d entries.", len(blocklist.JIDs))
+			handler.blocklist = blocklist
+		} else {
+			log.Warnf("Failed to obtain blocklist due to %#v.", err)
+		}
 	case *events.Disconnected:
 		// TODO: Find out if it would be more sensible to handle this as a non-error disconnect.
 		purple_error(handler.account, "Disconnected.", ERROR_TRANSIENT)
@@ -154,6 +162,9 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	// TODO
 	// no idea what this does
 	// &events.OfflineSyncCompleted{Count:0}
+	case *events.Blocklist:
+	// TODO update local blocklist
+	// &events.Blocklist{Action:"", DHash:"REDACTED", PrevDHash:"REDACTED", Changes:[]events.BlocklistChange{events.BlocklistChange{JID:types.JID{User:"REDACTED", RawAgent:0x0, Device:0x0, Integrator:0x0, Server:"s.whatsapp.net"}, Action:"block"}}}
 	default:
 		log.Warnf("Event type not handled: %#v", rawEvt)
 	}
