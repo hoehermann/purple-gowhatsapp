@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.18) # needed on win32
+﻿cmake_minimum_required(VERSION 3.16...3.24)
 
 project("purple-gowhatsapp" C)
 
