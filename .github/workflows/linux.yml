@@ -1,0 +1,47 @@
+name: Linux
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: install deps
+        run: |
+          sudo apt update
+          sudo apt install -y libglib2.0-dev libopusfile-dev
+          # We only need these to build, not to run.  Skip the dependency check.
+          sudo apt download libpurple0 libpurple-dev libgdk-pixbuf2.0-dev
+          sudo dpkg --force-depends -i libpurple0*.deb libpurple-dev*.deb libgdk-pixbuf2.0-dev*.deb
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.21'
+          
+      - name: make
+        run: |
+          cmake -B build -S .
+          cmake --build build
+          cpack -G DEB -B build --config build/CPackConfig.cmake
+
+      - name: archive
+        uses: actions/upload-artifact@v4
+        with: 
+            path: build/*.deb
+
+      - name: release
+        if: contains(github.ref, 'tags/v')
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: build/*.deb
+          tag: nightly-${{ github.sha }}
+          name: Nightly ${{ github.sha }}
+          allowUpdates: true
+          artifactErrorsFailBuild: true

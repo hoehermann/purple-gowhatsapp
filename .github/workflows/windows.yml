@@ -1,11 +1,10 @@
-name: CMake Build
-
-on: [push]
+name: Windows Build
+on:
+  - push
 
 jobs:
 
   build:
-    #if: contains(github.ref, 'tags/v')
     runs-on: windows-2022
     steps:
     - uses: actions/checkout@v4
@@ -33,7 +32,7 @@ jobs:
         token: ${{ github.token }}
 
     - name: Configure
-      run: cmake -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Debug -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF -S . -B build -G "MSYS Makefiles" -DCMAKE_SHARED_LINKER_FLAGS="-static-libgcc"
+      run: cmake -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Debug -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF -S . -B build -G "MSYS Makefiles"
 
     - name: Build
       run: cmake --build build
@@ -51,5 +50,8 @@ jobs:
       if: contains(github.ref, 'tags/v')
       uses: ncipollo/release-action@v1
       with:
-        artifacts: libwhatsmeow.dll
-        bodyFile: CHANGELOG.md
+        artifacts: build/src/c/libwhatsmeow.dll
+        tag: nightly-${{ github.sha }}
+        name: Nightly ${{ github.sha }}
+        allowUpdates: true
+        artifactErrorsFailBuild: true
