@@ -1,4 +1,4 @@
-name: Windows Build
+name: Windows
 on:
   - push
 
@@ -51,7 +51,7 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         artifacts: build/src/c/libwhatsmeow.dll
-        tag: nightly-${{ github.sha }}
-        name: Nightly ${{ github.sha }}
+        #tag: nightly-${{ github.sha }}
+        #name: Nightly ${{ github.sha }}
         allowUpdates: true
         artifactErrorsFailBuild: true
