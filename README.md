@@ -161,19 +161,19 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 
 #### Purple Settings
 
-* `qrcode-size`  
+* `qrcode-size` int  
   The size of the QR code shown for login purposes, in pixels (default: 256). 
   When set to zero, the QR code will be delivered as a text message.
   
-* `fetch-contacts`  
+* `fetch-contacts` bool  
   If set to true (default), buddy list will be populated with contacts sent by server. 
   This is useful for the first login in particular. If enabled while connecting, it will also fetch the current list of WhatsApp groups.
   
-* `fake-online`  
+* `fake-online` bool  
   If set to true (default), contacts currently not online will be regarded as "away" (so they still appear in the buddy list).
   If set to false, offline contacts will be regarded as "offline" (no messages can be sent).
 
-* `send-receipt`  
+* `send-receipt` string choice  
   Selects when to send receipts "double blue tick" notifications:
   
     * `immediately`: immediately upon message receival
@@ -181,28 +181,28 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
     * `on-answer`: as soon as the user sends an answer (default)
     * `never`: never
 
-* `message-cache-size`  
+* `message-cache-size` int  
   Stores a number (default: 100) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions.
 
-* `discard-old-messages`  
+* `discard-old-messages` bool  
   If set to true (default: false), messages older than the connection will be discarded.  
   Note: This is implemented without time-zone information. This might not work as expected when chatting with someone in a different time-zone.
 
-* `handle-images`  
+* `handle-images` string choice  
   What to do with images:
   
     * `inline`: embed in the conversation window
     * `xfer`: treat as file download
     * `both`: do both
   
-* `inline-stickers`  
+* `inline-stickers` bool  
   If set to true (default), stickers will automatically be downloaded and may embedded in the conversation window if an appropriate webp GDK pixbuf loader is present.
 
-* `group-is-file-origin`  
+* `group-is-file-origin` bool  
   It set to true (default), when a file is posted into a group chat, that chat will be the origin of the file. If set to false, the file will originate from the group chat *participant*. At time of writing, Bitlbee wants this to be false.  
   Note: File transfers for group chats are supported since libpurple 2.14.0.
   
-* `attachment-message`  
+* `attachment-message` string  
   This system message is written to the conversation for each incoming attachment. It can have two `%s` place-holders which wil be fed into a call to `printf`.
   
   1. The first `%s` will be replaced by the original sender (the participant, not the group chat).  
@@ -215,16 +215,16 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   * `$sender`: Denotes the original sender (the participant, not the group chat).  
   * `$filename`: Refers to the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.
 
-* `get-icons`  
+* `get-icons` bool  
   If set to true (default: false), profile pictures are updated every time the plug-in connects.
 
-* `ignore-status-broadcast`  
+* `ignore-status-broadcast` bool  
   If set to true (default), your contact's status broadcasts are ignored.
 
-* `bridge-compatibility`  
+* `bridge-compatibility` bool  
   Special compatibility setting for protocol bridges like Spectrum or bitlbee. Setting this to true (default: false) will treat system messages just like normal messages, allowing them to be logged and forwarded. This only affects soft errors regarding a specific conversation, e.g. "message could not be sent".
     
-* `echo-sent-messages`  
+* `echo-sent-messages` string choice  
   Selects when to put an outgoing message into the local conversation window:
   
     * `internal`: After the WhatsApp server has received the message, and lock-up the UI until it does (default).
@@ -234,13 +234,13 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
     
   Note: Neither of these indicate whether the message has been received by the *contact*.
 
-* `display-message-id`  
+* `display-message-id` bool  
   If set to true, the ID of a text message will be appended to the displayed text. For outgoing messages, this only has effect if `echo-sent-messages` is set to `on-success`.
 
-* `autojoin-chats`  
+* `autojoin-chats` bool  
   Automatically join all chats representing the WhatsApp groups after connecting and every time group information is provided. This is useful for protocol bridges.
   
-* `database-address`  
+* `database-address` string  
   whatsmeow stores all session information in a SQL database.
   
   This setting can have place-holders:
@@ -255,14 +255,14 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   
   If the setting starts with `postgres:`, the suffix will be passed to [database/sql.Open](https://pkg.go.dev/database/sql#Open) as `dataSourceName` for the [pq](https://github.com/lib/pq) PostgreSQL driver. At time of writing, there are no further drivers [supported by whatsmeow](https://github.com/tulir/whatsmeow/blob/4313827/store/sqlstore/container.go#L38). Support for MySQL/MariaDB has been [requested](https://github.com/tulir/whatsmeow/pull/48). 
 
-* `embed-max-file-size`  
+* `embed-max-file-size` int  
   When set to a value greater than 0 (default, in megabytes), the plug-in tries to detect link-only messages such as `https://example.com/voicemessage.oga` for forwarding.
   
   If enabled, this plug-in tries to download and forward the linked file, choosing the appropriate media type automatically. This way, your contacts do not see a link to an image, video or a voice message, but instead can play the content directly in their app. The message must consist of one URL exactly, including whitespace. For this reason, this mode is incompatible with Pidgin's OTR plug-in, see [this bug report](https://developer.pidgin.im/ticket/10280). 
   
   At time of writing, the maximum file-size supported by WhatsApp is 2 GB according to [wabetainfo](https://wabetainfo.com/whatsapp-is-testing-sharing-media-files-up-to-2gb-in-size/) and confirmed by iOS users in Germany.
   
-* `trusted-url-regex`  
+* `trusted-url-regex` string  
   In case a link-only message does not point to an image, video or audio file, the file may be sent as a document message. For reasons of safety, this will only happen for files from trusted sources. An URL must match this [regular expression](https://golangbyexample.com/golang-regex-match-full-string/) to be considered trustworthy. Matching is case-sensitive. The match spans the entire verbatim URL, so query and fragment need to be considered. Do not forget the caret and/or dollar sign. Some examples:
   
   * `^https://www\.example\.com` trust files from `www.example.com` via HTTPS.
