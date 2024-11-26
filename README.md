@@ -1,15 +1,10 @@
 # purple-gowhatsapp
 
-A libpurple/Pidgin plugin for WhatsApp. Being developed on Ubuntu 22.04. 
+A libpurple/Pidgin plugin for WhatsApp. Being developed on Ubuntu 24.04. 
 
 This is a re-write of [purple-gowhatsapp](https://github.com/hoehermann/purple-gowhatsapp/tree/gowhatsapp), switching back-ends from [go-whatsapp](https://github.com/Rhymen/go-whatsapp) to [whatsmeow](https://github.com/tulir/whatsmeow). whatsmeow is written by Tulir Asokan. It has multi-device support.
 
 ![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")
-
-### Download
-
-* [Latest Build for Windows](https://nightly.link/hoehermann/purple-gowhatsapp/workflows/build/whatsmeow/libwhatsmeow.dll.zip)
-* [Nightly Build for Ubuntu 22.04](https://buildbot.hehoe.de/purple-whatsmeow/builds/)
 
 ### Features
 
@@ -99,7 +94,7 @@ Dependencies:
 * pkg-config
 * cmake (3.8 or newer)
 * make
-* go (1.21 or newer)
+* go (1.22 or newer)
 * gcc (9.2.0 or newer)
 * libgdk-pixbuf-2.0 (optional)
 * libopusfile (optional)
@@ -117,7 +112,11 @@ This project uses CMake.
     cmake --build .
     sudo make install/strip
 
-Note: If you configure the project for using user-specific installation paths before building, you may install without sudo:
+You may specify which go compiler binary to use:
+
+    cmake -DCMAKE_Go_COMPILER=/opt/go/bin/go ..
+
+If you configure the project for using user-specific installation paths before building, you may install without sudo:
 
     cmake -DPURPLE_DATA_DIR:PATH=~/.local/share -DPURPLE_PLUGIN_DIR:PATH=~/.purple/plugins ..
 
@@ -131,10 +130,10 @@ You should not do that with user-specific paths, obviously.
 
 CMake will try to set-up a development environment automatically. 
 
-Additional dependencies:
+Additional dependencies (must be 32 bit aka. win32 aka. x86 aka. 386 aka. i686):
 
-* [go 1.21 or newer (32 bit)](https://go.dev/dl/go1.22.3.windows-386.msi)
-* [gcc 13.2 (32 bit)](https://packages.msys2.org/package/mingw-w64-i686-gcc)
+* [go 1.22 or newer](https://go.dev/dl/go1.22.3.windows-386.msi)
+* [gcc 13.2 or newer](https://packages.msys2.org/package/mingw-w64-i686-gcc)
 
 This is known to work with MSYS make and CMake generator "MSYS Makefiles". go and gcc must be in `%PATH%`.  
 At time of writing, cgo does not support MSVC.

@@ -23,7 +23,7 @@ jobs:
           
       - uses: actions/setup-go@v5
         with:
-          go-version: '>=1.21'
+          go-version: '>=1.22'
           
       - name: make
         run: |
@@ -38,11 +38,11 @@ jobs:
             name: purple-whatsmeow.deb
 
       - name: release
-        if: contains(github.ref, 'tags/v')
+        #if: contains(github.ref, 'tags/v')
         uses: ncipollo/release-action@v1
         with:
           artifacts: build/*.deb
-          #tag: nightly-${{ github.sha }}
-          #name: Nightly ${{ github.sha }}
+          tag: nightly-${{ github.sha }}
+          name: Nightly ${{ github.sha }}
           allowUpdates: true
           artifactErrorsFailBuild: true

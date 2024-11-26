@@ -1,6 +1,8 @@
 module github.com/hoehermann/purple-gowhatsapp/src/go
 
-go 1.21
+go 1.22.0
+
+toolchain go1.23.3
 
 require (
 	github.com/alfg/mp4 v0.0.0-20210728035756-55ea58c08aeb
