@@ -1,5 +1,9 @@
 package main
 
+/*
+#include "../c/constants.h"
+*/
+import "C"
 import (
 	"bytes"
 	"fmt"
@@ -51,9 +55,14 @@ func (handler *Handler) profile_picture_downloader() {
 			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
 			continue
 		}
+		// check the settings for whether the user wants small previews or big original pictures
+		// NOTE: apart from PREVIEW, there is not only ORIGINAL, but also NO.
+		// NO is not accounted for here since in that case, this function should not even be executed.
+		setting := purple_get_string(handler.account, C.GOWHATSAPP_ICONS_OPTION, C.GOWHATSAPP_ICONS_PREVIEW)
+		want_preview := setting == C.GoString(C.GOWHATSAPP_ICONS_PREVIEW)
 		ppi, _ := handler.client.GetProfilePictureInfo(
 			jid, &whatsmeow.GetProfilePictureParams{
-				Preview:     true, // TODO: let user decide
+				Preview:     want_preview,
 				ExistingID:  pdr.picture_id,
 				IsCommunity: false, // TODO: find out if we do or do not want this
 			},

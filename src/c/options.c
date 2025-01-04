@@ -91,6 +91,19 @@ gowhatsapp_add_account_options(GList *account_options)
         GOWHATSAPP_TRUSTED_URL_REGEX_DEFAULT
         );
     account_options = g_list_append(account_options, option);
+        
+    {
+        GList *choices = NULL;
+        choices = add_choice(choices, "no", GOWHATSAPP_ICONS_NO);
+        choices = add_choice(choices, "preview", GOWHATSAPP_ICONS_PREVIEW);
+        choices = add_choice(choices, "original", GOWHATSAPP_ICONS_ORIGINAL);
+        option = purple_account_option_list_new( // MEMCHECK: account_options takes ownership
+            "Download user profile pictures",
+            GOWHATSAPP_ICONS_OPTION,
+            choices
+        );
+        account_options = g_list_append(account_options, option);
+    }
 
     {
         GList *choices = NULL;
@@ -139,14 +152,7 @@ gowhatsapp_add_account_options(GList *account_options)
         TRUE
         );
     account_options = g_list_append(account_options, option);
-    
-    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
-        "Download user profile pictures",
-        GOWHATSAPP_GET_ICONS_OPTION,
-        FALSE
-        );
-    account_options = g_list_append(account_options, option);
-    
+
     option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
         "Automatically join all chats",
         GOWHATSAPP_AUTO_JOIN_CHAT_OPTION,

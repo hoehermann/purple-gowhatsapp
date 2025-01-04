@@ -214,8 +214,12 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   * `$sender`: Denotes the original sender (the participant, not the group chat).  
   * `$filename`: Refers to the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.
 
-* `get-icons` bool  
-  If set to true (default: false), profile pictures are updated every time the plug-in connects.
+* `get-icons` string choice    
+  Every time the plug-in connects, profile pictures are updated:
+  
+    * `no`: They are not (default).
+    * `preview`: The small thumbnail is downloaded from the WhatsApp servers.
+    * `original`: The original picture is downloaded from the WhatsApp servers.
 
 * `ignore-status-broadcast` bool  
   If set to true (default), your contact's status broadcasts are ignored.
