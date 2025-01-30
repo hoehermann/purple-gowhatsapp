@@ -11,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"mime"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -122,7 +124,7 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 			handler.mark_read_if_on_receival(source.Chat)
 		}
 	}
-	handler.handle_attachment(message, id, source)
+	handler.handle_attachment(message, id, source, timestamp)
 }
 
 func extension_from_mimetype(mimeType *string) string {
@@ -137,7 +139,7 @@ func extension_from_mimetype(mimeType *string) string {
 }
 
 // based on https://github.com/FKLC/WhatsAppToDiscord/blob/master/WA2DC.go
-func (handler *Handler) handle_attachment(message *waE2E.Message, id string, source types.MessageSource) {
+func (handler *Handler) handle_attachment(message *waE2E.Message, id string, source types.MessageSource, timestamp time.Time) {
 	var (
 		data      []byte
 		err       error
@@ -212,12 +214,29 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		}
 	}
 	if filename != "" {
-		sender := source.Sender.ToNonAD()
-		if source.IsGroup {
-			// put original sender username into file-name
-			// so source is known even when receiving from group chats
-			filename = fmt.Sprintf("%s_%s", sender.User, filename)
+		sender := source.Sender.ToNonAD().String()
+		directory := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_DIRECTORY_OPTION, C.GOWHATSAPP_ATTACHMENT_DIRECTORY_DEFAULT)
+		if directory != "" {
+			local_path := filepath.Join(directory, chat, filename)
+			os.MkdirAll(filepath.Join(directory, chat), os.ModePerm)
+			file, err := os.Create(local_path)
+			if err != nil {
+				errmsg := fmt.Sprintf("Unable to store file at %s due to %v", local_path, err)
+				purple_display_system_message(handler.account, chat, source.IsGroup, errmsg)
+			} else {
+				file.Write(data)
+				file.Close()
+				url_prefix := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_BASE_URL_OPTION, C.GOWHATSAPP_ATTACHMENT_BASE_URL_DEFAULT)
+				url := fmt.Sprintf("%s/%s/%s", url_prefix, chat, filename)
+				if url_prefix == "" {
+					local_path, _ := filepath.Abs(local_path)
+					url = "file://" + local_path
+				}
+				text := url
+				purple_display_text_message(handler.account, chat, source.IsGroup, false, sender, nil, timestamp, text, &id)
+			}
+		} else {
+			purple_handle_attachment(handler.account, chat, source.IsGroup, sender, false, data_type, mimetype, filename, data, id)
 		}
-		purple_handle_attachment(handler.account, chat, source.IsGroup, sender.String(), false, data_type, mimetype, filename, data, id)
 	}
 }

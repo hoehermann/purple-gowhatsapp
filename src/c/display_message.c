@@ -54,7 +54,7 @@ void gowhatsapp_display_message_common(
 
     gchar * message_text = NULL;
     if (purple_account_get_bool(account, GOWHATSAPP_DISPLAY_MESSAGE_ID_OPTION, FALSE)) {
-        // for https://github.com/Juliaria08
+        // for https://github.com/Juliaria08 in https://github.com/hoehermann/purple-gowhatsapp/issues/206
         message_text = g_strdup_printf("%s <span lang=\"id\">%s</span>", text, messageId); // MEMCHECK: released here (see below)
     } else {
         message_text = g_strdup(text); // MEMCHECK: released here (see below)

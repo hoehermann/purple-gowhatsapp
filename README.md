@@ -214,6 +214,18 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   * `$sender`: Denotes the original sender (the participant, not the group chat).  
   * `$filename`: Refers to the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.
 
+* `attachment-directory` string  
+  This is a path specifying the location of a local directory. Setting this to a non-empty value will store attachments immediately, completely bypassing libpurple's file transfer mechanism. Sub-directories will be created for every contact and every group (though not for individual group members). Profile pictures will be stored in the contact's directory.
+
+  Default value is the empty string.
+  
+  This can be useful for message bridges with limited resources.
+
+* `attachment-base-url` string  
+  This is a base URL to write to the conversation after a file has been stored directly. For use in conjunction with `attachment-directory`.
+
+  Default value is the empty string. A local `file://` URL will be generated on a best-effort basis.
+
 * `get-icons` string choice    
   Every time the plug-in connects, profile pictures are updated:
   
