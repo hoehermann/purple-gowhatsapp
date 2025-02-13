@@ -263,10 +263,10 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   * `$purple_user_dir`: Will be replaced by the user directory, e.g. `~/.purple`.
   * `$username`: Will be replaced by the username as entered in the account details.
   
-  Default: `file:$purple_user_dir/whatsmeow.db?_foreign_keys=on&_busy_timeout=3000`  
+  Default: `file:$purple_user_dir/whatsmeow.db?_pragma=foreign_keys(1)`  
   Folder must exist, `whatsmeow.db` is created automatically.
   
-  By default, the driver will be `sqlite3` for a file-backed SQLite database. This is not recommended for multi-account-applications (e.g. spectrum or bitlbee) due to a [limitation in the driver](https://github.com/mattn/go-sqlite3/issues/209). The file-system (see addess option) must support locking and be responsive. Network shares (especially SMB) **do not work**.
+  By default, the driver will be `sqlite` for a file-backed SQLite database. This is not recommended for multi-account-applications (e.g. spectrum or bitlbee). The file-system (see addess option) must support locking and be responsive. Network shares (especially SMB) **do not work**.
   
   If the setting starts with `postgres:`, the suffix will be passed to [database/sql.Open](https://pkg.go.dev/database/sql#Open) as `dataSourceName` for the [pq](https://github.com/lib/pq) PostgreSQL driver. At time of writing, there are no further drivers [supported by whatsmeow](https://github.com/tulir/whatsmeow/blob/4313827/store/sqlstore/container.go#L38). Support for MySQL/MariaDB has been [requested](https://github.com/tulir/whatsmeow/pull/48). 
 

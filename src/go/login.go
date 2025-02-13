@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
@@ -21,6 +20,7 @@ import (
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/proto"
+	_ "modernc.org/sqlite"
 )
 
 /*
@@ -48,7 +48,8 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	address := purple_get_string(account, C.GOWHATSAPP_DATABASE_ADDRESS_OPTION, C.GOWHATSAPP_DATABASE_ADDRESS_DEFAULT)
 	address = strings.Replace(address, "$purple_user_dir", purple_user_dir, -1)
 	address = strings.Replace(address, "$username", username, -1)
-	dialect := "sqlite3" // see https://github.com/mattn/go-sqlite3/blob/671e666/_example/simple/simple.go#L14
+	address = strings.Replace(address, "_foreign_keys=on", "_pragma=foreign_keys(1)", -1) // backwards compatibility with github.com/mattn/go-sqlite3 URI variant
+	dialect := "sqlite"                                                                   // see https://pkg.go.dev/modernc.org/sqlite#hdr-Connecting_to_a_database
 	max_open_conns := 1
 	if strings.HasPrefix(address, "postgres:") {
 		dialect = "postgres"
