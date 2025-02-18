@@ -90,7 +90,7 @@ These features will not be worked on:
 
 Dependencies: 
 
-* pidgin (libpurple glib gtk)
+* libpurple
 * pkg-config
 * cmake (3.8 or newer)
 * make
@@ -101,7 +101,7 @@ Dependencies:
 
 For Ubuntu, or Debian compliant Linux flavors, use the apt package manager to install these dependencies first:
 
-    sudo apt install pidgin pkg-config cmake make golang gcc libgdk-pixbuf2.0-dev libopusfile-dev
+    sudo apt install libpurple-dev pkg-config cmake make golang gcc libgdk-pixbuf2.0-dev libopusfile-dev
 
 This project uses CMake.
 
