@@ -86,16 +86,16 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
     
     option = purple_account_option_string_new( // MEMCHECK: account_options takes ownership
-        "Attachment directory",
-        GOWHATSAPP_ATTACHMENT_DIRECTORY_OPTION,
-        GOWHATSAPP_ATTACHMENT_DIRECTORY_DEFAULT
+        "Attachment file path template",
+        GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION,
+        GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT
         );
     account_options = g_list_append(account_options, option);
     
     option = purple_account_option_string_new( // MEMCHECK: account_options takes ownership
         "Attachment base url",
-        GOWHATSAPP_ATTACHMENT_BASE_URL_OPTION,
-        GOWHATSAPP_ATTACHMENT_BASE_URL_DEFAULT
+        GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_OPTION,
+        GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_DEFAULT
         );
     account_options = g_list_append(account_options, option);
     

@@ -214,15 +214,22 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   * `$sender`: Denotes the original sender (the participant, not the group chat).  
   * `$filename`: Refers to the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.
 
-* `attachment-directory` string  
-  This is a path specifying the location of a local directory. Setting this to a non-empty value will store attachments immediately, completely bypassing libpurple's file transfer mechanism. Sub-directories will be created for every contact and every group (though not for individual group members). Profile pictures will be stored in the contact's directory.
+* `attachment-path-template` string  
+  This is a template for specifying a path to a local file-name. Setting this to a non-empty value will store attachments immediately, completely bypassing libpurple's file transfer mechanism. This can be useful for message bridges with limited resources. Sub-directories will be created as needed. Profile pictures will be stored in the contact's directory.
 
   Default value is the empty string.
-  
-  This can be useful for message bridges with limited resources.
 
-* `attachment-base-url` string  
-  This is a base URL to write to the conversation after a file has been stored directly. For use in conjunction with `attachment-directory`.
+	* `$remote`: Denotes the ID of the contact or group chat this attachment has been posted to.
+	* `$hash`: The file's SHA256 (always set, useful for avoiding clashes and for de-duplication).
+	* `$filename`: The sender-supplied file-name (only for Document messages, otherwise empty). Usually contains the extension.
+	* `$extension`: A file-name extension fitting the mimetype (on Document messages, this is empty).
+
+  Example: `/var/run/purple/$remote/$hash$filename$extension`
+
+  There is no shell expansion (`~` will not become the home directory). Relative paths are resolved to the application's working directory.
+
+* `attachment-url-template` string  
+  This is a template for an URL to write to the conversation after a file has been stored directly. For the supported place-holders, see `attachment-path-template`.
 
   Default value is the empty string. A local `file://` URL will be generated on a best-effort basis.
 

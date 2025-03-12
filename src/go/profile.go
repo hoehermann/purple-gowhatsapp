@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"go.mau.fi/whatsmeow"
 )
@@ -99,10 +100,14 @@ func (handler *Handler) profile_picture_downloader() {
 			continue
 		}
 		// store profile picture in contact-specific attachment directory
-		directory := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_DIRECTORY_OPTION, C.GOWHATSAPP_ATTACHMENT_DIRECTORY_DEFAULT)
-		if directory != "" {
-			os.MkdirAll(filepath.Join(directory, pdr.who), os.ModePerm)
-			local_path := filepath.Join(directory, pdr.who, "profile.jpg")
+		local_path_template := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT)
+		if local_path_template != "" {
+			local_path := local_path_template
+			local_path = strings.Replace(local_path, "$remote", pdr.who, -1)
+			local_path = strings.Replace(local_path, "$hash", "", -1)
+			local_path = strings.Replace(local_path, "$filename", "profile.jpg", -1)
+			local_path = strings.Replace(local_path, "$extension", "", -1)
+			os.MkdirAll(filepath.Dir(local_path), os.ModePerm)
 			file, err := os.Create(local_path)
 			if err == nil {
 				file.Write(b.Bytes())

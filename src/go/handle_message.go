@@ -143,16 +143,19 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 	var (
 		data      []byte
 		err       error
-		filename  = ""
-		data_type C.int
-		mimetype  *string
+		filename          = ""
+		hash              = ""
+		extension         = ""
+		data_type C.int   = C.gowhatsapp_attachment_type_none
+		mimetype  *string = nil
 	)
 	chat := source.Chat.ToNonAD().String()
 	{
 		im := message.GetImageMessage()
 		if im != nil {
 			data, err = handler.client.Download(im)
-			filename = hex.EncodeToString(im.GetFileSHA256()) + extension_from_mimetype(im.Mimetype)
+			hash = hex.EncodeToString(im.GetFileSHA256())
+			extension = extension_from_mimetype(im.Mimetype)
 			data_type = C.gowhatsapp_attachment_type_image
 			mimetype = im.Mimetype
 		}
@@ -161,7 +164,8 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		vm := message.GetVideoMessage()
 		if vm != nil {
 			data, err = handler.client.Download(vm)
-			filename = hex.EncodeToString(vm.GetFileSHA256()) + extension_from_mimetype(vm.Mimetype)
+			hash = hex.EncodeToString(vm.GetFileSHA256())
+			extension = extension_from_mimetype(vm.Mimetype)
 			data_type = C.gowhatsapp_attachment_type_video
 		}
 	}
@@ -169,7 +173,8 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		ptv := message.GetPtvMessage()
 		if ptv != nil {
 			data, err = handler.client.Download(ptv)
-			filename = hex.EncodeToString(ptv.GetFileSHA256()) + extension_from_mimetype(ptv.Mimetype)
+			hash = hex.EncodeToString(ptv.GetFileSHA256())
+			extension = extension_from_mimetype(ptv.Mimetype)
 			data_type = C.gowhatsapp_attachment_type_video
 		}
 	}
@@ -177,7 +182,8 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		am := message.GetAudioMessage()
 		if am != nil {
 			data, err = handler.client.Download(am)
-			filename = hex.EncodeToString(am.GetFileSHA256()) + extension_from_mimetype(am.Mimetype)
+			hash = hex.EncodeToString(am.GetFileSHA256())
+			extension = extension_from_mimetype(am.Mimetype)
 			data_type = C.gowhatsapp_attachment_type_audio
 		}
 	}
@@ -185,16 +191,19 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		dm := message.GetDocumentMessage()
 		if dm != nil {
 			data, err = handler.client.Download(dm)
+			hash = hex.EncodeToString(dm.GetFileSHA256())
+			extension = "" // filename comes with extension
+			data_type = C.gowhatsapp_attachment_type_document
 			filename = *message.GetDocumentMessage().Title
 			// TODO: sanitize filename
-			data_type = C.gowhatsapp_attachment_type_document
 		}
 	}
 	{
 		sm := message.GetStickerMessage()
 		if sm != nil {
 			data, err = handler.client.Download(sm)
-			filename = hex.EncodeToString(sm.GetFileSHA256()) + extension_from_mimetype(sm.Mimetype)
+			hash = hex.EncodeToString(sm.GetFileSHA256())
+			extension = extension_from_mimetype(sm.Mimetype)
 			data_type = C.gowhatsapp_attachment_type_sticker
 			mimetype = sm.Mimetype
 		}
@@ -213,12 +222,16 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 			handler.log.Warnf("Forwarding file %s to frontend regardless of error: %v", filename, err)
 		}
 	}
-	if filename != "" {
+	if data_type != C.gowhatsapp_attachment_type_none {
 		sender := source.Sender.ToNonAD().String()
-		directory := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_DIRECTORY_OPTION, C.GOWHATSAPP_ATTACHMENT_DIRECTORY_DEFAULT)
-		if directory != "" {
-			local_path := filepath.Join(directory, chat, filename)
-			os.MkdirAll(filepath.Join(directory, chat), os.ModePerm)
+		local_path_template := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT)
+		if local_path_template != "" {
+			local_path := local_path_template
+			local_path = strings.Replace(local_path, "$remote", chat, -1)
+			local_path = strings.Replace(local_path, "$hash", hash, -1)
+			local_path = strings.Replace(local_path, "$filename", filename, -1)
+			local_path = strings.Replace(local_path, "$extension", extension, -1)
+			os.MkdirAll(filepath.Dir(local_path), os.ModePerm)
 			file, err := os.Create(local_path)
 			if err != nil {
 				errmsg := fmt.Sprintf("Unable to store file at %s due to %v", local_path, err)
@@ -226,9 +239,13 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 			} else {
 				file.Write(data)
 				file.Close()
-				url_prefix := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_BASE_URL_OPTION, C.GOWHATSAPP_ATTACHMENT_BASE_URL_DEFAULT)
-				url := fmt.Sprintf("%s/%s/%s", url_prefix, chat, filename)
-				if url_prefix == "" {
+				url_template := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_OPTION, C.GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_DEFAULT)
+				url := url_template
+				url = strings.Replace(url, "$remote", chat, -1)
+				url = strings.Replace(url, "$hash", hash, -1)
+				url = strings.Replace(url, "$filename", filename, -1)
+				url = strings.Replace(url, "$extension", extension, -1)
+				if url == "" {
 					local_path, _ := filepath.Abs(local_path)
 					url = "file://" + local_path
 				}
@@ -236,6 +253,10 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 				purple_display_text_message(handler.account, chat, source.IsGroup, false, sender, nil, timestamp, text, &id)
 			}
 		} else {
+			if filename == "" {
+				// only Document messages offer named files. use hash and extension for all the other attachment types
+				filename = hash + extension
+			}
 			purple_handle_attachment(handler.account, chat, source.IsGroup, sender, false, data_type, mimetype, filename, data, id)
 		}
 	}
