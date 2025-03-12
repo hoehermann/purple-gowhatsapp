@@ -37,6 +37,13 @@ void gowhatsapp_ensure_buddy_in_blist(
         return;
     }
 
+    if (purple_str_has_suffix(remoteJid, "@lid")) {
+        // hidden users cannot be interacted with
+        // see https://github.com/tulir/whatsmeow/issues/473
+        // do not add them to the buddy list
+        return;
+    }
+
     PurpleBuddy *buddy = purple_blist_find_buddy(account, remoteJid);
 
     if (!buddy) {
