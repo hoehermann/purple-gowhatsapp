@@ -192,10 +192,13 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		if dm != nil {
 			data, err = handler.client.Download(dm)
 			hash = hex.EncodeToString(dm.GetFileSHA256())
-			extension = "" // filename comes with extension
+			filename = dm.GetFileName() // TODO: sanitize filename
+			extension = filepath.Ext(filename)
+			if extension == "" {
+				extension = extension_from_mimetype(dm.Mimetype)
+			}
+			filename = strings.TrimSuffix(filename, extension)
 			data_type = C.gowhatsapp_attachment_type_document
-			filename = dm.GetFileName()
-			// TODO: sanitize filename
 		}
 	}
 	{
@@ -253,8 +256,12 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 				purple_display_text_message(handler.account, chat, source.IsGroup, false, sender, nil, timestamp, text, &id)
 			}
 		} else {
-			if filename == "" {
-				// only Document messages offer named files. use hash and extension for all the other attachment types
+			// append extension to file-name (relevant on Windows in particular)
+			if data_type == C.gowhatsapp_attachment_type_document {
+				// only Document messages offer named files
+				filename = filename + extension
+			} else {
+				// use hash and extension for all the other attachment types
 				filename = hash + extension
 			}
 			purple_handle_attachment(handler.account, chat, source.IsGroup, sender, false, data_type, mimetype, filename, data, id)

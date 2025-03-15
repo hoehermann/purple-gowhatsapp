@@ -221,10 +221,10 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 
 	* `$remote`: Denotes the ID of the contact or group chat this attachment has been posted to.
 	* `$hash`: The file's SHA256 (always set, useful for avoiding clashes and for de-duplication).
-	* `$filename`: The sender-supplied file-name (only for Document messages, otherwise empty). Usually contains the extension.
-	* `$extension`: A file-name extension fitting the mimetype (on Document messages, this is empty).
+	* `$filename`: The sender-supplied file-name (only for Document messages, otherwise empty). Does not contain the extension.
+	* `$extension`: A file-name extension fitting the mimetype.
 
-  Example: `/var/run/purple/$remote/$hash$filename$extension`
+  Example: `/var/run/purple/$remote/$filename$hash$extension`
 
   There is no shell expansion (`~` will not become the home directory). Relative paths are resolved to the application's working directory.
 
