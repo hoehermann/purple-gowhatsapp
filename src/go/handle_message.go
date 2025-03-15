@@ -194,7 +194,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 			hash = hex.EncodeToString(dm.GetFileSHA256())
 			extension = "" // filename comes with extension
 			data_type = C.gowhatsapp_attachment_type_document
-			filename = *message.GetDocumentMessage().Title
+			filename = dm.GetFileName()
 			// TODO: sanitize filename
 		}
 	}
