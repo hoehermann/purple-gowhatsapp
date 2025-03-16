@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"mime"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -243,16 +244,18 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 				file.Write(data)
 				file.Close()
 				url_template := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_OPTION, C.GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_DEFAULT)
-				url := url_template
-				url = strings.Replace(url, "$remote", chat, -1)
-				url = strings.Replace(url, "$hash", hash, -1)
-				url = strings.Replace(url, "$filename", filename, -1)
-				url = strings.Replace(url, "$extension", extension, -1)
-				if url == "" {
-					local_path, _ := filepath.Abs(local_path)
-					url = "file://" + local_path
+				url_s := ""
+				if url_template == "" {
+					u := url.URL{Scheme: "file", Path: local_path} // TODO: use url.FromFilePath(path)
+					url_s = u.String()
+				} else {
+					url_s = url_template
+					url_s = strings.Replace(url_s, "$remote", url.PathEscape(chat), -1)
+					url_s = strings.Replace(url_s, "$hash", hash, -1)
+					url_s = strings.Replace(url_s, "$filename", url.PathEscape(filename), -1)
+					url_s = strings.Replace(url_s, "$extension", extension, -1)
 				}
-				text := url
+				text := url_s
 				purple_display_text_message(handler.account, chat, source.IsGroup, false, sender, nil, timestamp, text, &id)
 			}
 		} else {
