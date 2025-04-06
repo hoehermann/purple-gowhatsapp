@@ -10,14 +10,13 @@ static gboolean gowhatsapp_message_is_old(gowhatsapp_message_t *gwamsg) {
     WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(purple_account_get_connection(gwamsg->account));
     if (wpd->connected_at_timestamp > gwamsg->timestamp) {
         const gboolean discard_old_messages = purple_account_get_bool(gwamsg->account, GOWHATSAPP_DISCARD_OLD_MESSAGES_OPTION, FALSE);
-        purple_debug_info(GOWHATSAPP_NAME, "This message is older than the connection.\n");
         if (discard_old_messages) {
+            purple_debug_info(GOWHATSAPP_NAME, "This message is older than the connection.\n");
             return TRUE;
         }
     }
     return FALSE;
 }
-
 
 /*
  * Interprets a message received from whatsmeow. Handles login success and failure. Forwards errors.

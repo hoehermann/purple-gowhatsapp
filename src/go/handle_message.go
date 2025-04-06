@@ -235,6 +235,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 			local_path = strings.Replace(local_path, "$hash", hash, -1)
 			local_path = strings.Replace(local_path, "$filename", filename, -1)
 			local_path = strings.Replace(local_path, "$extension", extension, -1)
+			// TODO: maybe pipe this through a timetostr formatter to allow time-based file-names?
 			os.MkdirAll(filepath.Dir(local_path), os.ModePerm)
 			file, err := os.Create(local_path)
 			if err != nil {
@@ -254,6 +255,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 					url_s = strings.Replace(url_s, "$hash", hash, -1)
 					url_s = strings.Replace(url_s, "$filename", url.PathEscape(filename), -1)
 					url_s = strings.Replace(url_s, "$extension", extension, -1)
+					// TODO: maybe pipe this through a timetostr formatter to allow time-based file-names?
 				}
 				text := url_s
 				purple_display_text_message(handler.account, chat, source.IsGroup, false, sender, nil, timestamp, text, &id)

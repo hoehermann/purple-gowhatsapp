@@ -165,6 +165,11 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	case *events.Blocklist:
 	// TODO update local blocklist
 	// &events.Blocklist{Action:"", DHash:"REDACTED", PrevDHash:"REDACTED", Changes:[]events.BlocklistChange{events.BlocklistChange{JID:types.JID{User:"REDACTED", RawAgent:0x0, Device:0x0, Integrator:0x0, Server:"s.whatsapp.net"}, Action:"block"}}}
+	case *events.UndecryptableMessage:
+		info := evt.Info
+		source := info.MessageSource
+		text := fmt.Sprintf("sent an undecryptable %s message. Check the message on your main device.", evt.UnavailableType)
+		purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, false, source.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text, &info.ID)
 	default:
 		log.Warnf("Event type not handled: %#v", rawEvt)
 	}
