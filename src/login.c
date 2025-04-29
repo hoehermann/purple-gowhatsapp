@@ -1,5 +1,5 @@
 #include "gowhatsapp.h"
-#include "purple-go-whatsapp.h" // for gowhatsapp_go_login
+#include "libwhatsmeow.h" // for gowhatsapp_go_login
 
 void
 gowhatsapp_login(PurpleAccount *account)

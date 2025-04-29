@@ -94,7 +94,7 @@ Dependencies:
 * pkg-config
 * cmake (3.8 or newer)
 * make
-* go (1.22 or newer)
+* go (1.23 or newer)
 * gcc (9.2.0 or newer)
 * libgdk-pixbuf-2.0 (optional)
 * libopusfile (optional)
@@ -103,44 +103,15 @@ For Ubuntu, or Debian compliant Linux flavors, use the apt package manager to in
 
     sudo apt install libpurple-dev pkg-config cmake make golang gcc libgdk-pixbuf2.0-dev libopusfile-dev
 
-This project uses CMake.
+Then build:
 
     git clone --recurse-submodules git@github.com:hoehermann/purple-gowhatsapp.git
-    cmake -S . -B build
-    cmake --build build --target download-modules # optional, for compiling offline
-    cmake --build build
-    cmake --install build --strip
-
-You may specify which go compiler binary to use:
-
-    cmake -DCMAKE_Go_COMPILER=/opt/go/bin/go ..
-
-If you configure the project for using user-specific installation paths before building, you may install without sudo:
-
-    cmake -DPURPLE_DATA_DIR:PATH=~/.local/share -DPURPLE_PLUGIN_DIR:PATH=~/.purple/plugins ..
-
-In the build directory, you can also create a Debian package:
-
-    cpack
-
-You should not do that with user-specific paths, obviously.
+    cd src
+    CGO_CFLAGS="-DPLUGIN_VERSION=$(cat ../VERSION) $(pkg-config -cflags glib-2.0 purple opusfile gdk-pixbuf-2.0)" CGO_LDFLAGS=$(pkg-config --libs glib-2.0 purple opusfile gdk-pixbuf-2.0) go build -buildmode=c-shared -o libwhatsmeow.so
 
 #### Windows Specific
 
-CMake will try to set-up a development environment automatically. 
-
-Additional dependencies (must be 32 bit aka. win32 aka. x86 aka. 386 aka. i686):
-
-* [go 1.22 or newer](https://go.dev/dl/go1.22.3.windows-386.msi)
-* [gcc 13.2 or newer](https://packages.msys2.org/package/mingw-w64-i686-gcc)
-
-This is known to work with MSYS make and CMake generator "MSYS Makefiles". go and gcc must be in `%PATH%`.  
-At time of writing, cgo does not support MSVC.
-
-For sending opus in ogg audio files as voice messages, add a static win32 build of opusfile to CMake's prefix path or use vcpkg's toolchain file:
-
-    vcpkg.exe install opusfile:x86-mingw-static
-    cmake -DCMAKE_TOOLCHAIN_FILE="wherever/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF -G "MSYS Makefiles" ..
+Currently unavailable.
 
 ### Installation
 

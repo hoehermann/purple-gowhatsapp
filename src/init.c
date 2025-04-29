@@ -1,6 +1,6 @@
 /*
  *   gowhatsapp plugin for libpurple
- *   Copyright (C) 2021 Hermann Höhne
+ *   Copyright (C) 2025 Hermann Höhne
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
   */
 
 #include "gowhatsapp.h"
-#include "purple-go-whatsapp.h" // for gowhatsapp_go_init
+#include "libwhatsmeow.h" // for gowhatsapp_go_init
 
 #ifndef PLUGIN_VERSION
 #error Must set PLUGIN_VERSION in build system

@@ -1,6 +1,6 @@
 #include "gowhatsapp.h"
 #include "constants.h"
-#include "purple-go-whatsapp.h" // for gowhatsapp_go_query_contacts
+#include "libwhatsmeow.h" // for gowhatsapp_go_query_contacts
 
 static const char *gowhatsapp_message_type_string[] = {
     FOREACH_MESSAGE_TYPE(GENERATE_STRING)

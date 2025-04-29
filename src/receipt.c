@@ -1,5 +1,5 @@
 #include "gowhatsapp.h"
-#include "purple-go-whatsapp.h"
+#include "libwhatsmeow.h"
 
 static gulong conversation_updated_signal = 0;
 

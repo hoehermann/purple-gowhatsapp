@@ -6,5 +6,4 @@ out
 build
 ignore
 
-src/go/go.sum
-src/go/go.mod
+src/libwhatsmeow.so

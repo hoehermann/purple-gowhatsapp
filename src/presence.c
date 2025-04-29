@@ -1,6 +1,6 @@
 #include "gowhatsapp.h"
 #include "constants.h"
-#include "purple-go-whatsapp.h" // for gowhatsapp_go_send_presence
+#include "libwhatsmeow.h" // for gowhatsapp_go_send_presence
 
 /*
  * WhatsApp informed us that a contact is now online or offline.
