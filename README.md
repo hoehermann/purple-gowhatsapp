@@ -105,12 +105,11 @@ For Ubuntu, or Debian compliant Linux flavors, use the apt package manager to in
 
 This project uses CMake.
 
-    git submodule update --init
-    mkdir build
-    cd build
-    cmake ..
-    cmake --build .
-    sudo make install/strip
+    git clone --recurse-submodules git@github.com:hoehermann/purple-gowhatsapp.git
+    cmake -S . -B build
+    cmake --build build --target download-modules # optional, for compiling offline
+    cmake --build build
+    cmake --install build --strip
 
 You may specify which go compiler binary to use:
 
