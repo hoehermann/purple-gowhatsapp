@@ -91,11 +91,13 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 		rm := message.GetReactionMessage()
 		if rm != nil && rm.Text != nil && rm.Key != nil && rm.Key.ID != nil {
 			quote := ""
+			// the look-up currently does not work for outgoing image messages
+			// TODO: add/check all kinds of outgoing messages (I do not remember if text-messages are already working)
 			for i := range handler.cachedMessages {
 				if handler.cachedMessages[i].id == rm.Key.GetID() {
 					message := &handler.cachedMessages[i]
 					quote = fmt.Sprintf("message \"%.50s\" from %s", message.text, message.timestamp.Format(time.RFC822))
-					// TODO: truncate string when storing, not when displaying
+					// TODO: add elipis to indicate message truncation
 					break
 				}
 			}
