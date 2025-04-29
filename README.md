@@ -92,7 +92,6 @@ Dependencies:
 
 * libpurple
 * pkg-config
-* cmake (3.8 or newer)
 * make
 * go (1.23 or newer)
 * gcc (9.2.0 or newer)
@@ -107,7 +106,7 @@ Then build:
 
     git clone --recurse-submodules git@github.com:hoehermann/purple-gowhatsapp.git
     cd src
-    CGO_CFLAGS="-DPLUGIN_VERSION=$(cat ../VERSION) $(pkg-config -cflags glib-2.0 purple opusfile gdk-pixbuf-2.0)" CGO_LDFLAGS=$(pkg-config --libs glib-2.0 purple opusfile gdk-pixbuf-2.0) go build -buildmode=c-shared -o libwhatsmeow.so
+    CGO_CFLAGS="-DPLUGIN_VERSION=$(cat ../VERSION) $(pkg-config -cflags glib-2.0 purple opusfile gdk-pixbuf-2.0)" CGO_LDFLAGS=$(pkg-config --libs glib-2.0 purple opusfile gdk-pixbuf-2.0) go build -mod=vendor -buildmode=c-shared -o libwhatsmeow.so
 
 #### Windows Specific
 
