@@ -4,7 +4,9 @@
 void gowhatsapp_display_text_message(PurpleConnection *connection, gowhatsapp_message_t *gwamsg, PurpleMessageFlags flags) {
     g_return_if_fail(connection != NULL);
     // WhatsApp is a plain-text protocol, but Pidgin expects HTML
-    gchar * text = purple_markup_escape_text(gwamsg->text, -1);
+    gchar * html = purple_markup_escape_text(gwamsg->text, -1); // converts to HTML except the line breakes
+    gchar * text = purple_strdup_withhtml(html); // converts newline characters to HTML br tags
+    g_free(html);
     gowhatsapp_display_message_common(connection, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, flags, gwamsg->messageId);
     g_free(text);
 }
