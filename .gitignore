@@ -2,8 +2,7 @@
 .vscode
 CMakeSettings.json
 out
-
 build
 ignore
-
 src/libwhatsmeow.so
+/src/vendor/

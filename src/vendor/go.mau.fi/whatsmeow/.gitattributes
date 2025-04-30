@@ -1,3 +1,0 @@
-*.pb.go linguist-generated=true
-*.pb.raw binary linguist-generated=true
-internals.go linguist-generated=true
