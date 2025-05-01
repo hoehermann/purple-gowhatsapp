@@ -24,6 +24,10 @@
 #include "gowhatsapp.h"
 #include "libwhatsmeow.h" // for gowhatsapp_go_init
 
+#ifndef GO_CGO_PROLOGUE_H
+#pragma message "Warning: cgo prologue is missing when building with the dummy header."
+#endif
+
 #ifndef PLUGIN_VERSION
 #error Must set PLUGIN_VERSION in build system
 #endif

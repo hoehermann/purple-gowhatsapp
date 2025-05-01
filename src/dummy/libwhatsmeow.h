@@ -1,5 +1,3 @@
-#pragma message "Warning: Building with a dummy header. Please execute `go build` again."
-
 extern void gowhatsapp_go_login(PurpleAccount* account, char* purple_user_dir, char* username, char* password, char* proxy_uri);
 extern void gowhatsapp_go_close(PurpleAccount* account);
 extern void gowhatsapp_go_logout(PurpleAccount* account);
