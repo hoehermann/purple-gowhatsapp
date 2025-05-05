@@ -24,10 +24,6 @@
 #include "gowhatsapp.h"
 #include "libwhatsmeow.h" // for gowhatsapp_go_init
 
-#ifndef GO_CGO_PROLOGUE_H
-#pragma message "Warning: cgo prologue is missing when building with the dummy header."
-#endif
-
 #ifndef PLUGIN_VERSION
 #error Must set PLUGIN_VERSION in build system
 #endif
@@ -88,9 +84,12 @@ actions(PurplePlugin *plugin, gpointer context)
     return actions;
 }
 
-static gboolean
-libpurple2_plugin_load(PurplePlugin *plugin)
-{
+static gboolean libpurple2_plugin_load(PurplePlugin *plugin) {
+    #ifndef GO_CGO_PROLOGUE_H
+        #pragma message "Warning: cgo prologue is missing when building with the dummy header."
+        pruple_debug_error(GOWHATSAPP_NAME, "This plug-in was built with a dummy header. This is dangerously unsafe. Refusing to load plug-in.\n");
+        return FALSE;
+    #endif
     return TRUE;
 }
 

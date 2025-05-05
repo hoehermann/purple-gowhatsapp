@@ -2,8 +2,8 @@
 
 project("purple-whatsmeow" C)
 
-if (NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-  message(FATAL "This project uses cgo which is incompatible with anything but the Clang or GNU C Compiler (see https://github.com/golang/go/issues/36283).")
+if (NOT (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+  message(FATAL_ERROR "This project uses cgo which is incompatible with anything but the Clang or GNU C Compiler (see https://github.com/golang/go/issues/36283). Your compiler is ${CMAKE_C_COMPILER_ID}.")
 endif()
 
 # TODO: add support for

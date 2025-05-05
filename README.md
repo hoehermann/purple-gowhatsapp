@@ -106,7 +106,10 @@ Then build:
 
     git clone --recurse-submodules git@github.com:hoehermann/purple-gowhatsapp.git
     cd src
-    CGO_CFLAGS="-DPLUGIN_VERSION=$(cat ../VERSION) $(pkg-config -cflags glib-2.0 purple opusfile gdk-pixbuf-2.0)" CGO_LDFLAGS=$(pkg-config --libs glib-2.0 purple opusfile gdk-pixbuf-2.0) go build -mod=vendor -buildmode=c-shared -o libwhatsmeow.so
+    CGO_CFLAGS="-DPLUGIN_VERSION=$(cat ../VERSION) $(pkg-config -cflags glib-2.0 purple opusfile gdk-pixbuf-2.0)"
+    CGO_LDFLAGS=$(pkg-config --libs glib-2.0 purple opusfile gdk-pixbuf-2.0)
+    go build -mod=vendor -buildmode=c-shared -o libwhatsmeow.so # use dummy header to generate proper header
+    go build -mod=vendor -buildmode=c-shared -o libwhatsmeow.so # use proper header
 
 #### Windows Specific
 
