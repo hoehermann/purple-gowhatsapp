@@ -106,6 +106,7 @@ For Ubuntu, or Debian compliant Linux flavors, use the apt package manager to in
 This project uses CMake.
 
     git clone --recurse-submodules git@github.com:hoehermann/purple-gowhatsapp.git
+    rm go.mod go.sum # recommended for bleeding-edge builds
     cmake -S . -B build
     cmake --build build --target download-modules # optional, for compiling offline
     cmake --build build
