@@ -1,5 +1,5 @@
 #include "gowhatsapp.h"
-#include "purple-go-whatsapp.h"
+#include "libwhatsmeow.h"
 
 static int
 send_message(PurpleConnection *pc, const gchar *who, const gchar *message, gboolean is_group) 

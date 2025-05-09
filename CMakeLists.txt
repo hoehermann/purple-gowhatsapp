@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.16...3.24)
 
-project("purple-gowhatsapp" C)
+project("purple-whatsmeow" C)
 
 # TODO: add support for
 # find_package(OpusFile CONFIG REQUIRED)
@@ -21,7 +21,7 @@ if (NOT "${OPUSFILE_FOUND}")
     set(OPUSFILE_LINK_LIBRARIES ${OPUSFILE_LIB} ${OPUS_LIB} ${OGG_LIB})
 endif()
 
-set(Purple_DIR "${CMAKE_CURRENT_SOURCE_DIR}/submodules/purple-cmake" CACHE PATH "Where to find purple-config.cmake")
+set(Purple_DIR "scripts/purple-cmake" CACHE PATH "Where to find purple-config.cmake")
 find_package(Purple REQUIRED)
 
 message(STATUS "PURPLE_INCLUDE_DIRS: ${PURPLE_INCLUDE_DIRS}")
@@ -36,9 +36,9 @@ message(STATUS "OPUSFILE_LINK_LIBRARIES: ${OPUSFILE_LINK_LIBRARIES}")
 # read version string from file
 file(READ "${CMAKE_SOURCE_DIR}/VERSION" VERSION)
 
-add_subdirectory(src/go)
-add_subdirectory(src/c)
+include(scripts/go.cmake)
+add_subdirectory(glue)
 
-install(DIRECTORY "pixmaps" DESTINATION "${PURPLE_DATA_DIR}" FILES_MATCHING PATTERN "*.png")
+install(DIRECTORY "assets/pixmaps" DESTINATION "${PURPLE_DATA_DIR}" FILES_MATCHING PATTERN "*.png")
 
-include(cpack.cmake)
+include(scripts/cpack.cmake)

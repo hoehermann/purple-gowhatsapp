@@ -110,6 +110,10 @@ void xfer_download_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg
     // MEMCHECK NOTE: purple_xfer_unref calls purple_xfer_destroy which MAY call purple_xfer_cancel_local if (purple_xfer_get_status(xfer) == PURPLE_XFER_STATUS_STARTED) which calls cancel_recv and cancel_local
 }
 
+#if !GLIB_CHECK_VERSION(2, 68, 0)
+#define g_memdup2 g_memdup
+#endif
+
 void gowhatsapp_handle_attachment(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
     const gboolean is_image = gwamsg->subtype == gowhatsapp_attachment_type_image;
     const gboolean is_sticker = gwamsg->subtype == gowhatsapp_attachment_type_sticker;

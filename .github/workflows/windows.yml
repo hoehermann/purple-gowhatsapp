@@ -41,19 +41,19 @@ jobs:
       run: cmake --build build
 
     - name: Strip
-      run: strip -s build/src/c/libwhatsmeow.dll
+      run: strip -s build/glue/libwhatsmeow.dll
 
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        path: build/src/c/libwhatsmeow.dll
+        path: build/glue/libwhatsmeow.dll
         name: libwhatsmeow.dll
     
     - name: Create Release
       #if: contains(github.ref, 'tags/v')
       uses: ncipollo/release-action@v1
       with:
-        artifacts: build/src/c/libwhatsmeow.dll
+        artifacts: build/glue/libwhatsmeow.dll
         tag: nightly-${{ github.sha }}
         name: Nightly ${{ github.sha }}
         allowUpdates: true

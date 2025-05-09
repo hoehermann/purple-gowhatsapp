@@ -1,8 +1,8 @@
 package main
 
 /*
-#include "../c/constants.h"
-#include "../c/opusreader.h"
+#include "constants.h"
+#include "opusreader.h"
 */
 import "C"
 

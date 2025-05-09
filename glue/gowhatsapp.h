@@ -9,10 +9,6 @@
 #define GOWHATSAPP_STATUS_STR_OFFLINE   "offline"
 #define GOWHATSAPP_STATUS_STR_MOBILE    "mobile"
 
-#if !GLIB_CHECK_VERSION(2, 68, 0)
-#define g_memdup2 g_memdup
-#endif
-
 // protocol data for one connection
 typedef struct {
     // reference to roomlist which is currently being populated in asynchronous calls

@@ -1,10 +1,5 @@
-.vs
 .vscode
-CMakeSettings.json
-out
-
-build
 ignore
-
-src/go/go.sum
-src/go/go.mod
+vendor
+*.so
+libwhatsmeow.*

@@ -22,7 +22,7 @@
   */
 
 #include "gowhatsapp.h"
-#include "purple-go-whatsapp.h" // for gowhatsapp_go_init
+#include "libwhatsmeow.h" // for gowhatsapp_go_init
 
 #ifndef PLUGIN_VERSION
 #error Must set PLUGIN_VERSION in build system

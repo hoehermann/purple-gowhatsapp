@@ -1,10 +1,8 @@
 # purple-gowhatsapp
 
-A libpurple/Pidgin plugin for WhatsApp. Being developed on Ubuntu 24.04. 
+A libpurple/Pidgin plugin for WhatsApp powered by [whatsmeow](https://github.com/tulir/whatsmeow). whatsmeow is written by Tulir Asokan.
 
-This is a re-write of [purple-gowhatsapp](https://github.com/hoehermann/purple-gowhatsapp/tree/gowhatsapp), switching back-ends from [go-whatsapp](https://github.com/Rhymen/go-whatsapp) to [whatsmeow](https://github.com/tulir/whatsmeow). whatsmeow is written by Tulir Asokan. It has multi-device support.
-
-![Instant Message](/instant_message.png?raw=true "Instant Message Screenshot")
+![Instant Message](/docs/instant_message.png?raw=true "Instant Message Screenshot")
 
 ### Features
 
@@ -88,13 +86,15 @@ These features will not be worked on:
 
 #### Linux
 
-Dependencies: 
+This project is being developed on Ubuntu 24.04. Support for other distributions is community effort.
+
+Dependencies:
 
 * libpurple
 * pkg-config
 * cmake (3.8 or newer)
 * make
-* go (1.22 or newer)
+* go (1.24 or newer)
 * gcc (9.2.0 or newer)
 * libgdk-pixbuf-2.0 (optional)
 * libopusfile (optional)
@@ -105,10 +105,9 @@ For Ubuntu, or Debian compliant Linux flavors, use the apt package manager to in
 
 This project uses CMake.
 
-    git clone --recurse-submodules git@github.com:hoehermann/purple-gowhatsapp.git
-    rm go.mod go.sum # recommended for bleeding-edge builds
-    cmake -S . -B build
-    cmake --build build --target download-modules # optional, for compiling offline
+    git clone --recurse-submodules git@github.com:hoehermann/purple-gowhatsapp.git purple-whatsmeow
+    rm purple-whatsmeow/go.{mod,sum} # recommended for bleeding-edge builds
+    cmake -S purple-whatsmeow -B build
     cmake --build build
     cmake --install build --strip
 
@@ -132,7 +131,7 @@ CMake will try to set-up a development environment automatically.
 
 Additional dependencies (must be 32 bit aka. win32 aka. x86 aka. 386 aka. i686):
 
-* [go 1.22 or newer](https://go.dev/dl/go1.22.3.windows-386.msi)
+* [go 1.24 or newer](https://go.dev/dl/go1.24.0.windows-386.msi)
 * [gcc 13.2 or newer](https://packages.msys2.org/package/mingw-w64-i686-gcc)
 
 This is known to work with MSYS make and CMake generator "MSYS Makefiles". go and gcc must be in `%PATH%`.  
@@ -141,7 +140,7 @@ At time of writing, cgo does not support MSVC.
 For sending opus in ogg audio files as voice messages, add a static win32 build of opusfile to CMake's prefix path or use vcpkg's toolchain file:
 
     vcpkg.exe install opusfile:x86-mingw-static
-    cmake -DCMAKE_TOOLCHAIN_FILE="wherever/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF -G "MSYS Makefiles" ..
+    cmake -DCMAKE_TOOLCHAIN_FILE="wherever/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF -G "MSYS Makefiles" -S . -B build
 
 ### Installation
 

@@ -1,5 +1,5 @@
 #include "gowhatsapp.h"
-#include "purple-go-whatsapp.h" // for gowhatsapp_go_query_groups
+#include "libwhatsmeow.h" // for gowhatsapp_go_query_groups
 
 // Core functions for working with chats in purple
 

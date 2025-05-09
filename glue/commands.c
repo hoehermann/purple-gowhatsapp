@@ -1,5 +1,5 @@
 #include "gowhatsapp.h"
-#include "purple-go-whatsapp.h"
+#include "libwhatsmeow.h"
 
 /*
  * These functions implement some irc-style commands for advanced use in protocol bridges like Spectrum.

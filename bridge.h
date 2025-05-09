@@ -1,22 +1,7 @@
-#ifndef _BRIDGE_H_
-#define _BRIDGE_H_
+#pragma once
 
-#include <stdint.h> // for int64_t
+#include <purple.h> // for PurpleAccount
 #include <time.h> // for time_t
-#include <stdlib.h> // for calloc
-
-// for querying current settings
-// these signatures are redefinitions taken from purple.h
-// CGO needs to have them re-declared as external
-#ifndef _PURPLE_ACCOUNT_H_
-#define _PURPLE_ACCOUNT_H_
-struct _PurpleAccount;
-typedef struct _PurpleAccount PurpleAccount;
-extern int gowhatsapp_account_exists(PurpleAccount *account);
-extern int purple_account_get_int(PurpleAccount *account, const char *name, int default_value);
-extern int purple_account_get_bool(PurpleAccount *account, const char *name, int default_value); // assumes gboolean is int
-extern const char * purple_account_get_string(PurpleAccount *account, const char *name, const char *default_value);
-#endif
 
 // no real reason to do this, I just think it is cool
 // https://stackoverflow.com/questions/9907160/how-to-convert-enum-names-to-string-in-c
@@ -89,4 +74,9 @@ typedef struct gowhatsapp_message gowhatsapp_message_t;
 
 // for feeding messages from go into purple
 extern void gowhatsapp_process_message_bridge(gowhatsapp_message_t gwamsg);
-#endif
+
+// for processing the messages in purple
+extern gboolean process_message_bridge(gpointer data);
+
+// for checking if the account exists before trying to read settings from it
+extern int gowhatsapp_account_exists(PurpleAccount *account);

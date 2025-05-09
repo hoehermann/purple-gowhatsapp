@@ -1,5 +1,5 @@
 #include "gowhatsapp.h"
-#include "purple-go-whatsapp.h"
+#include "libwhatsmeow.h"
 
 static void
 gowhatsapp_free_xfer(PurpleXfer *xfer)

@@ -1,6 +1,6 @@
 #include "gowhatsapp.h"
 #include "constants.h"
-#include "purple-go-whatsapp.h" // for gowhatsapp_go_subscribe_presence
+#include "libwhatsmeow.h" // for gowhatsapp_go_subscribe_presence
 
 PurpleGroup * gowhatsapp_get_purple_group() {
     PurpleGroup *group = purple_blist_find_group("Whatsapp");

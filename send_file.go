@@ -1,7 +1,7 @@
 package main
 
 /*
-#include "../c/opusreader.h"
+#include "opusreader.h"
 */
 import "C"
 

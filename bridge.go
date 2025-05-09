@@ -22,8 +22,8 @@
 package main
 
 /*
-#include "../c/constants.h"
-#include "../c/bridge.h"
+#include "constants.h"
+#include "bridge.h"
 */
 import "C"
 
