@@ -1,3 +1,18 @@
+# 1.17.0
+
+* Update: Requires Go 1.24.2.
+* Update: DEB package built against Ubuntu 22.04.
+* Feature: Blocked contacts are no longer added to the buddy list.
+* Feature: Profile picture can be downloaded in high quality.
+* Feature: Attachments can be downloaded directly, bypassing libpurple file transfer mechanisms.
+* Change: Aligned directory layout to align with go expectations.
+* Change: Use pure-go sqlite implementation.
+* Bugfix: Message ID is displayed for image messages.
+* Bugfix: g_memdup2 is defined in all the places it is needed.
+* Bugfix: Contacts on the hidden server are no longer added to the buddy list.
+* Bugfix: Respect the original file name when handling a Document Message.
+* Bugfix: Newlines are converted to pango linebreak tags.
+
 # 1.16.0
 
 * Feature: Offer to pair with 8-character code.
