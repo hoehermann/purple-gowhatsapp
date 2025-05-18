@@ -6,6 +6,7 @@ package main
 import "C"
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strconv"
@@ -75,7 +76,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		return
 	}
 	container := sqlstore.NewWithDB(db, dialect, dbLog)
-	err = container.Upgrade()
+	err = container.Upgrade(context.TODO())
 	if err != nil {
 		purple_error(account, fmt.Sprintf("Failed to upgrade database: %v", err), ERROR_FATAL)
 		return
@@ -110,7 +111,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		}
 		registrationId = uint32(rId)
 		// now query database for device information
-		device, err = container.GetDevice(deviceJid)
+		device, err = container.GetDevice(context.TODO(), deviceJid)
 		if err != nil {
 			// this is in case of database errors, presumably
 			purple_error(account, fmt.Sprintf("Unable to read device from database: %#v", err), ERROR_FATAL)
@@ -186,7 +187,7 @@ func (handler *Handler) generate_pairing_code() (string, error) {
 	// Firefox on Linux chosen arbitrarily
 	clientDisplayName := "Firefox (Linux)"
 	clientType := whatsmeow.PairClientFirefox
-	pairing_code, err := handler.client.PairPhone(phone, showPushNotification, clientType, clientDisplayName)
+	pairing_code, err := handler.client.PairPhone(context.TODO(), phone, showPushNotification, clientType, clientDisplayName)
 	return pairing_code, err
 }
 
@@ -231,17 +232,18 @@ func (handler *Handler) prune_devices(deviceJid types.JID) {
 		purple_error(handler.account, "prune_devices called without a database connection", ERROR_FATAL)
 		return
 	}
-	devices, err := handler.container.GetAllDevices()
+	ctx := context.TODO()
+	devices, err := handler.container.GetAllDevices(ctx)
 	if err == nil {
 		for _, device := range devices {
 			if device.ID == nil {
 				handler.log.Infof("Deleting bogous device %s from database...", device.ID.String())
-				device.Delete() // ignores errors
+				device.Delete(ctx) // ignores errors
 			} else {
 				obsolete := device.ID.ToNonAD() == deviceJid.ToNonAD() && *device.ID != deviceJid
 				if obsolete {
 					handler.log.Infof("Deleting obsolete device %s from database...", device.ID.String())
-					device.Delete() // ignores errors
+					device.Delete(ctx) // ignores errors
 				}
 			}
 		}

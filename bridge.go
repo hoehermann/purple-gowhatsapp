@@ -28,11 +28,13 @@ package main
 import "C"
 
 import (
+	"context"
 	"fmt"
-	"go.mau.fi/whatsmeow/appstate"
-	"go.mau.fi/whatsmeow/types"
 	"time"
 	"unsafe"
+
+	"go.mau.fi/whatsmeow/appstate"
+	"go.mau.fi/whatsmeow/types"
 )
 
 type PurpleAccount = C.PurpleAccount
@@ -64,7 +66,7 @@ func gowhatsapp_go_close(account *PurpleAccount) {
 func gowhatsapp_go_logout(account *PurpleAccount) {
 	handler, ok := handlers[account]
 	if ok {
-		err := handler.client.Logout()
+		err := handler.client.Logout(context.TODO())
 		if err != nil {
 			purple_error(account, fmt.Sprintf("Logout failed: %#v", err), ERROR_FATAL)
 			// TODO: ask user whether they want to force Client.Disconnect() and Client.Store.Delete()
@@ -204,12 +206,12 @@ func gowhatsapp_go_get_contacts(account *PurpleAccount) {
 	handler, ok := handlers[account]
 	if ok {
 		go func() {
-			err := handler.client.FetchAppState(appstate.WAPatchCriticalUnblockLow, false, false)
+			err := handler.client.FetchAppState(context.TODO(), appstate.WAPatchCriticalUnblockLow, false, false)
 			if err != nil {
 				handler.log.Warnf("Could not fetch app state from server: %#v", err)
 			}
 			// even in case of error, continue with locally stored contacts
-			contacts, err := handler.client.Store.Contacts.GetAllContacts()
+			contacts, err := handler.client.Store.Contacts.GetAllContacts(context.TODO())
 			if err != nil {
 				handler.log.Warnf("Could not get contacts from store: %#v", err)
 			} else {

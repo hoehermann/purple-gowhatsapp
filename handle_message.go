@@ -7,6 +7,7 @@ package main
 import "C"
 
 import (
+	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -153,10 +154,12 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		mimetype  *string = nil
 	)
 	chat := source.Chat.ToNonAD().String()
+	ctx := context.TODO()
+	// TODO: switch to handler.client.DownloadAny()
 	{
 		im := message.GetImageMessage()
 		if im != nil {
-			data, err = handler.client.Download(im)
+			data, err = handler.client.Download(ctx, im)
 			hash = hex.EncodeToString(im.GetFileSHA256())
 			extension = extension_from_mimetype(im.Mimetype)
 			data_type = C.gowhatsapp_attachment_type_image
@@ -166,7 +169,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 	{
 		vm := message.GetVideoMessage()
 		if vm != nil {
-			data, err = handler.client.Download(vm)
+			data, err = handler.client.Download(ctx, vm)
 			hash = hex.EncodeToString(vm.GetFileSHA256())
 			extension = extension_from_mimetype(vm.Mimetype)
 			data_type = C.gowhatsapp_attachment_type_video
@@ -175,7 +178,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 	{
 		ptv := message.GetPtvMessage()
 		if ptv != nil {
-			data, err = handler.client.Download(ptv)
+			data, err = handler.client.Download(ctx, ptv)
 			hash = hex.EncodeToString(ptv.GetFileSHA256())
 			extension = extension_from_mimetype(ptv.Mimetype)
 			data_type = C.gowhatsapp_attachment_type_video
@@ -184,7 +187,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 	{
 		am := message.GetAudioMessage()
 		if am != nil {
-			data, err = handler.client.Download(am)
+			data, err = handler.client.Download(ctx, am)
 			hash = hex.EncodeToString(am.GetFileSHA256())
 			extension = extension_from_mimetype(am.Mimetype)
 			data_type = C.gowhatsapp_attachment_type_audio
@@ -193,7 +196,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 	{
 		dm := message.GetDocumentMessage()
 		if dm != nil {
-			data, err = handler.client.Download(dm)
+			data, err = handler.client.Download(ctx, dm)
 			hash = hex.EncodeToString(dm.GetFileSHA256())
 			filename = dm.GetFileName() // TODO: sanitize filename
 			extension = filepath.Ext(filename)
@@ -207,7 +210,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 	{
 		sm := message.GetStickerMessage()
 		if sm != nil {
-			data, err = handler.client.Download(sm)
+			data, err = handler.client.Download(ctx, sm)
 			hash = hex.EncodeToString(sm.GetFileSHA256())
 			extension = extension_from_mimetype(sm.Mimetype)
 			data_type = C.gowhatsapp_attachment_type_sticker
