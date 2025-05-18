@@ -233,6 +233,8 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		local_path_template := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT)
 		if local_path_template != "" {
 			local_path := local_path_template
+			// TODO: add $direction (sent/received)
+			// TODO: have one function to replace in local path and URL (with the escaping function as a parameter)
 			local_path = strings.Replace(local_path, "$remote", chat, -1)
 			local_path = strings.Replace(local_path, "$hash", hash, -1)
 			local_path = strings.Replace(local_path, "$filename", filename, -1)
@@ -257,7 +259,6 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 					url_s = strings.Replace(url_s, "$hash", hash, -1)
 					url_s = strings.Replace(url_s, "$filename", url.PathEscape(filename), -1)
 					url_s = strings.Replace(url_s, "$extension", extension, -1)
-					// TODO: maybe pipe this through a timetostr formatter to allow time-based file-names?
 				}
 				text := url_s
 				purple_display_text_message(handler.account, chat, source.IsGroup, false, sender, nil, timestamp, text, &id)
