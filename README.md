@@ -92,7 +92,7 @@ Dependencies:
 
 * libpurple
 * pkg-config
-* cmake (3.8 or newer)
+* cmake (3.20 or newer)
 * make
 * go (1.24.2 or newer)
 * gcc (9.2.0 or newer)
@@ -101,11 +101,13 @@ Dependencies:
 
 For Ubuntu, or Debian compliant Linux flavors, use the apt package manager to install these dependencies first:
 
-    sudo apt install libpurple-dev pkg-config cmake make golang gcc libgdk-pixbuf2.0-dev libopusfile-dev
+    sudo apt install libpurple-dev pkg-config cmake make gcc libgdk-pixbuf2.0-dev libopusfile-dev
 
-This project uses CMake.
+In case it is really recent, you can use the go compiler shipped with your distribution (e.g. Arch Linux). All others need to obtain a recent version from https://golang.org/dl/.
 
-    git clone --recurse-submodules git@github.com:hoehermann/purple-gowhatsapp.git purple-whatsmeow
+For systems with pkg-config, a Makefile exists. For all others, this project uses CMake.
+
+    git clone --recurse-submodules https://github.com/hoehermann/purple-gowhatsapp.git purple-whatsmeow
     rm purple-whatsmeow/go.{mod,sum} # recommended for bleeding-edge builds
     cmake -S purple-whatsmeow -B build
     cmake --build build
@@ -240,7 +242,7 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
     * `original`: The original picture is downloaded from the WhatsApp servers.
 
 * `ignore-status-broadcast` bool  
-  If set to true (default), your contact's status broadcasts are ignored.
+  If set to true (default: false), your contact's status broadcasts are ignored.
 
 * `bridge-compatibility` bool  
   Special compatibility setting for protocol bridges like Spectrum or bitlbee. Setting this to true (default: false) will treat system messages just like normal messages, allowing them to be logged and forwarded. This only affects soft errors regarding a specific conversation, e.g. "message could not be sent".
