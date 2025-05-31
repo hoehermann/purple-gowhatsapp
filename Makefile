@@ -1,7 +1,7 @@
 $(warning This Makefile exists for reference purposes. It is not maintained. Use CMake instead.)
 
 export GO_FLAGS
-export CGO_CFLAGS = -DPLUGIN_VERSION=$(shell cat VERSION) $(shell pkg-config -cflags glib-2.0 purple opusfile gdk-pixbuf-2.0)
+export CGO_CFLAGS = -DPLUGIN_VERSION=$(shell cat VERSION) $(shell pkg-config --cflags glib-2.0 purple opusfile gdk-pixbuf-2.0)
 export CGO_LDFLAGS = $(shell pkg-config --libs glib-2.0 purple opusfile gdk-pixbuf-2.0)
 
 all: libwhatsmeow.so
