@@ -25,11 +25,17 @@ import (
 
 func (handler *Handler) handle_message(message *waE2E.Message, id string, source types.MessageSource, name *string, timestamp time.Time, is_historical bool) {
 	//handler.log.Infof("message: %#v", message)
-	if source.Chat == types.StatusBroadcastJID && purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, true) {
-		handler.log.Warnf("Ignoring status broadcast.")
-		// there have been numerous user reports of status broadcasts crashing the plug-in
-		// or other undesired behaviour such as just being annoying
-		return
+	if source.Chat == types.StatusBroadcastJID { 
+		if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, false) {
+			// some people find status broadcasts annoying
+			handler.log.Warnf("Ignoring status broadcast.")
+			return
+		} else {
+			// the protocol implements status broadcasts in the form of a group
+			// we just treat those messages as if they were direct messages
+			source.Chat = source.Sender
+			source.IsGroup = false
+		}
 	}
 	if handler.blocklist != nil {
 		// TODO find out whether locally checking the blocklist is actually necessary or if WhatsApp servers do the filtering for us
@@ -235,6 +241,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		sender := source.Sender.ToNonAD().String()
 		local_path_template := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT)
 		if local_path_template != "" {
+			// TODO: use client.DownloadToFile
 			local_path := local_path_template
 			// TODO: add $direction (sent/received)
 			// TODO: have one function to replace in local path and URL (with the escaping function as a parameter)

@@ -167,7 +167,11 @@ func gowhatsapp_go_query_group_participants(account *PurpleAccount, groupid *C.c
 			jid, err := parseJID(go_groupid)
 			// TODO: check that jid actually is a group jid, see https://github.com/hoehermann/purple-gowhatsapp/issues/195
 			if err == nil {
-				return participants_to_ntcstrarray(handler.query_group_participants_retry(jid, 1, 10, 0))
+				if jid == types.StatusBroadcastJID {
+					// the status broadcast is not an actual group which participants can be queried from
+				} else {
+					return participants_to_ntcstrarray(handler.query_group_participants_retry(jid, 1, 10, 0))
+				}
 			} else {
 				purple_error(account, fmt.Sprintf("Cannot get group information from invalid JID %s due to %#v.", go_groupid, err), ERROR_FATAL)
 			}
