@@ -25,7 +25,7 @@ import (
 
 func (handler *Handler) handle_message(message *waE2E.Message, id string, source types.MessageSource, name *string, timestamp time.Time, is_historical bool) {
 	//handler.log.Infof("message: %#v", message)
-	if source.Chat == types.StatusBroadcastJID { 
+	if source.Chat == types.StatusBroadcastJID {
 		if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, false) {
 			// some people find status broadcasts annoying
 			handler.log.Warnf("Ignoring status broadcast.")

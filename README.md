@@ -186,6 +186,16 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
     * `on-answer`: as soon as the user sends an answer (default)
     * `never`: never
 
+* `client-appearance` string choice  
+  Selects when to send receipts "double gray tick" notifications:
+  
+    * `default`: Appear online, but inactive.
+    * `appear-online`: Appear online and active. Messages will be marked with the "double gray tick" immediately.
+    * `appear-offline`: Receive messages, but appear offline. The implications of this are unknown.
+
+* `passive` bool  
+  This connection is passive. No idea what that entails.
+  
 * `message-cache-size` int  
   Stores a number (default: 100) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions.
 
