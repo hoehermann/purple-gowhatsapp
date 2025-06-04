@@ -178,7 +178,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 func (handler *Handler) generate_pairing_code() (string, error) {
 	own_jid, err := parseJID(handler.username)
 	if err != nil {
-		return "", fmt.Errorf("„%s“ is not a valid WhatsApp JID.", handler.username)
+		return "", fmt.Errorf("„%s“ is not a valid WhatsApp JID", handler.username)
 	}
 	phone := own_jid.ToNonAD().User
 	showPushNotification := true

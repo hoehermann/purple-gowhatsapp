@@ -8,9 +8,6 @@ import (
 	"bytes"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
@@ -96,21 +93,6 @@ func (handler *Handler) profile_picture_downloader() {
 		if err != nil {
 			log.Warnf("Error while transferring profile picture for %s: %#v", pdr.jid.ToNonAD().String(), err)
 			continue
-		}
-		// store profile picture in contact-specific attachment directory
-		local_path_template := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT)
-		if local_path_template != "" {
-			local_path := local_path_template
-			local_path = strings.Replace(local_path, "$remote", pdr.jid.ToNonAD().String(), -1)
-			local_path = strings.Replace(local_path, "$hash", "", -1)
-			local_path = strings.Replace(local_path, "$filename", "profile.jpg", -1)
-			local_path = strings.Replace(local_path, "$extension", "", -1)
-			os.MkdirAll(filepath.Dir(local_path), os.ModePerm)
-			file, err := os.Create(local_path)
-			if err == nil {
-				file.Write(b.Bytes())
-				file.Close()
-			}
 		}
 		purple_set_profile_picture(handler.account, pdr.jid.ToNonAD().String(), b.Bytes(), resp.Header.Get("Last-Modified"), ppi.ID)
 	}

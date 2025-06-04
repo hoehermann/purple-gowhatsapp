@@ -39,9 +39,25 @@ gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg)
     purple_buddy_icons_set_for_user(gwamsg->account, gwamsg->remoteJid, gwamsg->blob, gwamsg->blobsize, NULL);
     PurpleBuddy *buddy = purple_blist_find_buddy(gwamsg->account, gwamsg->remoteJid);
     // no g_free(gwamsg->blob) here – purple takes ownership
-    purple_blist_node_set_string(&buddy->node, "picture_id", gwamsg->senderJid);
+    purple_blist_node_set_string(&buddy->node, "picture_id", gwamsg->messageId);
     purple_blist_node_set_string(&buddy->node, "picture_date", gwamsg->text);
     // TODO: use purple_buddy_icons_set_account_icon_timestamp instead of saving the time string
+
+    // automatically persist profile picture
+    const char *local_path_template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT);
+    if (local_path_template && local_path_template[0]) {
+        time_t timestamp = time(NULL); // TODO: parse profile picture modification date
+        char *hash = ""; // not set for profile pictures
+        char *local_file_path = gowhatsapp_attachment_fill_template(local_path_template, timestamp, hash, "profile", ".jpg", gwamsg->remoteJid, gwamsg->remoteJid, gwamsg->messageId, PURPLE_MESSAGE_RECV);
+        char *local_directory = g_path_get_dirname(local_file_path);
+        if (0 == g_mkdir_with_parents(local_directory, 0x755)) {
+            GError* error;
+            gboolean success = g_file_set_contents(local_file_path, gwamsg->blob, gwamsg->blobsize, &error);
+            // success not checked, errors ignored silently
+        }
+        g_free(local_directory);
+        g_free(local_file_path);
+    }
 }
 
 void 

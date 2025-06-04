@@ -30,14 +30,19 @@ import "C"
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"runtime/cgo"
+	"strings"
 	"time"
 	"unsafe"
 
+	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/appstate"
 	"go.mau.fi/whatsmeow/types"
 )
 
 type PurpleAccount = C.PurpleAccount
+type PurpleXfer = C.PurpleXfer
 
 // TODO: find out how to enable C99's bool type in cgo
 func bool_to_Cchar(b bool) C.char {
@@ -111,6 +116,25 @@ func gowhatsapp_go_send_file(account *PurpleAccount, who *C.char, filename *C.ch
 		err = handler.send_file(C.GoString(who), C.GoString(filename))
 	}
 	return C.CString(err)
+}
+
+//export gowhatsapp_go_download_attachment
+func gowhatsapp_go_download_attachment(account *PurpleAccount, local_file_path *C.char, download_handle C.uintptr_t) *C.char {
+	handler, ok := handlers[account]
+	if ok {
+		h := cgo.Handle(download_handle)
+		var err error = nil
+		if local_file_path != nil {
+			message := h.Value().(whatsmeow.DownloadableMessage)
+			err = handler.download_attachment(C.GoString(local_file_path), message)
+		}
+		h.Delete()
+		if err == nil {
+			return nil
+		}
+		return C.CString(fmt.Sprintf("Failed to download attachment due to %v", err))
+	}
+	return C.CString("Not connected.")
 }
 
 //export gowhatsapp_go_mark_read_conversation
@@ -283,6 +307,13 @@ func gowhatsapp_go_request_profile_picture(account *PurpleAccount, who *C.char, 
 	}
 }
 
+//export gowhatsapp_go_url_from_local_path
+func gowhatsapp_go_url_from_local_path(local_path *C.char) *C.char {
+	local_path_slashed := strings.ReplaceAll(C.GoString(local_path), "\\", "/") // hopefully, this will keep Windows slashes in check without breaking anything
+	url := url.URL{Scheme: "file", Path: local_path_slashed}                    // TODO: use url.FromFilePath(path) once it exists
+	return C.CString(url.String())
+}
+
 /*
  * This will display a QR code via PurpleRequest API
  * or in a conversation window (depending on UI features and user settings).
@@ -389,29 +420,27 @@ func purple_update_name(account *PurpleAccount, remoteJid string, pushName strin
 }
 
 /*
- * This will create a file transfer for receiving an attachment.
- * Works well for participants. A bit wonky for group chats.
- *
- * Please note: Pidgin will ask the user if they wish to receive the file
- * while in fact the file has already been received and they may only chose
- * where to store it.
+ * This will create a purple file transfer for receiving an attachment.
  */
-func purple_handle_attachment(account *PurpleAccount, remoteJid string, isGroup bool, senderJid string, isOutgoing bool, data_type C.int, mimetype *string, filename string, data []byte, id string) {
+func purple_handle_attachment(account *PurpleAccount, remoteJid string, isGroup bool, senderJid string, caption string, id string, timestamp time.Time,
+	data_type C.int, filename string, extension string, mimetype string, hash_hex string, length uint64, message whatsmeow.DownloadableMessage,
+) {
 	cmessage := C.struct_gowhatsapp_message{
-		account:    account,
-		msgtype:    C.char(C.gowhatsapp_message_type_attachment),
-		subtype:    C.char(data_type),
-		remoteJid:  C.CString(remoteJid),
-		isGroup:    bool_to_Cchar(isGroup),
-		senderJid:  C.CString(senderJid),
-		isOutgoing: bool_to_Cchar(isOutgoing),
-		messageId:  C.CString(id),
-		name:       C.CString(filename),
-		blob:       C.CBytes(data),
-		blobsize:   C.size_t(len(data)), // contrary to https://golang.org/pkg/builtin/#len and https://golang.org/ref/spec#Numeric_types, len returns an int of 64 bits on 32 bit Windows machines (see https://github.com/hoehermann/purple-gowhatsapp/issues/1)
-	}
-	if mimetype != nil {
-		cmessage.text = C.CString(*mimetype)
+		account:         account,
+		msgtype:         C.char(C.gowhatsapp_message_type_attachment),
+		subtype:         C.char(data_type),
+		remoteJid:       C.CString(remoteJid),
+		timestamp:       C.time_t(timestamp.Unix()),
+		isGroup:         bool_to_Cchar(isGroup),
+		senderJid:       C.CString(senderJid),
+		messageId:       C.CString(id),
+		filename:        C.CString(filename),
+		extension:       C.CString(extension),
+		mimetype:        C.CString(mimetype),
+		hash_hex:        C.CString(hash_hex),
+		filesize:        C.uint64_t(length),
+		download_handle: C.uintptr_t(cgo.NewHandle(message)),
+		text:            C.CString(caption),
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }
@@ -424,7 +453,7 @@ func purple_set_profile_picture(account *PurpleAccount, who string, data []byte,
 		account:   account,
 		msgtype:   C.char(C.gowhatsapp_message_type_profile_picture),
 		remoteJid: C.CString(who),
-		senderJid: C.CString(picture_id),
+		messageId: C.CString(picture_id),
 		text:      C.CString(picture_date),
 		blob:      C.CBytes(data),
 		blobsize:  C.size_t(len(data)),

@@ -1,6 +1,7 @@
 #include "gowhatsapp.h"
 #include "constants.h"
 #include "../bridge.h"
+#include "bridge.h"
 
 /*
  * This is the C/gtk side of the go → C communication.
@@ -48,13 +49,21 @@ static void process_message(gowhatsapp_message_t * gwamsg) {
 gboolean process_message_bridge(gpointer data) {
     gowhatsapp_message_t * gwamsg = (gowhatsapp_message_t *)data;
     process_message(gwamsg);
-    // always clean up data in heap
+    gowhatsapp_free_message(gwamsg); // always clean up data in heap
+    return FALSE;
+}
+
+void gowhatsapp_free_message(gowhatsapp_message_t *gwamsg) {
     g_free(gwamsg->remoteJid);
     g_free(gwamsg->senderJid);
     g_free(gwamsg->text);
     g_free(gwamsg->name);
-    //g_free(gwamsg->blob); this is cleared after handling the attachment / qrcode
+    // g_free(gwamsg->blob); this is cleared after handling the qrcode PNG or profile picture
+    g_free(gwamsg->hash_hex);
+    g_free(gwamsg->filename);
+    g_free(gwamsg->extension);
+    g_free(gwamsg->mimetype);
+    g_free(gwamsg->messageId);
     g_strfreev(gwamsg->participants);
     g_free(gwamsg);
-    return FALSE;
 }

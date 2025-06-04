@@ -79,6 +79,7 @@ set(GO_SRCS
   ${CMAKE_SOURCE_DIR}/handler.go
   ${CMAKE_SOURCE_DIR}/send_message.go
   ${CMAKE_SOURCE_DIR}/handle_message.go
+  ${CMAKE_SOURCE_DIR}/handle_attachment.go
   ${CMAKE_SOURCE_DIR}/logger.go
   ${CMAKE_SOURCE_DIR}/send_file.go
   ${CMAKE_SOURCE_DIR}/mark_read.go

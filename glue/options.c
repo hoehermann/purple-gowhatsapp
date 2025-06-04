@@ -79,13 +79,6 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
     
     option = purple_account_option_string_new( // MEMCHECK: account_options takes ownership
-        "Incoming file message",
-        GOWHATSAPP_ATTACHMENT_MESSAGE_OPTION,
-        GOWHATSAPP_ATTACHMENT_MESSAGE_DEFAULT
-        );
-    account_options = g_list_append(account_options, option);
-    
-    option = purple_account_option_string_new( // MEMCHECK: account_options takes ownership
         "Attachment file path template",
         GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION,
         GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT
@@ -118,23 +111,10 @@ gowhatsapp_add_account_options(GList *account_options)
         );
         account_options = g_list_append(account_options, option);
     }
-
-    {
-        GList *choices = NULL;
-        choices = add_choice(choices, "embed in conversation window", GOWHATSAPP_IMAGES_CHOICE_INLINE);
-        choices = add_choice(choices, "do file transfer", GOWHATSAPP_IMAGES_CHOICE_XFER);
-        choices = add_choice(choices, "do both", GOWHATSAPP_IMAGES_CHOICE_BOTH);
-        option = purple_account_option_list_new( // MEMCHECK: account_options takes ownership
-            "What to do with incoming images",
-            GOWHATSAPP_HANDLE_IMAGES_OPTION,
-            choices
-        );
-        account_options = g_list_append(account_options, option);
-    }
     
     option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
-        "Inline stickers (needs webp loader)",
-        GOWHATSAPP_INLINE_STICKERS_OPTION,
+        "Inline images (stickers need webp loader)",
+        GOWHATSAPP_INLINE_IMAGES_OPTION,
         TRUE
         );
     account_options = g_list_append(account_options, option);

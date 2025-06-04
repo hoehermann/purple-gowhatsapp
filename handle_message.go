@@ -2,25 +2,16 @@ package main
 
 /*
 #include "constants.h"
-#include "bridge.h"
 */
 import "C"
 
 import (
-	"context"
-	"encoding/hex"
-	"errors"
 	"fmt"
-	"mime"
-	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
-	"golang.org/x/net/http2"
 )
 
 func (handler *Handler) handle_message(message *waE2E.Message, id string, source types.MessageSource, name *string, timestamp time.Time, is_historical bool) {
@@ -77,24 +68,6 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 
 	}
 	{
-		im := message.GetImageMessage()
-		if im != nil && im.Caption != nil {
-			text += im.GetCaption()
-		}
-	}
-	{
-		vm := message.GetVideoMessage()
-		if vm != nil && vm.Caption != nil {
-			text += vm.GetCaption()
-		}
-	}
-	{
-		ptv := message.GetPtvMessage()
-		if ptv != nil && ptv.Caption != nil {
-			text += ptv.GetCaption()
-		}
-	}
-	{
 		rm := message.GetReactionMessage()
 		if rm != nil && rm.Text != nil && rm.Key != nil && rm.Key.ID != nil {
 			quote := ""
@@ -135,154 +108,4 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 		}
 	}
 	handler.handle_attachment(message, id, source, timestamp)
-}
-
-func extension_from_mimetype(mimeType *string) string {
-	extension := ".data"
-	if mimeType != nil {
-		extensions, _ := mime.ExtensionsByType(*mimeType)
-		if extensions != nil {
-			extension = extensions[0]
-		}
-	}
-	return extension
-}
-
-// based on https://github.com/FKLC/WhatsAppToDiscord/blob/master/WA2DC.go
-func (handler *Handler) handle_attachment(message *waE2E.Message, id string, source types.MessageSource, timestamp time.Time) {
-	var (
-		data      []byte
-		err       error
-		filename          = ""
-		hash              = ""
-		extension         = ""
-		data_type C.int   = C.gowhatsapp_attachment_type_none
-		mimetype  *string = nil
-	)
-	chat := source.Chat.ToNonAD().String()
-	ctx := context.TODO()
-	// TODO: switch to handler.client.DownloadAny()
-	{
-		im := message.GetImageMessage()
-		if im != nil {
-			data, err = handler.client.Download(ctx, im)
-			hash = hex.EncodeToString(im.GetFileSHA256())
-			extension = extension_from_mimetype(im.Mimetype)
-			data_type = C.gowhatsapp_attachment_type_image
-			mimetype = im.Mimetype
-		}
-	}
-	{
-		vm := message.GetVideoMessage()
-		if vm != nil {
-			data, err = handler.client.Download(ctx, vm)
-			hash = hex.EncodeToString(vm.GetFileSHA256())
-			extension = extension_from_mimetype(vm.Mimetype)
-			data_type = C.gowhatsapp_attachment_type_video
-		}
-	}
-	{
-		ptv := message.GetPtvMessage()
-		if ptv != nil {
-			data, err = handler.client.Download(ctx, ptv)
-			hash = hex.EncodeToString(ptv.GetFileSHA256())
-			extension = extension_from_mimetype(ptv.Mimetype)
-			data_type = C.gowhatsapp_attachment_type_video
-		}
-	}
-	{
-		am := message.GetAudioMessage()
-		if am != nil {
-			data, err = handler.client.Download(ctx, am)
-			hash = hex.EncodeToString(am.GetFileSHA256())
-			extension = extension_from_mimetype(am.Mimetype)
-			data_type = C.gowhatsapp_attachment_type_audio
-		}
-	}
-	{
-		dm := message.GetDocumentMessage()
-		if dm != nil {
-			data, err = handler.client.Download(ctx, dm)
-			hash = hex.EncodeToString(dm.GetFileSHA256())
-			filename = dm.GetFileName() // TODO: sanitize filename
-			extension = filepath.Ext(filename)
-			if extension == "" {
-				extension = extension_from_mimetype(dm.Mimetype)
-			}
-			filename = strings.TrimSuffix(filename, extension)
-			data_type = C.gowhatsapp_attachment_type_document
-		}
-	}
-	{
-		sm := message.GetStickerMessage()
-		if sm != nil {
-			data, err = handler.client.Download(ctx, sm)
-			hash = hex.EncodeToString(sm.GetFileSHA256())
-			extension = extension_from_mimetype(sm.Mimetype)
-			data_type = C.gowhatsapp_attachment_type_sticker
-			mimetype = sm.Mimetype
-		}
-	}
-	if err != nil {
-		if len(data) == 0 {
-			errmsg := fmt.Sprintf("Message contained an attachment, but the download failed: %v", err)
-			var h2se *http2.StreamError
-			if errors.As(err, &h2se) {
-				err = h2se.Cause
-				errmsg = fmt.Sprintf("%s %v", errmsg, err)
-			}
-			purple_display_system_message(handler.account, chat, source.IsGroup, errmsg)
-			return
-		} else {
-			handler.log.Warnf("Forwarding file %s to frontend regardless of error: %v", filename, err)
-		}
-	}
-	if data_type != C.gowhatsapp_attachment_type_none {
-		sender := source.Sender.ToNonAD().String()
-		local_path_template := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT)
-		if local_path_template != "" {
-			// TODO: use client.DownloadToFile
-			local_path := local_path_template
-			// TODO: add $direction (sent/received)
-			// TODO: have one function to replace in local path and URL (with the escaping function as a parameter)
-			local_path = strings.Replace(local_path, "$remote", chat, -1)
-			local_path = strings.Replace(local_path, "$hash", hash, -1)
-			local_path = strings.Replace(local_path, "$filename", filename, -1)
-			local_path = strings.Replace(local_path, "$extension", extension, -1)
-			// TODO: maybe pipe this through a timetostr formatter to allow time-based file-names?
-			os.MkdirAll(filepath.Dir(local_path), os.ModePerm)
-			file, err := os.Create(local_path)
-			if err != nil {
-				errmsg := fmt.Sprintf("Unable to store file at %s due to %v", local_path, err)
-				purple_display_system_message(handler.account, chat, source.IsGroup, errmsg)
-			} else {
-				file.Write(data)
-				file.Close()
-				url_template := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_OPTION, C.GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_DEFAULT)
-				url_s := ""
-				if url_template == "" {
-					u := url.URL{Scheme: "file", Path: local_path} // TODO: use url.FromFilePath(path)
-					url_s = u.String()
-				} else {
-					url_s = url_template
-					url_s = strings.Replace(url_s, "$remote", url.PathEscape(chat), -1)
-					url_s = strings.Replace(url_s, "$hash", hash, -1)
-					url_s = strings.Replace(url_s, "$filename", url.PathEscape(filename), -1)
-					url_s = strings.Replace(url_s, "$extension", extension, -1)
-				}
-				text := url_s
-				purple_display_text_message(handler.account, chat, source.IsGroup, false, sender, nil, timestamp, text, &id)
-			}
-		} else {
-			// append extension to file-name (relevant on Windows in particular)
-			if data_type == C.gowhatsapp_attachment_type_document {
-				// only Document messages offer named files
-				filename = filename + extension
-			} else {
-				// use hash and extension for all the other attachment types
-				filename = hash + extension
-			}
-			purple_handle_attachment(handler.account, chat, source.IsGroup, sender, false, data_type, mimetype, filename, data, id)
-		}
-	}
 }

@@ -54,11 +54,11 @@ Known issues:
 * Stickers:
   * A [webp pixbuf loader](https://github.com/aruiz/webp-pixbuf-loader) must be present at runtime.
   * GDK pixbuf headers must be available at build time else presence of loader cannot be checked.
-  * Stickers are not animated.
+  * Stickers may or may not appear animated depending on loader.
 * Special messages:
   * Voice calls are not supported (a warning is displayed).
-  * Votes are not supported (a warning is displayed).
-  * Other special messages are irgnored silently.
+  * Polls are not supported (a warning is displayed).
+  * Other special messages are ignored silently.
 * No support for mark-up in outgoing messages.  
   Note: Due to the internal use of [purple_markup_strip_html](https://docs.imfreedom.org/pidgin2/util_8h.html#a0f02bb7e180bb04fb74c8f39564902ee), you need to use a br-tag instead of newline. Pidgin does that automatically, but other clients might not.
 * Emojis:
@@ -216,45 +216,41 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 * `group-is-file-origin` bool  
   It set to true (default), when a file is posted into a group chat, that chat will be the origin of the file. If set to false, the file will originate from the group chat *participant*. At time of writing, Bitlbee wants this to be false.  
   Note: File transfers for group chats are supported since libpurple 2.14.0.
-  
-* `attachment-message` string  
-  This system message is written to the conversation for each incoming attachment. It can have two `%s` place-holders which wil be fed into a call to `printf`.
-  
-  1. The first `%s` will be replaced by the original sender (the participant, not the group chat).  
-  1. The second `%s` will be replaced by the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.
-
-  Default value is `Preparing to store "%s" sent by %s...`.
-
-  If built and used in a Linux environment with GLib 2.68 or newer, you can also use place-holders for more flexibility:
-
-  * `$sender`: Denotes the original sender (the participant, not the group chat).  
-  * `$filename`: Refers to the original document file name. For non-document attachments, this falls back to the hash mandated by WhatsApp.
 
 * `attachment-path-template` string  
   This is a template for specifying a path to a local file-name. Setting this to a non-empty value will store attachments immediately, completely bypassing libpurple's file transfer mechanism. This can be useful for message bridges with limited resources. Sub-directories will be created as needed. Profile pictures will be stored in the contact's directory.
 
   Default value is the empty string.
 
-	* `$remote`: Denotes the ID of the contact or group chat this attachment has been posted to.
-	* `$hash`: The file's SHA256 (always set, useful for avoiding clashes and for de-duplication).
-	* `$filename`: The sender-supplied file-name (only for Document messages, otherwise empty). Does not contain the extension.
-	* `$extension`: A file-name extension fitting the mimetype.
+  The template is passed through `strftime` and accepts time and date format parameters such as `%Y-%m-%d_%H:%M:%S`. The result may not be longer than 128 bytes! Then the replacements are done:
+
+	* `$home`: User directory (same as `~`).
+	* `$purple`: Purple configuration directory (usually `~/.purple`).
+	* `$direction`: Whether this attachment was "received" (sent by a contact) or "sent" (other device on the own account).
+	* `$remote`: The ID of the contact or group chat this attachment has been posted to.
+	* `$sender`: The ID of the contact who posted this attachment to the group chat. Empty if not posted in a group chat.
+	* `$messageid`: The ID of the message.
+	* `$hash`: The file's SHA256 (useful for avoiding clashes and for de-duplication, not set for profile pictures).
+	* `$filename`: The sender-supplied file-name (only for Document messages and profile pictures, otherwise empty). Does not contain the extension.
+	* `$extension`: A file-name extension fitting the mime-type. Includes the dot.
 
   Example: `/var/run/purple/$remote/$filename$hash$extension`
 
-  There is no shell expansion (`~` will not become the home directory). Relative paths are resolved to the application's working directory.
+  There is no shell expansion (`~` will not become the home directory). Relative paths are resolved to the application's working directory. Using an absolute path is recommended.
 
 * `attachment-url-template` string  
   This is a template for an URL to write to the conversation after a file has been stored directly. For the supported place-holders, see `attachment-path-template`.
 
   Default value is the empty string. A local `file://` URL will be generated on a best-effort basis.
 
-* `get-icons` string choice    
+* `get-icons` string choice  
   Every time the plug-in connects, profile pictures are updated:
   
     * `no`: They are not (default).
     * `preview`: The small thumbnail is downloaded from the WhatsApp servers.
     * `original`: The original picture is downloaded from the WhatsApp servers.
+    
+  Also updates the profile picture when the contact changes it. May incur serious hiccups.
 
 * `ignore-status-broadcast` bool  
   If set to true (default: false), your contact's status broadcasts are ignored.
@@ -380,19 +376,6 @@ This plug-in supports a couple of "IRC-style" commands. The user can write them 
 
 * `?logout`  
   Performs a log-out. The QR-code will be requested upon connecting again.
-
-#### Attachment Handling and Memory Consumption
-
-Attachments (images, videos, voice messages, stickers, document) are *always* downloaded as *soon as the message is processed*. The user is then asked where they want the file to be written. During this time, the file data is residing in memory multiple times:
-
-* in the input buffer
-* in the decryption buffer
-* in the go → C message buffer
-* in the output buffer
-
-On systems with many concurrent connections, this could exhaust memory.
-
-As of writing, whatsmeow does not offer an interface to read the file in chunks.
 
 #### Acknowledgements
 

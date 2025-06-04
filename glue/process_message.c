@@ -103,11 +103,11 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             break;
         case gowhatsapp_message_type_text:
             if (!gowhatsapp_message_is_old(gwamsg)) {
-                gowhatsapp_display_text_message(pc, gwamsg, 0);
+                gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, gwamsg->text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, 0, gwamsg->messageId, TRUE);
             }
             break;
         case gowhatsapp_message_type_system:
-            gowhatsapp_display_text_message(pc, gwamsg, PURPLE_MESSAGE_SYSTEM);
+            gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, gwamsg->text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_SYSTEM, gwamsg->messageId, TRUE);
             break;
         case gowhatsapp_message_type_typing:
             serv_got_typing(pc, gwamsg->remoteJid, 0, PURPLE_TYPING);
@@ -120,7 +120,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             break;
         case gowhatsapp_message_type_attachment:
             if (!gowhatsapp_message_is_old(gwamsg)) {
-                gowhatsapp_handle_attachment(pc, gwamsg);
+                gowhatsapp_handle_attachment(gwamsg);
             }
             break;
         case gowhatsapp_message_type_profile_picture:

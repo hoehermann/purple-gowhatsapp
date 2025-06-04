@@ -1,7 +1,8 @@
 #pragma once
 
-#include <purple.h> // for PurpleAccount
+#include <purple.h> // for PurpleAccount, PurpleXfer
 #include <time.h> // for time_t
+#include <stdint.h> // for uint64_t and uintptr_t
 
 // no real reason to do this, I just think it is cool
 // https://stackoverflow.com/questions/9907160/how-to-convert-enum-names-to-string-in-c
@@ -60,15 +61,22 @@ struct gowhatsapp_message {
     char *pairing_code; /// 6-character pairing code
     char *pairing_qrdata; /// the pairing QR-code raw data
     char *pairing_qrterminal; /// graphical QR for printing on a terminal
-    char *name; /// remote user's name (chosen by them) or filename (in case of attachment)
-    void *blob; /// binary payload (used for inlining images)
-    char **participants; /// list of participants (for group chats)
+    char *name; /// remote user's name (chosen by them)
+    void *blob; /// binary payload (used for image of pairing QR code PNG and profile pictures)
     size_t blobsize; /// size of binary payload in bytes
     time_t timestamp; /// timestamp the message was sent(?)
+    char **participants; /// list of participants (for group chats)
     char msgtype; /// message type – see above
     char subtype; /// loglevel, error severity, attachment type or online-state
     char isGroup; /// this is a group chat message
-    char isOutgoing; /// this is an outgoing message (echo sent from this instance)
+    char isOutgoing; /// this is an outgoing message (echo sent from this instance, indicating success on sending – this is *not* ifFromMe)
+    // everything related to attachments:
+    char *filename;
+    char *extension; /// including the dot
+    char *mimetype;
+    char *hash_hex;
+    uint64_t filesize;
+    uintptr_t download_handle; // a reference to the structure needed for the actual download
 };
 typedef struct gowhatsapp_message gowhatsapp_message_t;
 
@@ -80,3 +88,6 @@ extern gboolean process_message_bridge(gpointer data);
 
 // for checking if the account exists before trying to read settings from it
 extern int gowhatsapp_account_exists(PurpleAccount *account);
+
+// for releasing the memory of a message struct
+void gowhatsapp_free_message(gowhatsapp_message_t *gwamsg);
