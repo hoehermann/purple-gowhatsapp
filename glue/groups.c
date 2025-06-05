@@ -80,7 +80,9 @@ void gowhatsapp_join_chat(PurpleConnection *pc, GHashTable *data) {
         // add chat to buddy list (optional)
         PurpleAccount *account = purple_connection_get_account(pc);
         const char *topic = g_hash_table_lookup(data, "topic");
-        gowhatsapp_ensure_group_chat_in_blist(account, remoteJid, topic);
+        if (purple_account_get_bool(account, GOWHATSAPP_UPDATE_BUDDY_ON_MESSAGE_OPTION, TRUE)) {
+            gowhatsapp_ensure_group_chat_in_blist(account, remoteJid, topic);
+        }
         // create conversation (important)
         gowhatsapp_enter_group_chat(pc, remoteJid, NULL);
     }
@@ -154,14 +156,15 @@ gowhatsapp_roomlist_add_room(PurpleConnection *pc, char *remoteJid, char *name) 
  * 
  * NOTE: The roomlist is requested automatically when the local user status is set to "available".
  */
-void 
-gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
+void gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg) {
     // list the group in the roomlist (if it is currently being queried)
     gowhatsapp_roomlist_add_room(pc, gwamsg->remoteJid, gwamsg->name);
     // these all cannot handle the group list end marker
     if (gwamsg->remoteJid != NULL) {
-        // adds the group to the buddy list (if fetching contacts is enabled, useful for human-readable titles)
-        gowhatsapp_ensure_group_chat_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
+        if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_REQUEST_CONTACTS_AFTER_LOGIN_OPTION, TRUE)) {
+            // adds the group to the buddy list (useful for human-readable titles)
+            gowhatsapp_ensure_group_chat_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
+        }
         // this might be a delayed response to a query for participants of a currently active group chat
         PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, gwamsg->remoteJid, gwamsg->account);
         if (conv != NULL) {

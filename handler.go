@@ -109,10 +109,13 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		handler.handle_presence(evt)
 	case *events.HistorySync:
 		// this happens after initial logon via QR code (after AppStateSyncComplete)
-		pushnames := evt.Data.GetPushnames()
-		for _, p := range pushnames {
-			if p.ID != nil && p.Pushname != nil {
-				purple_update_name(handler.account, *p.ID, *p.Pushname)
+		if purple_get_bool(handler.account, C.GOWHATSAPP_FETCH_CONTACTS_AFTER_LINKING_OPTION, true) {
+			pushnames := evt.Data.GetPushnames()
+			for _, p := range pushnames {
+				if p.ID != nil && p.Pushname != nil {
+					handler.log.Infof("HistorySync Pushname: %#v", p)
+					purple_update_name(handler.account, *p.ID, *p.Pushname)
+				}
 			}
 		}
 		// TODO: handle historical conversations obtained by evt.Data.GetConversations() utilising client.ParseWebMessage

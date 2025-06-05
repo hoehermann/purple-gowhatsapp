@@ -18,6 +18,15 @@ static gboolean gowhatsapp_message_is_old(gowhatsapp_message_t *gwamsg) {
     return FALSE;
 }
 
+static void gowhatsapp_connection_set_online(PurpleConnection *connection) {
+    PurpleAccount *account = purple_connection_get_account(connection);
+    purple_connection_set_state(connection, PURPLE_CONNECTION_CONNECTED);
+    // subscribe for presence updates so buddies may be "online"
+    gowhatsapp_set_presence(account, purple_account_get_active_status(account));
+    // For Pidgin, we also want to query the room list automatically (so group chats may be added to the buddy list).
+    gowhatsapp_roomlist_get_list(connection);
+}
+
 /*
  * Interprets a message received from whatsmeow. Handles login success and failure. Forwards errors.
  */
@@ -67,9 +76,14 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             break;
         case gowhatsapp_message_type_connected:
             gowhatsapp_close_qrcode(gwamsg->account);
-            // after connecting, fetch contacts.
-            // results will come in asyncronously, see next case
-            gowhatsapp_go_get_contacts(gwamsg->account);
+            if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_REQUEST_CONTACTS_AFTER_LOGIN_OPTION, TRUE)) {
+                // after connecting, fetch contacts.
+                // results will come in asyncronously, see next case
+                gowhatsapp_go_get_contacts(gwamsg->account);
+            } else {
+                // do not query contacts, just signal we are online now, but note next case
+                gowhatsapp_connection_set_online(pc);
+            }
             break;
         case gowhatsapp_message_type_name:
             if (NULL == gwamsg->remoteJid) {
@@ -78,11 +92,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
                 // This does not happen immediately since Spectrum will automatically call roomlist_get_list
                 // as soon as the connection ha been established. However, it needs all contacts to be updated
                 // before entering any group chat. Or the group chat participants' names will not be resolved.
-                purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTED);
-                // subscribe for presence updates so buddies may be "online"
-                gowhatsapp_set_presence(gwamsg->account, purple_account_get_active_status(gwamsg->account));
-                // For Pidgin, we also want to query the room list automatically (so group chats may be added to the buddy list).
-                gowhatsapp_roomlist_get_list(pc);
+                gowhatsapp_connection_set_online(pc);
             } else {
                 gowhatsapp_ensure_buddy_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
             }

@@ -75,10 +75,9 @@ void gowhatsapp_display_message_common(
             }
             purple_conv_im_write(purple_conversation_get_im_data(conv), remoteJid, message_text, flags, timestamp);
         } else {
-            // messages sometimes arrive before buddy has been created
-            // a buddy created here may be missing a display name,
-            // but i don't think i ever saw one of them anyway
-            gowhatsapp_ensure_buddy_in_blist(account, remoteJid, name);
+            if (purple_account_get_bool(account, GOWHATSAPP_UPDATE_BUDDY_ON_MESSAGE_OPTION, TRUE)) {
+                gowhatsapp_ensure_buddy_in_blist(account, remoteJid, name);
+            }
             purple_serv_got_im(pc, remoteJid, message_text, flags, timestamp);
         }
     }

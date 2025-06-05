@@ -165,10 +165,15 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
   The size of the QR code shown for login purposes, in pixels (default: 256). 
   When set to zero, the QR code will be delivered as a text message.
   
-* `fetch-contacts` bool  
-  If set to true (default), buddy list will be populated with contacts sent by server. 
-  This is useful for the first login in particular. If enabled while connecting, it will also fetch the current list of WhatsApp groups.
+* `fetch-contacts-after-linking` bool  
+  If set to true (default), buddy list will be populated with the contacts fetched from the main device once right after linking. Does not include groups.
   
+* `request-contacts-after-login` bool  
+  If set to true (default), buddy list will be populated with the updated contacts and group chats after connecting. 
+  
+* `update-buddy-on-message` bool  
+  If set to true (default), buddy list will be populated with contacts and group chats when receiving a message. 
+
 * `fake-online` bool  
   If set to true (default), contacts currently not online will be regarded as "away" (so they still appear in the buddy list).
   If set to false, offline contacts will be regarded as "offline" (no messages can be sent).

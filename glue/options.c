@@ -161,8 +161,22 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
     
     option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
-        "Automatically add contacts",
-        GOWHATSAPP_FETCH_CONTACTS_OPTION,
+        "Fetch contacts from main device once after linking",
+        GOWHATSAPP_FETCH_CONTACTS_AFTER_LINKING_OPTION,
+        TRUE
+        );
+    account_options = g_list_append(account_options, option);
+    
+    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
+        "Update contacts every time after login",
+        GOWHATSAPP_REQUEST_CONTACTS_AFTER_LOGIN_OPTION,
+        TRUE
+        );
+    account_options = g_list_append(account_options, option);
+    
+    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
+        "Update buddy name when receiving a message",
+        GOWHATSAPP_UPDATE_BUDDY_ON_MESSAGE_OPTION,
         TRUE
         );
     account_options = g_list_append(account_options, option);

@@ -27,16 +27,9 @@ gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
 
 /*
  * Ensure buddy in the buddy list.
- * Only has effect if "fetch contacts" is enabled.
  * Updates alias non-destructively.
  */
-void gowhatsapp_ensure_buddy_in_blist(
-    PurpleAccount *account, const char *remoteJid, const char *display_name
-) {
-    if (!purple_account_get_bool(account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE)) {
-        return;
-    }
-
+void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *remoteJid, const char *display_name) {
     if (purple_str_has_suffix(remoteJid, "@lid")) {
         // hidden users cannot be interacted with
         // see https://github.com/tulir/whatsmeow/issues/473
@@ -83,16 +76,10 @@ gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *grou
  * Add group chat to blist. Updates existing group chat if found. 
  * Only changes blist if fetch contacts is set.
  */
-PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
-    PurpleAccount *account, const char *remoteJid, const char *topic
-) {
-    gboolean fetch_contacts = purple_account_get_bool(
-        account, GOWHATSAPP_FETCH_CONTACTS_OPTION, TRUE
-    );
-
+PurpleChat * gowhatsapp_ensure_group_chat_in_blist(PurpleAccount *account, const char *remoteJid, const char *topic) {
     PurpleChat *chat = purple_blist_find_chat(account, remoteJid);
 
-    if (chat == NULL && fetch_contacts) {
+    if (chat == NULL) {
         GHashTable *comp = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free); // MEMCHECK: purple_chat_new takes ownership
         g_hash_table_insert(comp, "name", g_strdup(remoteJid)); // MEMCHECK: g_strdup'ed string released by GHashTable's value_destroy_func g_free (see above)
         chat = purple_blist_chat_new(account, remoteJid, comp); // MEMCHECK: blist takes ownership // TODO: double check if the middle parameter should be the topic instead
@@ -100,7 +87,7 @@ PurpleChat * gowhatsapp_ensure_group_chat_in_blist(
         purple_blist_add_chat(chat, group, NULL);
     }
 
-    if (topic != NULL && fetch_contacts) {
+    if (topic != NULL) {
         purple_blist_alias_chat(chat, topic);
     }
 
