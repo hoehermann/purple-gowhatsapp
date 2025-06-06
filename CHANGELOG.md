@@ -1,3 +1,13 @@
+# 1.19.0
+
+* Update: Depends on whatsmeow v0.0.0-20250606170101-3afe34f8ab8f.
+* Change: Fore fine-grained options when to add contacts to buddy list automatically.
+* Bugfix: Content from status broadcast messages is now routed to buddy conversation.
+
+# 1.18.0
+
+* Update: Depends on whatsmeow v0.0.0-20250515105332-8c870897140e.
+
 # 1.17.0
 
 * Update: Requires Go 1.24.2.
