@@ -26,20 +26,23 @@ void gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy) 
 /*
  * Ensure buddy in the buddy list.
  * Updates alias non-destructively.
+ * 
+ * identifier is the username (purple who)
+ * name is the human readable name (purple alias).
  */
-void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *remoteJid, const char *display_name) {
-    if (purple_str_has_suffix(remoteJid, "@lid")) {
+void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *identifier, const char *name) {
+    if (purple_str_has_suffix(identifier, "@lid")) {
         // hidden users cannot be interacted with
         // see https://github.com/tulir/whatsmeow/issues/473
         // do not add them to the buddy list
         return;
     }
 
-    PurpleBuddy *buddy = purple_blist_find_buddy(account, remoteJid);
+    PurpleBuddy *buddy = purple_blist_find_buddy(account, identifier);
 
     if (!buddy) {
         PurpleGroup *group = gowhatsapp_get_purple_group();
-        buddy = purple_buddy_new(account, remoteJid, display_name); // MEMCHECK: blist takes ownership
+        buddy = purple_buddy_new(account, identifier, name); // MEMCHECK: blist takes ownership
         purple_blist_add_buddy(buddy, NULL, group, NULL);
         gowhatsapp_subscribe_presence_updates(account, buddy);
     }
@@ -47,12 +50,17 @@ void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *remote
     gowhatsapp_assume_buddy_online(account, buddy);
 
     // update name after checking against local alias and persisted name
-    // TODO: merge changes from purple-presage
-    const char *local_alias = purple_buddy_get_alias(buddy);
-    const char *server_alias = purple_blist_node_get_string(&buddy->node, "server_alias");
-    if (display_name != NULL && !purple_strequal(local_alias, display_name) && !purple_strequal(server_alias, display_name)) {
-        serv_got_alias(purple_account_get_connection(account), remoteJid, display_name); // it seems buddy->server_alias is not persisted
-        purple_blist_node_set_string(&buddy->node, "server_alias", display_name); // explicitly persisting the new name
+    if (name != NULL && *name) {
+        const char *local_alias = purple_buddy_get_alias(buddy);
+        const char *server_alias = purple_blist_node_get_string(&buddy->node, "server_alias");
+        if (local_alias == NULL) {
+            // if no local alias exists, use the provided one
+            purple_blist_alias_buddy(buddy, name);
+        }
+        if (!purple_strequal(local_alias, name) && !purple_strequal(server_alias, name)) {
+            purple_serv_got_alias(purple_account_get_connection(account), identifier, name); // this sets buddy->server_alias, but it is not persisted
+            purple_blist_node_set_string(&buddy->node, "server_alias", name); // explicitly persist the new name so there is no name-change reported after a restart
+        }
     }
 }
 
@@ -97,6 +105,7 @@ PurpleChat * gowhatsapp_ensure_group_chat_in_blist(PurpleAccount *account, const
  * 
  * This reimplements the default behaviour of purple_blist_find_chat 
  * in libpurple/blist.c and could be removed from here.
+ * Difference: purple_blist_find_chat returns NULL when account is not connected.
  * 
  * Largely borrowed from:
  * https://github.com/EionRobb/purple-discord/blob/master/libdiscord.c
