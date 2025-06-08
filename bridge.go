@@ -272,7 +272,12 @@ func gowhatsapp_go_get_contacts(account *PurpleAccount, flush C.int) {
 func gowhatsapp_go_request_profile_picture(account *PurpleAccount, who *C.char, picture_date *C.char, picture_id *C.char) {
 	handler, ok := handlers[account]
 	if ok {
-		go handler.request_profile_picture(C.GoString(who), C.GoString(picture_date), C.GoString(picture_id))
+		jid, err := parseJID(C.GoString(who))
+		if err != nil {
+			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
+		} else {
+			handler.request_profile_picture(jid, C.GoString(picture_date), C.GoString(picture_id))
+		}
 	} else {
 		// no connection, fail silently
 	}

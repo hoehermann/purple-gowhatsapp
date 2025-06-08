@@ -108,9 +108,9 @@ gowhatsapp_add_account_options(GList *account_options)
         
     {
         GList *choices = NULL;
-        choices = add_choice(choices, "no", GOWHATSAPP_ICONS_NO);
-        choices = add_choice(choices, "preview", GOWHATSAPP_ICONS_PREVIEW);
-        choices = add_choice(choices, "original", GOWHATSAPP_ICONS_ORIGINAL);
+        choices = add_choice(choices, "no", GOWHATSAPP_ICONS_CHOICE_NO);
+        choices = add_choice(choices, "preview", GOWHATSAPP_ICONS_CHOICE_PREVIEW);
+        choices = add_choice(choices, "original", GOWHATSAPP_ICONS_CHOICE_ORIGINAL);
         option = purple_account_option_list_new( // MEMCHECK: account_options takes ownership
             "Download user profile pictures",
             GOWHATSAPP_ICONS_OPTION,

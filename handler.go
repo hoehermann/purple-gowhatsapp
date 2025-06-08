@@ -112,6 +112,10 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		}
 	case *events.Presence:
 		handler.handle_presence(evt)
+	case *events.ChatPresence:
+		handler.handle_chat_presence(evt)
+	case *events.Picture:
+		handler.request_profile_picture(evt.JID, "", evt.PictureID)
 	case *events.HistorySync:
 		// this happens after initial logon via QR code (after AppStateSyncComplete)
 		if purple_get_bool(handler.account, C.GOWHATSAPP_FETCH_CONTACTS_AFTER_LINKING_OPTION, true) {
@@ -124,8 +128,6 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 			}
 		}
 		// TODO: handle historical conversations obtained by evt.Data.GetConversations() utilising client.ParseWebMessage
-	case *events.ChatPresence:
-		handler.handle_chat_presence(evt)
 	case *events.AppState:
 		log.Debugf("App state event: %+v / %+v", evt.Index, evt.SyncActionValue)
 	case *events.LoggedOut:

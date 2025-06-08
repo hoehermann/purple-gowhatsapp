@@ -6,7 +6,6 @@ package main
 import "C"
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -14,16 +13,20 @@ import (
 	"strings"
 
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/types"
 )
 
 type ProfilePictureRequest struct {
-	who          string // JID of the contact whos profile picture is being requested
-	picture_date string // age of profile picture currently being displayed (may be "" in case of no picture)
-	picture_id   string // id of profile picture currently being displayed (may be "" in case of no picture)
+	jid          types.JID // JID of the contact whos profile picture is being requested
+	picture_date string    // age of profile picture currently being displayed (may be "" in case of no picture)
+	picture_id   string    // id of profile picture currently being displayed (may be "" in case of no picture)
 }
 
-func (handler *Handler) request_profile_picture(who string, picture_date string, picture_id string) {
-	handler.pictureRequests <- ProfilePictureRequest{who: who, picture_date: picture_date, picture_id: picture_id}
+func (handler *Handler) request_profile_picture(jid types.JID, picture_date string, picture_id string) {
+	setting := purple_get_string(handler.account, C.GOWHATSAPP_ICONS_OPTION, C.GOWHATSAPP_ICONS_CHOICE_NO)
+	if setting != C.GoString(C.GOWHATSAPP_ICONS_CHOICE_NO) {
+		handler.pictureRequests <- ProfilePictureRequest{jid: jid, picture_date: picture_date, picture_id: picture_id}
+	}
 }
 
 /*
@@ -53,18 +56,13 @@ func (handler *Handler) profile_picture_downloader() {
 			// drop requests while not connected to WhatsApp
 			continue
 		}
-		jid, err := parseJID(pdr.who)
-		if err != nil {
-			purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_FATAL)
-			continue
-		}
 		// check the settings for whether the user wants small previews or big original pictures
 		// NOTE: apart from PREVIEW, there is not only ORIGINAL, but also NO.
 		// NO is not accounted for here since in that case, this function should not even be executed.
-		setting := purple_get_string(handler.account, C.GOWHATSAPP_ICONS_OPTION, C.GOWHATSAPP_ICONS_PREVIEW)
-		want_preview := setting == C.GoString(C.GOWHATSAPP_ICONS_PREVIEW)
+		setting := purple_get_string(handler.account, C.GOWHATSAPP_ICONS_OPTION, C.GOWHATSAPP_ICONS_CHOICE_PREVIEW)
+		want_preview := setting == C.GoString(C.GOWHATSAPP_ICONS_CHOICE_PREVIEW)
 		ppi, _ := handler.client.GetProfilePictureInfo(
-			jid, &whatsmeow.GetProfilePictureParams{
+			pdr.jid, &whatsmeow.GetProfilePictureParams{
 				Preview:     want_preview,
 				ExistingID:  pdr.picture_id,
 				IsCommunity: false, // TODO: find out if we do or do not want this
@@ -76,7 +74,7 @@ func (handler *Handler) profile_picture_downloader() {
 		}
 		req, err := http.NewRequest("GET", ppi.URL, nil)
 		if err != nil {
-			log.Warnf("Unable to construct request for profile pictore for %s: %#v", pdr.who, err)
+			log.Warnf("Unable to construct request for profile pictore for %s: %#v", pdr.jid.ToNonAD().String(), err)
 			continue
 		}
 		if pdr.picture_date != "" {
@@ -86,24 +84,24 @@ func (handler *Handler) profile_picture_downloader() {
 		}
 		resp, err := handler.httpClient.Do(req)
 		if err != nil {
-			log.Warnf("Error downloading profile picture for %s: %#v", pdr.who, err)
+			log.Warnf("Error downloading profile picture for %s: %#v", pdr.jid.ToNonAD().String(), err)
 			continue
 		}
-		defer resp.Body.Close()
 		if resp.StatusCode == 304 { // not modified
 			continue
 		}
 		var b bytes.Buffer
 		_, err = io.Copy(&b, resp.Body)
+		resp.Body.Close()
 		if err != nil {
-			log.Warnf("Error while transferring profile picture for %s: %#v", pdr.who, err)
+			log.Warnf("Error while transferring profile picture for %s: %#v", pdr.jid.ToNonAD().String(), err)
 			continue
 		}
 		// store profile picture in contact-specific attachment directory
 		local_path_template := purple_get_string(handler.account, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, C.GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT)
 		if local_path_template != "" {
 			local_path := local_path_template
-			local_path = strings.Replace(local_path, "$remote", pdr.who, -1)
+			local_path = strings.Replace(local_path, "$remote", pdr.jid.ToNonAD().String(), -1)
 			local_path = strings.Replace(local_path, "$hash", "", -1)
 			local_path = strings.Replace(local_path, "$filename", "profile.jpg", -1)
 			local_path = strings.Replace(local_path, "$extension", "", -1)
@@ -114,6 +112,6 @@ func (handler *Handler) profile_picture_downloader() {
 				file.Close()
 			}
 		}
-		purple_set_profile_picture(handler.account, pdr.who, b.Bytes(), resp.Header.Get("Last-Modified"), ppi.ID)
+		purple_set_profile_picture(handler.account, pdr.jid.ToNonAD().String(), b.Bytes(), resp.Header.Get("Last-Modified"), ppi.ID)
 	}
 }

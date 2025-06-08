@@ -11,14 +11,12 @@ PurpleGroup * gowhatsapp_get_purple_group() {
     return group;
 }
 
-void
-gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy)
-{
+void gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy) {
     if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_AWAY, NULL);
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_MOBILE, NULL);
     }
-    if (!purple_strequal(purple_account_get_string(account, GOWHATSAPP_ICONS_OPTION, GOWHATSAPP_ICONS_NO), GOWHATSAPP_ICONS_NO)) {
+    if (!purple_strequal(purple_account_get_string(account, GOWHATSAPP_ICONS_OPTION, GOWHATSAPP_ICONS_CHOICE_NO), GOWHATSAPP_ICONS_CHOICE_NO)) {
         const char *picture_id = purple_blist_node_get_string(&buddy->node, "picture_id");
         const char *picture_date = purple_blist_node_get_string(&buddy->node, "picture_date");
         gowhatsapp_go_request_profile_picture(account, buddy->name, (char *)picture_date, (char *)picture_id); // cgo does not suport const
