@@ -66,19 +66,26 @@ status_types(PurpleAccount *account)
     return types;
 }
 
-static void
-logout(PurplePluginAction* action) {
+static void action_contacts(PurplePluginAction* action) {
+  PurpleConnection* pc = action->context;
+  PurpleAccount *account = purple_connection_get_account(pc);
+  gowhatsapp_go_get_contacts(account, TRUE);
+}
+
+static void action_logout(PurplePluginAction* action) {
   PurpleConnection* pc = action->context;
   PurpleAccount *account = purple_connection_get_account(pc);
   gowhatsapp_go_logout(account);
 }
 
-static GList *
-actions(PurplePlugin *plugin, gpointer context)
-{
+static GList * actions(PurplePlugin *plugin, gpointer context) {
     GList* actions = NULL;
     {
-        PurplePluginAction *act = purple_plugin_action_new("Logout", &logout);
+        PurplePluginAction *act = purple_plugin_action_new("Flush Contacts", &action_contacts);
+        actions = g_list_append(actions, act);
+    }
+    {
+        PurplePluginAction *act = purple_plugin_action_new("Logout", &action_logout);
         actions = g_list_append(actions, act);
     }
     return actions;

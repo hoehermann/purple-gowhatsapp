@@ -206,11 +206,11 @@ func gowhatsapp_go_query_groups(account *PurpleAccount) {
 }
 
 //export gowhatsapp_go_get_contacts
-func gowhatsapp_go_get_contacts(account *PurpleAccount) {
+func gowhatsapp_go_get_contacts(account *PurpleAccount, flush C.int) {
 	handler, ok := handlers[account]
 	if ok {
 		go func() {
-			err := handler.client.FetchAppState(context.TODO(), appstate.WAPatchCriticalUnblockLow, false, false)
+			err := handler.client.FetchAppState(context.TODO(), appstate.WAPatchCriticalUnblockLow, Cint_to_bool(flush), false)
 			if err != nil {
 				handler.log.Warnf("Could not fetch app state from server: %#v", err)
 			}

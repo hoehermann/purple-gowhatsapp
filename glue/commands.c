@@ -93,7 +93,7 @@ int execute_command(PurpleConnection *pc, const gchar *message, const gchar *who
             conversation_write_versions(account, who, conv);
         } break;
         case GOWHATSAPP_COMMAND_CONTACTS: {
-            gowhatsapp_go_get_contacts(account);
+            gowhatsapp_go_get_contacts(account, TRUE);
         } break;
         case GOWHATSAPP_COMMAND_PARTICIPANTS: {
             return execute_command_participants(account, message, who, conv);

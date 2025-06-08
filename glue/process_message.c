@@ -79,7 +79,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
             if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_REQUEST_CONTACTS_AFTER_LOGIN_OPTION, TRUE)) {
                 // after connecting, fetch contacts.
                 // results will come in asyncronously, see next case
-                gowhatsapp_go_get_contacts(gwamsg->account);
+                gowhatsapp_go_get_contacts(gwamsg->account, FALSE);
             } else {
                 // do not query contacts, just signal we are online now, but note next case
                 gowhatsapp_connection_set_online(pc);
