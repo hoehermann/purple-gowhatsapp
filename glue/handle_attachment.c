@@ -101,6 +101,14 @@ static void xfer_download_attachment(gowhatsapp_message_t *gwamsg) {
     // MEMCHECK NOTE: purple_xfer_unref calls purple_xfer_destroy which MAY call purple_xfer_cancel_local if (purple_xfer_get_status(xfer) == PURPLE_XFER_STATUS_STARTED) which calls cancel_recv and cancel_local
 }
 
+static void replace_placeholder(gpointer key, gpointer value, gpointer user_data) {
+    char **text = user_data;
+    // NOTE: I am not using g_string_replace here since the GLib shipped with win32 Pidgin is ancient
+    char *replaced = purple_strreplace(*text, key, value);
+    g_free(*text);
+    *text = replaced;
+}
+
 char * gowhatsapp_attachment_fill_template(const char *template, time_t timestamp, const char *hash, const char *filename, const char *extension, const char *remote, const char *sender, const char *messageid, PurpleMessageFlags flags) {
     // in case of chats, remote and sender may be different
     // but in case of direct messages, they are the same
@@ -115,21 +123,23 @@ char * gowhatsapp_attachment_fill_template(const char *template, time_t timestam
     if (flags & PURPLE_MESSAGE_SEND) {
         direction = "sent";
     }
-    // NOTE: I am not using g_string_replace here since the GLib shipped with win32 Pidgin is ancient
-    char *template1 = purple_strreplace(purple_utf8_strftime(template, localtime(&timestamp)), "$hash", hash);
-    char *template2 = purple_strreplace(template1, "$direction", direction);
-    char *template3 = purple_strreplace(template2, "$extension", extension);
-    char *template4 = purple_strreplace(template3, "$remote", remote);
-    char *template5 = purple_strreplace(template4, "$sender", sender);
-    char *template6 = purple_strreplace(template5, "$messageid", messageid);
-    char *template7 = purple_strreplace(template6, "$filename", filename);
-    g_free(template1);
-    g_free(template2);
-    g_free(template3);
-    g_free(template4);
-    g_free(template5);
-    g_free(template6);
-    return template7;
+
+    // this hash table does not release keys or values since everything is either static or not owned by this function
+    GHashTable *replacements = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
+    // casts necessary to remove const
+    g_hash_table_insert(replacements, "$home", (char *)purple_home_dir());
+    g_hash_table_insert(replacements, "$purple", (char *)purple_user_dir());
+    g_hash_table_insert(replacements, "$hash", (char *)hash);
+    g_hash_table_insert(replacements, "$direction", (char *)direction);
+    g_hash_table_insert(replacements, "$remote", (char *)remote);
+    g_hash_table_insert(replacements, "$sender", (char *)sender);
+    g_hash_table_insert(replacements, "$messageid", (char *)messageid);
+    g_hash_table_insert(replacements, "$extension", (char *)extension);
+    g_hash_table_insert(replacements, "$filename", (char *)filename);
+
+    char *replaced = g_strdup(purple_utf8_strftime(template, localtime(&timestamp)));
+    g_hash_table_foreach(replacements, replace_placeholder, &replaced);
+    return replaced;
 }
 
 void gowhatsapp_handle_attachment(gowhatsapp_message_t *gwamsg) {
