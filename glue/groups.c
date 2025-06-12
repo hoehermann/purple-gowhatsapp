@@ -270,3 +270,7 @@ gowhatsapp_set_chat_topic(PurpleConnection *pc, int id, const char *topic)
     // registered if Pidgin is going to enable the "Alias..." menu
     // option in the conversation.
 }
+
+char *gowhatsapp_get_cb_alias(PurpleConnection *connection, int id, const char *who) {
+    return gowhatsapp_go_get_display_name(purple_connection_get_account(connection), (char *)who);
+}

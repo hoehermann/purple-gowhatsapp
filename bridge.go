@@ -177,7 +177,13 @@ func participants_to_ntcstrarray(group_participants []types.GroupParticipant) **
 	// https://stackoverflow.com/questions/51525876/use-go-slice-in-c
 	participants := unsafe.Slice((**C.char)(cparticipants), participant_count)
 	for pi, participant := range group_participants {
-		participants[pi] = C.CString(participant.JID.ToNonAD().String())
+		jid := participant.JID
+		if jid.Server == types.HiddenUserServer && !participant.PhoneNumber.IsEmpty() {
+			// when the group chat participant is anonymized, we sometimes still get their actual JID in the PhoneNumber field
+			// using the actual JID is preferable for consistent local aliasing via the purple buddy list
+			jid = participant.PhoneNumber
+		}
+		participants[pi] = C.CString(jid.ToNonAD().String())
 	}
 	return cparticipants
 }
@@ -305,6 +311,39 @@ func gowhatsapp_go_request_profile_picture(account *PurpleAccount, who *C.char, 
 	} else {
 		// no connection, fail silently
 	}
+}
+
+//export gowhatsapp_go_get_display_name
+func gowhatsapp_go_get_display_name(account *PurpleAccount, who *C.char) *C.char {
+	handler, ok := handlers[account]
+	if ok {
+		jid, err := parseJID(C.GoString(who))
+		if err != nil {
+			handler.log.Warnf("Unable to parse JID for getting display name: %#v", err)
+		} else {
+			info, err := handler.client.Store.Contacts.GetContact(context.TODO(), jid)
+			if err != nil {
+				handler.log.Warnf("Could not get contact from store for display name: %#v", err)
+			} else {
+				name := info.FullName
+				if name == "" {
+					name = info.FirstName
+				}
+				if name == "" {
+					name = info.BusinessName
+				}
+				if name == "" {
+					name = info.PushName
+				}
+				if name != "" {
+					return C.CString(name)
+				}
+			}
+		}
+	} else {
+		purple_error(account, "Could not get contact from store for display name: Not connected.", ERROR_TRANSIENT)
+	}
+	return nil
 }
 
 //export gowhatsapp_go_url_from_local_path

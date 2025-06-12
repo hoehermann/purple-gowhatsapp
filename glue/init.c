@@ -123,6 +123,7 @@ static PurplePluginProtocolInfo prpl_info = {
     .chat_send = gowhatsapp_send_chat,
     .set_chat_topic = gowhatsapp_set_chat_topic,
     .roomlist_get_list = gowhatsapp_roomlist_get_list,
+    .get_cb_alias = gowhatsapp_get_cb_alias,
     //.roomlist_room_serialize = gowhatsapp_roomlist_serialize, // not necessary – we store the JID in room->name
     // managing buddies (contacts)
     .add_buddy = gowhatsapp_add_buddy,

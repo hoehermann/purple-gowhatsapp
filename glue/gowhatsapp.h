@@ -52,6 +52,7 @@ void gowhatsapp_chat_set_participants(PurpleConvChat *conv_chat, char **particip
 void gowhatsapp_roomlist_add_room(PurpleConnection *pc, char *remoteJid, char *name);
 void gowhatsapp_handle_group(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
 void gowhatsapp_free_name(PurpleConversation *conv);
+char *gowhatsapp_get_cb_alias(PurpleConnection *gc, int id, const char *who);
 
 // blist
 void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *remoteJid, const char *display_name);
