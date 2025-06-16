@@ -85,28 +85,11 @@ gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean
 }
 
 /*
- * Subscribe for presence updates for all contacts currently in the buddy list.
- * 
- * NOTE: Receiving contact presence updates may only be sent by WhatsApp when being "available".
- */
-void
-gowhatsapp_subscribe_all_presence_updates(PurpleAccount *account)
-{
-    g_return_if_fail(account != NULL);
-    GSList *buddies = purple_find_buddies(account, NULL);
-    while (buddies != NULL) {
-        gowhatsapp_subscribe_presence_updates(account, buddies->data);
-        buddies = g_slist_delete_link(buddies, buddies);
-    }
-}
-
-/*
  * Set own presence.
  * 
  * NOTE: Remote contact's presence updates may only be sent by WhatsApp when being "available" oneself.
  */
-void
-gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
+void gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
     const char *status_id = purple_status_get_id(status);
     
     // presence override, see execute_command_presence
@@ -116,8 +99,10 @@ gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status) {
     }
 
     gowhatsapp_go_send_presence(account, (char *)status_id); // cgo does not support const
-    // (re-)subscribe for presence updates (will check status_id again)
-    gowhatsapp_subscribe_all_presence_updates(account);
+    
+    // (re-)subscribe for presence updates for all contacts currently in the buddy list
+    // NOTE: Receiving contact presence updates may only be sent by WhatsApp when being "available".
+    gowhatsapp_for_all_buddies(account, gowhatsapp_subscribe_presence_updates);
 }
 
 /*
@@ -141,5 +126,15 @@ gowhatsapp_subscribe_presence_updates(PurpleAccount *account, PurpleBuddy *buddy
         // NOTE: WhatsApp requires you to be available to receive presence updates
         // subscribing for presence updates might implicitly set own presence to available
         gowhatsapp_go_subscribe_presence(account, buddy->name);
+    }
+}
+
+void gowhatsapp_request_profile_picture(PurpleAccount *account, PurpleBuddy *buddy) {
+    g_return_if_fail(buddy != NULL);
+
+    if (!purple_strequal(purple_account_get_string(account, GOWHATSAPP_ICONS_OPTION, GOWHATSAPP_ICONS_CHOICE_NO), GOWHATSAPP_ICONS_CHOICE_NO)) {
+        const char *picture_id = purple_blist_node_get_string(&buddy->node, "picture_id");
+        const char *picture_date = purple_blist_node_get_string(&buddy->node, "picture_date");
+        gowhatsapp_go_request_profile_picture(account, buddy->name, (char *)picture_date, (char *)picture_id); // cgo does not suport const
     }
 }

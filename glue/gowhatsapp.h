@@ -55,11 +55,14 @@ void gowhatsapp_free_name(PurpleConversation *conv);
 char *gowhatsapp_get_cb_alias(PurpleConnection *gc, int id, const char *who);
 
 // blist
-void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *remoteJid, const char *display_name);
+PurpleBuddy * gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *remoteJid, const char *display_name);
 PurpleChat * gowhatsapp_ensure_group_chat_in_blist(PurpleAccount *account, const char *remoteJid, const char *topic);
 PurpleGroup * gowhatsapp_get_purple_group();
 PurpleChat * gowhatsapp_find_blist_chat(PurpleAccount *account, const char *jid);
 void gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group);
+void gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean full);
+void gowhatsapp_assume_buddy_away(PurpleAccount *account, PurpleBuddy *buddy);
+void gowhatsapp_for_all_buddies(PurpleAccount *account, void(*func)(PurpleAccount *, PurpleBuddy *));
 
 // send_message
 int gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message, PurpleMessageFlags flags);
@@ -76,10 +79,12 @@ void gowhatsapp_chat_send_file(PurpleConnection *pc, int id, const char *filenam
 
 // presence
 void gowhatsapp_handle_presence(PurpleAccount *account, char *remoteJid, char available, time_t last_seen);
-void gowhatsapp_tooltip_text(PurpleBuddy *buddy, PurpleNotifyUserInfo *info, gboolean full);
-void gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg);
 void gowhatsapp_set_presence(PurpleAccount *account, PurpleStatus *status);
 void gowhatsapp_subscribe_presence_updates(PurpleAccount *account, PurpleBuddy *buddy);
+
+// profile pictures
+void gowhatsapp_request_profile_picture(PurpleAccount *account, PurpleBuddy *buddy);
+void gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg);
 
 // receipts
 void gowhatsapp_receipts_init(PurpleConnection *pc);

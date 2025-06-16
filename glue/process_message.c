@@ -18,13 +18,23 @@ static gboolean gowhatsapp_message_is_old(gowhatsapp_message_t *gwamsg) {
     return FALSE;
 }
 
+/*
+ * Tells the front-end we are now online.
+ *
+ * Also tells the front-end to display all our buddies as no longer offline so they can be interacted with.
+ * 
+ * Additionally requests the profile picture of each buddy.
+ */
 static void gowhatsapp_connection_set_online(PurpleConnection *connection) {
     PurpleAccount *account = purple_connection_get_account(connection);
     purple_connection_set_state(connection, PURPLE_CONNECTION_CONNECTED);
-    // subscribe for presence updates so buddies may be "online"
+
+    // display all buddies as "away"
+    gowhatsapp_for_all_buddies(account, gowhatsapp_assume_buddy_away);
+    // set own presence (and subscribe for presence updates so buddies may displayed as "online")
     gowhatsapp_set_presence(account, purple_account_get_active_status(account));
-    // For Pidgin, we also want to query the room list automatically (so group chats may be added to the buddy list).
-    gowhatsapp_roomlist_get_list(connection);
+
+    gowhatsapp_for_all_buddies(account, gowhatsapp_request_profile_picture);
 }
 
 /*
@@ -93,6 +103,8 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
                 // as soon as the connection ha been established. However, it needs all contacts to be updated
                 // before entering any group chat. Or the group chat participants' names will not be resolved.
                 gowhatsapp_connection_set_online(pc);
+                // we also want to query the room list automatically (so group chats may be added to the buddy list).
+                gowhatsapp_roomlist_get_list(pc);
             } else {
                 gowhatsapp_ensure_buddy_in_blist(gwamsg->account, gwamsg->remoteJid, gwamsg->name);
             }

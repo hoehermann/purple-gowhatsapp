@@ -11,15 +11,12 @@ PurpleGroup * gowhatsapp_get_purple_group() {
     return group;
 }
 
-void gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy) {
+void gowhatsapp_assume_buddy_away(PurpleAccount *account, PurpleBuddy *buddy) {
+    g_return_if_fail(buddy != NULL);
+
     if (purple_account_get_bool(account, GOWHATSAPP_FAKE_ONLINE_OPTION, TRUE)) {
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_AWAY, NULL);
         purple_prpl_got_user_status(account, buddy->name, GOWHATSAPP_STATUS_STR_MOBILE, NULL);
-    }
-    if (!purple_strequal(purple_account_get_string(account, GOWHATSAPP_ICONS_OPTION, GOWHATSAPP_ICONS_CHOICE_NO), GOWHATSAPP_ICONS_CHOICE_NO)) {
-        const char *picture_id = purple_blist_node_get_string(&buddy->node, "picture_id");
-        const char *picture_date = purple_blist_node_get_string(&buddy->node, "picture_date");
-        gowhatsapp_go_request_profile_picture(account, buddy->name, (char *)picture_date, (char *)picture_id); // cgo does not suport const
     }
 }
 
@@ -30,12 +27,10 @@ void gowhatsapp_assume_buddy_online(PurpleAccount *account, PurpleBuddy *buddy) 
  * identifier is the username (purple who)
  * name is the human readable name (purple alias).
  */
-void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *identifier, const char *name) {
+PurpleBuddy * gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *identifier, const char *name) {
     if (purple_str_has_suffix(identifier, "@lid")) {
-        // hidden users cannot be interacted with
-        // see https://github.com/tulir/whatsmeow/issues/473
-        // do not add them to the buddy list
-        return;
+        // TODO: combine into existing non-hidden buddy
+        return NULL;
     }
 
     PurpleBuddy *buddy = purple_blist_find_buddy(account, identifier);
@@ -46,8 +41,6 @@ void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *identi
         purple_blist_add_buddy(buddy, NULL, group, NULL);
         gowhatsapp_subscribe_presence_updates(account, buddy);
     }
-	
-    gowhatsapp_assume_buddy_online(account, buddy);
 
     // update name after checking against local alias and persisted name
     if (name != NULL && *name) {
@@ -62,18 +55,30 @@ void gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const char *identi
             purple_blist_node_set_string(&buddy->node, "server_alias", name); // explicitly persist the new name so there is no name-change reported after a restart
         }
     }
+
+    return buddy;
 }
 
 /*
  * This is called after a buddy has been added to the buddy list 
  * (i.e. by manual user interaction).
  */
-void
-gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group)
-{
+void gowhatsapp_add_buddy(PurpleConnection *pc, PurpleBuddy *buddy, PurpleGroup *group) {
     PurpleAccount *account = purple_connection_get_account(pc);
-    gowhatsapp_assume_buddy_online(account, buddy);
+    gowhatsapp_assume_buddy_away(account, buddy);
     gowhatsapp_subscribe_presence_updates(account, buddy);
+}
+
+/*
+ * Calls a function once on each buddy.
+ */
+void gowhatsapp_for_all_buddies(PurpleAccount *account, void(*func)(PurpleAccount *, PurpleBuddy *)) {
+    g_return_if_fail(account != NULL);
+    GSList *buddies = purple_find_buddies(account, NULL);
+    while (buddies != NULL) {
+        func(account, buddies->data);
+        buddies = g_slist_delete_link(buddies, buddies);
+    }
 }
 
 // Group chat related functions
