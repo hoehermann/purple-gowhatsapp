@@ -157,7 +157,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		log:              log,
 		client:           whatsmeow.NewClient(device, PurpleLogger(account, "Client")),
 		deferredReceipts: make(map[types.JID]map[types.JID][]types.MessageID),
-		pictureRequests:  make(chan ProfilePictureRequest),
+		pictureRequests:  make(chan ProfilePictureRequest, 1000), // I hope that no one has more than 1000 contacts
 	}
 	handlers[account] = &handler
 	handler.client.AddEventHandler(handler.eventHandler)

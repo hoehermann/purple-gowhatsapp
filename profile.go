@@ -22,7 +22,12 @@ type ProfilePictureRequest struct {
 func (handler *Handler) request_profile_picture(jid types.JID, picture_date string, picture_id string) {
 	setting := purple_get_string(handler.account, C.GOWHATSAPP_ICONS_OPTION, C.GOWHATSAPP_ICONS_CHOICE_NO)
 	if setting != C.GoString(C.GOWHATSAPP_ICONS_CHOICE_NO) {
-		handler.pictureRequests <- ProfilePictureRequest{jid: jid, picture_date: picture_date, picture_id: picture_id}
+		select {
+		case handler.pictureRequests <- ProfilePictureRequest{jid: jid, picture_date: picture_date, picture_id: picture_id}:
+			// do nothing
+		default:
+			handler.log.Warnf("Unable to request profile picture: Channel is full.")
+		}
 	}
 }
 
