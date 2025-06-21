@@ -1,7 +1,21 @@
+# 1.20.0
+
+* Update: Depends on whatsmeow v0.0.0-20250617170509-947866bb9f75.
+* Feature: Group chat participants from the hidden user server `lid` have their names resolved.
+* Feature: Have action to flush contacts (replaces local cache with fresh data).
+* Feature: Have option for [passive client mode](https://godocs.io/go.mau.fi/whatsmeow#Client.SetPassive).
+* Feature: Have option to [force active delivery recepits](https://godocs.io/go.mau.fi/whatsmeow#Client.SetForceActiveDeliveryReceipts).
+* Feature: Support more keywords in automatic download file path template.
+* Change: All attachments are downloaded directly to disk and decrypted in-place (was: keep in buffer until user decides where to store the data).
+* Change: A profile picture is downloaded when the contact changes it (was: on login only).
+* Bugfix: Downloading profile pictures now actually happens asynchronously.
+* Bugfix: Contacts may be displayed as "away" even when they are not fetched again on every login.
+
 # 1.19.0
 
 * Update: Depends on whatsmeow v0.0.0-20250606170101-3afe34f8ab8f.
 * Change: Fore fine-grained options when to add contacts to buddy list automatically.
+* Change: Status broadcast messages are no longer ignored by default.
 * Bugfix: Content from status broadcast messages is now routed to buddy conversation.
 
 # 1.18.0
