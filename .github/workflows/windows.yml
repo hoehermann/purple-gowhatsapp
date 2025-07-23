@@ -39,20 +39,21 @@ jobs:
     - name: Build
       run: cmake --build build
 
-    - name: Strip
-      run: strip -s build/glue/libwhatsmeow.dll
+    - name: Copy Binary with Debug Symbols
+      run: cp build/glue/libwhatsmeow.dll libwhatsmeow-debug.dll
+    
+    - name: Strip Debug Symbols
+      run: |
+        strip --strip-all build/glue/libwhatsmeow.dll
+        cp build/glue/libwhatsmeow.dll libwhatsmeow.dll
 
-    - name: Upload
-      uses: actions/upload-artifact@v4
-      with:
-        path: build/glue/libwhatsmeow.dll
-        name: libwhatsmeow.dll
+    # go list -m -f '{{.Version}}' go.mau.fi/whatsmeow | cut -d- -f 2
     
     - name: Create Release
       #if: contains(github.ref, 'tags/v')
       uses: ncipollo/release-action@v1
       with:
-        artifacts: build/glue/libwhatsmeow.dll
+        artifacts: libwhatsmeow-debug.dll,libwhatsmeow.dll
         tag: nightly-${{ github.sha }}
         name: Nightly ${{ github.sha }}
         allowUpdates: true
