@@ -138,7 +138,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 }
 
 func (handler *Handler) download_attachment(local_file_path string, message whatsmeow.DownloadableMessage) error {
-	os.MkdirAll(filepath.Dir(local_file_path), os.ModePerm)
+	os.MkdirAll(filepath.Dir(local_file_path), 0755)
 	file, err := os.Create(local_file_path)
 	if err != nil {
 		return err
