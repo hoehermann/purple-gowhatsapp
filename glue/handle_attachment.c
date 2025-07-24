@@ -142,6 +142,63 @@ char * gowhatsapp_attachment_fill_template(const char *template, time_t timestam
     return replaced;
 }
 
+#ifndef WIN32
+#include <unistd.h> // for symlink
+
+// This feature will not be implemented on win32, since creating directory junctions via reparse-points is insanely cumbersome:
+// https://stackoverflow.com/questions/1400549/in-net-how-do-i-create-a-junction-in-ntfs-as-opposed-to-a-symlink
+
+void create_symlinks_recurse(char *path, char *aliased_path) {
+    //purple_debug_info(GOWHATSAPP_NAME, "create_symlinks_recurse(%s, %s)…\n", aliased_path, path);
+    if (strlen(path) <= 1 || strlen(aliased_path) <= 1) {
+        // we reached / or . – stop recursion
+        return;
+    }
+    char *parent_directory = g_path_get_dirname(path);
+    char *aliased_parent_directory = g_path_get_dirname(aliased_path);
+    create_symlinks_recurse(parent_directory, aliased_parent_directory);
+    g_free(parent_directory);
+    g_free(aliased_parent_directory);
+    if (symlink(path, aliased_path) == 0) {
+        purple_debug_info(GOWHATSAPP_NAME, "Created symlink „%s“ → „%s“.\n", aliased_path, path);
+        // TODO: return aliased path, show that in conversation window
+    }
+}
+
+char * create_symlinks(PurpleAccount *account, const char *template, time_t timestamp, const char *hash, const char *filename, const char *extension, const char *remote, const char *sender, const char *messageid, PurpleMessageFlags flags) {
+    const char *chat_alias = remote;
+    const char *buddy_alias = sender;
+    PurpleBuddy *buddy = purple_blist_find_buddy(account, sender);
+    if (buddy) {
+        const char *alias = purple_buddy_get_alias(buddy);
+        // do not use alias if it is NULL, empty or containing directory separator (characters unfit for use in file-system are not checked or escaped)
+        if (alias != NULL && *alias != 0 && strchr(alias, '/') == NULL) {
+            buddy_alias = alias;
+        }
+    }
+    PurpleChat *chat = purple_blist_find_chat(account, remote);
+    if (chat) {
+        const char *alias = purple_chat_get_name(chat);
+        // do not use alias if it is NULL, empty or containing directory separator (characters unfit for use in file-system are not checked or escaped)
+        if (alias != NULL && *alias != 0 && strchr(alias, '/') == NULL) {
+            chat_alias = alias;
+        }
+    }
+    if (purple_strequal(remote, sender)) {
+        // chat is contact (direct message)
+        chat_alias = buddy_alias;
+    } else {
+        // group chat
+    }
+    // TODO: always store files with their hash, then provide symlink with the filename?
+    char *aliased_path = gowhatsapp_attachment_fill_template(template, timestamp, hash, filename, extension, chat_alias, buddy_alias, messageid, flags);
+    char *path = gowhatsapp_attachment_fill_template(template, timestamp, hash, filename, extension, remote, sender, messageid, flags);
+    create_symlinks_recurse(path, aliased_path);
+    g_free(aliased_path);
+    g_free(path);
+}
+#endif
+
 void gowhatsapp_handle_attachment(gowhatsapp_message_t *gwamsg) {
     // TODO: mention in readme: for maintaining order of messages, do not use purple's xfer mechanism
     const char *local_path_template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT);
@@ -158,6 +215,9 @@ void gowhatsapp_handle_attachment(gowhatsapp_message_t *gwamsg) {
         if (error && error[0]) {
             gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId, TRUE);
         } else {
+            #ifndef WIN32
+            create_symlinks(gwamsg->account, local_path_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
+            #endif
             const char *url_template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_OPTION, GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_DEFAULT);
             char *url = gowhatsapp_go_url_from_local_path(local_path);
             if (url_template && url_template[0]) {
