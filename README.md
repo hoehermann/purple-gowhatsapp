@@ -108,7 +108,6 @@ In case it is really recent, you can use the go compiler shipped with your distr
 For systems with pkg-config, a Makefile exists. For all others, this project uses CMake.
 
     git clone --recurse-submodules https://github.com/hoehermann/purple-gowhatsapp.git purple-whatsmeow
-    rm purple-whatsmeow/go.{mod,sum} # recommended for bleeding-edge builds
     cmake -S purple-whatsmeow -B build
     cmake --build build
     cmake --install build --strip
@@ -143,6 +142,12 @@ For sending opus in ogg audio files as voice messages, add a static win32 build 
 
     vcpkg.exe install opusfile:x86-mingw-static
     cmake -DCMAKE_TOOLCHAIN_FILE="wherever/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DVCPKG_MANIFEST_MODE=OFF -G "MSYS Makefiles" -S . -B build
+    
+#### Updates
+
+For bleeding-edge builds, execute `rm purple-whatsmeow/go.{mod,sum}` after cloning. The build system will re-generate them using the latest version of whatsmeow which may or may not be compatible with the glue code.
+
+Using the most recent version of whatsmeow is recommended. Based on experience and user-reports, using an old version of whatmeow may work up to half a year before the WhatsApp servers reject the client. Issues with linking may arise when using a version that is older than three months.
 
 ### Installation
 
