@@ -49,7 +49,6 @@ static void xfer_init(PurpleXfer *xfer) {
 }
 
 static void xfer_release(PurpleXfer * xfer) {
-    purple_debug_info(GOWHATSAPP_NAME, "xfer_release(…) called.\n");
     if (xfer->data != NULL) {
         gowhatsapp_message_t * gwamsg = xfer->data;
         gowhatsapp_go_download_attachment(gwamsg->account, NULL, gwamsg->download_handle); // free the handle
@@ -124,7 +123,8 @@ char * gowhatsapp_attachment_fill_template(const char *template, time_t timestam
         direction = "sent";
     }
 
-    // this hash table does not release keys or values since everything is either static or not owned by this function
+    // this hash table does not release keys since they are static
+    // it does not release values since they are not owned by this function
     GHashTable *replacements = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
     // casts necessary to remove const
     g_hash_table_insert(replacements, "$home", (char *)purple_home_dir());
@@ -139,6 +139,7 @@ char * gowhatsapp_attachment_fill_template(const char *template, time_t timestam
 
     char *replaced = g_strdup(purple_utf8_strftime(template, localtime(&timestamp)));
     g_hash_table_foreach(replacements, replace_placeholder, &replaced);
+    g_hash_table_destroy(replacements);
     return replaced;
 }
 
@@ -201,8 +202,8 @@ char * create_symlinks(PurpleAccount *account, const char *template, time_t time
 
 void gowhatsapp_handle_attachment(gowhatsapp_message_t *gwamsg) {
     // TODO: mention in readme: for maintaining order of messages, do not use purple's xfer mechanism
+    // local path for auto-downloader
     const char *local_path_template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT);
-    // auto-downloader
     if (local_path_template && local_path_template[0]) {
         // assume a contact sent this file
         PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
