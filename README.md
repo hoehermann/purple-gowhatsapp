@@ -94,7 +94,7 @@ Dependencies:
 * pkg-config
 * cmake (3.20 or newer)
 * make
-* go (1.24.5 or newer)
+* go (1.25.1 or newer)
 * gcc (9.2.0 or newer)
 * libgdk-pixbuf-2.0 (optional)
 * libopusfile (optional)
@@ -132,7 +132,7 @@ CMake will try to set-up a development environment automatically.
 
 Additional dependencies (must be 32 bit aka. win32 aka. x86 aka. 386 aka. i686):
 
-* [go 1.24.5 or newer](https://go.dev/dl/go1.24.5.windows-386.msi)
+* [go 1.25.1 or newer](https://go.dev/dl/go1.25.1.windows-386.msi)
 * [gcc 13.2 or newer](https://packages.msys2.org/package/mingw-w64-i686-gcc)
 
 This is known to work with MSYS make and CMake generator "MSYS Makefiles". go and gcc must be in `%PATH%`.  
