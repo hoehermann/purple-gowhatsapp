@@ -219,7 +219,7 @@ func gowhatsapp_go_query_groups(account *PurpleAccount) {
 	handler, ok := handlers[account]
 	if ok {
 		go func() {
-			groups, err := handler.client.GetJoinedGroups()
+			groups, err := handler.client.GetJoinedGroups(context.TODO())
 			if err != nil {
 				purple_error(account, fmt.Sprintf("Unable to get list of groups: %#v", err), ERROR_FATAL)
 			} else {
