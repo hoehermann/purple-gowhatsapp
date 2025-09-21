@@ -213,17 +213,16 @@ Using the most recent version of whatsmeow is recommended. Based on experience a
   
     * `inline`: embed in the conversation window
     * `xfer`: treat as file download
-    * `both`: do both
-  
-* `inline-stickers` bool  
-  If set to true (default), stickers will automatically be downloaded and may embedded in the conversation window if an appropriate webp GDK pixbuf loader is present.
+    * `both`: do both (default)
+
+  Note: Attachment download behaviour is influenced by the `attachment-path-template` setting.
 
 * `group-is-file-origin` bool  
   It set to true (default), when a file is posted into a group chat, that chat will be the origin of the file. If set to false, the file will originate from the group chat *participant*. At time of writing, Bitlbee wants this to be false.  
   Note: File transfers for group chats are supported since libpurple 2.14.0.
 
 * `attachment-path-template` string  
-  This is a template for specifying a path to a local file-name. Setting this to a non-empty value will store attachments immediately, completely bypassing libpurple's file transfer mechanism. This can be useful for message bridges with limited resources. Sub-directories will be created as needed. Profile pictures will be stored in the contact's directory.
+  This is a template for specifying a path to a local file-name. Setting this to a non-empty value will enable the automated downloader which stores attachments immediately, completely bypassing libpurple's file transfer mechanism. This can be useful for message bridges with limited resources. Also it can help with maintaining the order of messages. Sub-directories will be created as needed. Profile pictures will be stored in the contact's directory.
 
   Default value is the empty string.
 

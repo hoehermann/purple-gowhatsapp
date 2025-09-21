@@ -2,12 +2,11 @@
 #include "libwhatsmeow.h"
 #include "constants.h"
 #include "pixbuf.h"
+#include "glib/gstdio.h"
 
 static void gowhatsapp_display_image_inline(gowhatsapp_message_t *gwamsg, const char *local_file_path) {
-    const gboolean is_image = gwamsg->subtype == gowhatsapp_attachment_type_image;
-    const gboolean is_sticker = gwamsg->subtype == gowhatsapp_attachment_type_sticker;
-    const gboolean inline_images = purple_account_get_bool(gwamsg->account, GOWHATSAPP_INLINE_IMAGES_OPTION, TRUE);
-    if (inline_images && (is_image || is_sticker) && pixbuf_is_loadable_image_mimetype(gwamsg->mimetype)) {
+    const gboolean inline_images = !purple_strequal(purple_account_get_string(gwamsg->account, GOWHATSAPP_HANDLE_IMAGES_OPTION, GOWHATSAPP_HANDLE_IMAGES_CHOICE_BOTH), GOWHATSAPP_HANDLE_IMAGES_CHOICE_ATTACHMENT);
+    if (inline_images && pixbuf_is_loadable_image_mimetype(gwamsg->mimetype)) {
         gchar *data = NULL;
 	    size_t len;
 	    GError *err = NULL;
@@ -75,7 +74,7 @@ static gowhatsapp_message_t *duplicate_gowhatsapp_message(gowhatsapp_message_t *
     return clone;
 }
 
-static void xfer_download_attachment(gowhatsapp_message_t *gwamsg) {    
+static void download_via_xfer_mechanism(gowhatsapp_message_t *gwamsg) {    
     const char * sender = gwamsg->senderJid; // by default, the group chat participant is the sender
     if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_GROUP_IS_FILE_ORIGIN_OPTION, TRUE)) {
         sender = gwamsg->remoteJid; // set sender to the group chat
@@ -200,38 +199,66 @@ char * create_symlinks(PurpleAccount *account, const char *template, time_t time
 }
 #endif
 
-void gowhatsapp_handle_attachment(gowhatsapp_message_t *gwamsg) {
-    // TODO: mention in readme: for maintaining order of messages, do not use purple's xfer mechanism
-    // local path for auto-downloader
-    const char *local_path_template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT);
-    if (local_path_template && local_path_template[0]) {
-        // assume a contact sent this file
-        PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
-        if (purple_strequal(purple_account_get_username(gwamsg->account), gwamsg->senderJid)) {
-            // we actually sent this file (from a different device)
-            flags = PURPLE_MESSAGE_SEND | PURPLE_MESSAGE_REMOTE_SEND;
+void download_to_templated_destination(gowhatsapp_message_t *gwamsg, const char *local_path_template)
+{
+    // assume a contact sent this file
+    PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
+    if (purple_strequal(purple_account_get_username(gwamsg->account), gwamsg->senderJid))
+    {
+        // we actually sent this file (from a different device)
+        flags = PURPLE_MESSAGE_SEND | PURPLE_MESSAGE_REMOTE_SEND;
+    }
+    char *local_path = gowhatsapp_attachment_fill_template(local_path_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
+    char *error = gowhatsapp_go_download_attachment(gwamsg->account, local_path, gwamsg->download_handle);
+    if (error && error[0])
+    {
+        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId, TRUE);
+    }
+    else
+    {
+#ifndef WIN32
+        create_symlinks(gwamsg->account, local_path_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
+#endif
+        const char *url_template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_OPTION, GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_DEFAULT);
+        char *url = gowhatsapp_go_url_from_local_path(local_path);
+        if (url_template && url_template[0])
+        {
+            url = gowhatsapp_attachment_fill_template(url_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
         }
-        char *local_path = gowhatsapp_attachment_fill_template(local_path_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
-        char *error = gowhatsapp_go_download_attachment(gwamsg->account, local_path, gwamsg->download_handle);
-        if (error && error[0]) {
-            gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId, TRUE);
-        } else {
-            #ifndef WIN32
-            create_symlinks(gwamsg->account, local_path_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
-            #endif
-            const char *url_template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_OPTION, GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_DEFAULT);
-            char *url = gowhatsapp_go_url_from_local_path(local_path);
-            if (url_template && url_template[0]) {
-                url = gowhatsapp_attachment_fill_template(url_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
-            }
-            gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, url, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, 0, gwamsg->messageId, TRUE);
-            g_free(url);
-            gowhatsapp_display_image_inline(gwamsg, local_path);
-            gowhatsapp_display_caption(gwamsg);
-        }
-        g_free(error);
-        g_free(local_path);
+        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, url, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, 0, gwamsg->messageId, TRUE);
+        g_free(url);
+        gowhatsapp_display_image_inline(gwamsg, local_path);
+        gowhatsapp_display_caption(gwamsg);
+    }
+    g_free(error);
+    g_free(local_path);
+}
+
+static gboolean download_to_temporary_directory(gowhatsapp_message_t *gwamsg) {
+    char *local_path_tmp = g_strdup(g_build_filename(g_get_tmp_dir(), g_strdup_printf("whatsapp_image_%s%s", gwamsg->hash_hex, gwamsg->extension), NULL));
+    char *error = gowhatsapp_go_download_attachment(gwamsg->account, local_path_tmp, gwamsg->download_handle);
+    if (error && error[0]) {
+        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId, TRUE);
     } else {
-        xfer_download_attachment(gwamsg);
+        gowhatsapp_display_image_inline(gwamsg, local_path_tmp);
+        gowhatsapp_display_caption(gwamsg);
+    }
+    g_remove(local_path_tmp);
+    g_free(local_path_tmp);
+}
+
+void gowhatsapp_handle_attachment(gowhatsapp_message_t *gwamsg) {
+    gboolean inline_only = purple_strequal(purple_account_get_string(gwamsg->account, GOWHATSAPP_HANDLE_IMAGES_OPTION, GOWHATSAPP_HANDLE_IMAGES_CHOICE_BOTH), GOWHATSAPP_HANDLE_IMAGES_CHOICE_INLINE);
+    inline_only &= pixbuf_is_loadable_image_mimetype(gwamsg->mimetype); // only inline images which can be loaded
+    if (inline_only) {
+        download_to_temporary_directory(gwamsg);
+    } else {
+        // local path for auto-downloader
+        const char *local_path_template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT);
+        if (local_path_template && local_path_template[0]) {
+            download_to_templated_destination(gwamsg, local_path_template);
+        } else {
+            download_via_xfer_mechanism(gwamsg);
+        }
     }
 }

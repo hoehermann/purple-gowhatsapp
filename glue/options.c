@@ -111,13 +111,19 @@ gowhatsapp_add_account_options(GList *account_options)
         );
         account_options = g_list_append(account_options, option);
     }
-    
-    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
-        "Inline images (stickers need webp loader)",
-        GOWHATSAPP_INLINE_IMAGES_OPTION,
-        TRUE
+
+    {
+        GList *choices = NULL;
+        choices = add_choice(choices, "download to user-defined location and show", GOWHATSAPP_HANDLE_IMAGES_CHOICE_BOTH);
+        choices = add_choice(choices, "download to temporary location and show", GOWHATSAPP_HANDLE_IMAGES_CHOICE_INLINE);
+        choices = add_choice(choices, "download to user-defined location only", GOWHATSAPP_HANDLE_IMAGES_CHOICE_ATTACHMENT);
+        option = purple_account_option_list_new( // MEMCHECK: account_options takes ownership
+            "How to handle images",
+            GOWHATSAPP_HANDLE_IMAGES_OPTION,
+            choices
         );
-    account_options = g_list_append(account_options, option);
+        account_options = g_list_append(account_options, option);
+    }
 
     {
         GList *choices = NULL;
