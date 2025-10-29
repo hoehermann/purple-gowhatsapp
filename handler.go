@@ -82,7 +82,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// connected – start downloading profile pictures now.
 		go handler.profile_picture_downloader()
 		handler.handle_connected()
-		blocklist, err := cli.GetBlocklist()
+		blocklist, err := cli.GetBlocklist(context.TODO())
 		if err == nil {
 			log.Infof("Blocklist contains %d entries.", len(blocklist.JIDs))
 			handler.blocklist = blocklist

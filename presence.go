@@ -6,6 +6,7 @@ package main
 import "C"
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -30,7 +31,7 @@ func (handler *Handler) send_presence(presence_str string) {
 	}
 	presence, ok := presenceMap[presence_str]
 	if ok {
-		err := handler.client.SendPresence(presence)
+		err := handler.client.SendPresence(context.TODO(), presence)
 		if err != nil {
 			purple_error(handler.account, fmt.Sprintf("Failed to send presence: %v", err), ERROR_FATAL)
 		} else {
@@ -75,7 +76,7 @@ func (handler *Handler) subscribe_presence(who string) {
 		handler.log.Warnf("%s is not a valid JID: %#v", who, err)
 		return
 	}
-	err = handler.client.SubscribePresence(jid)
+	err = handler.client.SubscribePresence(context.TODO(), jid)
 	if err != nil {
 		handler.log.Warnf("Unable to subscribe for presence updates of %s.", jid.String())
 	}

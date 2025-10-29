@@ -6,8 +6,10 @@ package main
 import "C"
 
 import (
-	"go.mau.fi/whatsmeow/types"
+	"context"
 	"time"
+
+	"go.mau.fi/whatsmeow/types"
 )
 
 /*
@@ -105,7 +107,7 @@ func (handler *Handler) mark_read_unconditionally(chat types.JID) {
  */
 func (handler *Handler) mark_read(ids []types.MessageID, chat types.JID, sender types.JID) {
 	handler.log.Infof("Sending read receipt to %s...", sender.ToNonAD().String())
-	err := handler.client.MarkRead(ids, time.Now(), chat, sender)
+	err := handler.client.MarkRead(context.TODO(), ids, time.Now(), chat, sender)
 	if err != nil {
 		handler.log.Warnf("Sending read receipt failed: %#v", err)
 	}

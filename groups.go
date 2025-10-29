@@ -1,8 +1,10 @@
 package main
 
 import (
-	"go.mau.fi/whatsmeow/types"
+	"context"
 	"time"
+
+	"go.mau.fi/whatsmeow/types"
 )
 
 /*
@@ -12,7 +14,7 @@ import (
  * Upon delayed success, the response is fed to purple asynchronously.
  */
 func (handler *Handler) query_group_participants_retry(group_jid types.JID, seconds_backoff int, max_retries int, retry_count int) []types.GroupParticipant {
-	group, err := handler.client.GetGroupInfo(group_jid)
+	group, err := handler.client.GetGroupInfo(context.TODO(), group_jid)
 	if err == nil && group != nil {
 		if retry_count > 0 {
 			purple_update_group(handler.account, group)

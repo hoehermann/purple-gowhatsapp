@@ -6,6 +6,7 @@ package main
 import "C"
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 
@@ -64,6 +65,7 @@ func (handler *Handler) profile_picture_downloader() {
 		setting := purple_get_string(handler.account, C.GOWHATSAPP_ICONS_OPTION, C.GOWHATSAPP_ICONS_CHOICE_PREVIEW)
 		want_preview := setting == C.GoString(C.GOWHATSAPP_ICONS_CHOICE_PREVIEW)
 		ppi, _ := handler.client.GetProfilePictureInfo(
+			context.TODO(),
 			pdr.jid, &whatsmeow.GetProfilePictureParams{
 				Preview:     want_preview,
 				ExistingID:  pdr.picture_id,
