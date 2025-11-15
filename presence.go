@@ -51,7 +51,7 @@ func (handler *Handler) send_presence(presence_str string) {
 }
 
 func (handler *Handler) handle_chat_presence(evt *events.ChatPresence) {
-	who := evt.MessageSource.Chat.ToNonAD().String()
+	who := handler.lidToPn(evt.MessageSource.Chat, "handling chat (typing) presence").ToNonAD().String()
 	switch evt.State {
 	case types.ChatPresenceComposing:
 		purple_composing(handler.account, who)
@@ -63,10 +63,11 @@ func (handler *Handler) handle_chat_presence(evt *events.ChatPresence) {
 }
 
 func (handler *Handler) handle_presence(evt *events.Presence) {
+	who := handler.lidToPn(evt.From, "handling presence").ToNonAD().String()
 	if evt.Unavailable {
-		purple_update_presence(handler.account, evt.From.ToNonAD().String(), false, evt.LastSeen)
+		purple_update_presence(handler.account, who, false, evt.LastSeen)
 	} else {
-		purple_update_presence(handler.account, evt.From.ToNonAD().String(), true, time.Time{})
+		purple_update_presence(handler.account, who, true, time.Time{})
 	}
 }
 

@@ -177,13 +177,7 @@ func participants_to_ntcstrarray(group_participants []types.GroupParticipant) **
 	// https://stackoverflow.com/questions/51525876/use-go-slice-in-c
 	participants := unsafe.Slice((**C.char)(cparticipants), participant_count)
 	for pi, participant := range group_participants {
-		jid := participant.JID
-		if jid.Server == types.HiddenUserServer && !participant.PhoneNumber.IsEmpty() {
-			// when the group chat participant is anonymized, we sometimes still get their actual JID in the PhoneNumber field
-			// using the actual JID is preferable for consistent local aliasing via the purple buddy list
-			jid = participant.PhoneNumber
-		}
-		participants[pi] = C.CString(jid.ToNonAD().String())
+		participants[pi] = C.CString(participant.JID.ToNonAD().String())
 	}
 	return cparticipants
 }
@@ -200,7 +194,9 @@ func gowhatsapp_go_query_group_participants(account *PurpleAccount, groupid *C.c
 				if jid == types.StatusBroadcastJID {
 					// the status broadcast is not an actual group which participants can be queried from
 				} else {
-					return participants_to_ntcstrarray(handler.query_group_participants_retry(jid, 1, 10, 0))
+					participants := handler.query_group_participants_retry(jid, 1, 10, 0)
+					participants = handler.groupChatParticipantsLidToPn(participants, "group chat participants query")
+					return participants_to_ntcstrarray(participants)
 				}
 			} else {
 				purple_error(account, fmt.Sprintf("Cannot get group information from invalid JID %s due to %#v.", go_groupid, err), ERROR_FATAL)
@@ -224,6 +220,7 @@ func gowhatsapp_go_query_groups(account *PurpleAccount) {
 				purple_error(account, fmt.Sprintf("Unable to get list of groups: %#v", err), ERROR_FATAL)
 			} else {
 				for _, group := range groups {
+					group.Participants = handler.groupChatParticipantsLidToPn(group.Participants, "group chat query")
 					purple_update_group(account, group)
 				}
 				// emit an empty group message to denote end of list

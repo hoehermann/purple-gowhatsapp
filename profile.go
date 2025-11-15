@@ -7,6 +7,7 @@ import "C"
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -103,4 +104,31 @@ func (handler *Handler) profile_picture_downloader() {
 		}
 		purple_set_profile_picture(handler.account, pdr.jid.ToNonAD().String(), b.Bytes(), resp.Header.Get("Last-Modified"), ppi.ID)
 	}
+}
+
+func (handler *Handler) lidToPn(jid types.JID, application_context string) types.JID {
+	if jid.Server == types.HiddenUserServer {
+		pnJid, err := handler.client.Store.LIDs.GetPNForLID(context.TODO(), jid)
+		errmsg := fmt.Sprintf(" (error: %v)", err)
+		if err == nil {
+			errmsg = ""
+			handler.log.Infof("Looked up LID \"%s\" -> \"%s\"%s for %s.", jid.ToNonAD().String(), pnJid.ToNonAD().String(), errmsg, application_context)
+			if !pnJid.IsEmpty() {
+				jid = pnJid
+			}
+		}
+	}
+	return jid
+}
+
+func (handler *Handler) groupChatParticipantsLidToPn(participants []types.GroupParticipant, application_context string) []types.GroupParticipant {
+	for pi, participant := range participants {
+		jid := handler.lidToPn(participant.JID, application_context)
+		if jid.Server == types.HiddenUserServer && !participant.PhoneNumber.IsEmpty() {
+			// when the group chat participant is anonymized, we sometimes still get their actual JID in the PhoneNumber field
+			jid = participant.PhoneNumber
+		}
+		participants[pi].JID = jid
+	}
+	return participants
 }

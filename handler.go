@@ -148,17 +148,17 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		}
 	case *events.CallOffer:
 		bcm := evt.BasicCallMeta
-		chat := bcm.From.ToNonAD().String()
-		sender := bcm.CallCreator.ToNonAD().String()
+		chat := handler.lidToPn(bcm.From, "handling call offer")
+		sender := handler.lidToPn(bcm.CallCreator, "handling call offer")
 		text := "This contact is trying to call you, but WhatsApp Web does not support calls."
-		purple_display_text_message(handler.account, chat, false, false, sender, nil, bcm.Timestamp, text, nil)
+		purple_display_text_message(handler.account, chat.ToNonAD().String(), false, false, sender.ToNonAD().String(), nil, bcm.Timestamp, text, nil)
 	case *events.CallOfferNotice:
 		// same as CallOffer, but is a group
 		bcm := evt.BasicCallMeta
-		chat := bcm.From.ToNonAD().String()
-		sender := bcm.CallCreator.ToNonAD().String()
-		text := "This contact is trying to call you, but WhatsApp Web does not support calls."
-		purple_display_text_message(handler.account, chat, true, false, sender, nil, bcm.Timestamp, text, nil)
+		chat := handler.lidToPn(bcm.From, "handling call offer notice")
+		sender := handler.lidToPn(bcm.CallCreator, "handling call offer notice")
+		text := "This contact is trying to make you notice a call, but WhatsApp Web does not support calls."
+		purple_display_text_message(handler.account, chat.ToNonAD().String(), true, false, sender.ToNonAD().String(), nil, bcm.Timestamp, text, nil)
 	case *events.CallRelayLatency:
 		// related to calls. ignore silently.
 	case *events.CallTerminate:

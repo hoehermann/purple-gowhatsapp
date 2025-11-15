@@ -168,7 +168,6 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	err = handler.client.Connect()
 	if err != nil {
 		purple_error(handler.account, fmt.Sprintf("%#v", err), ERROR_TRANSIENT)
-		return
 	}
 }
 

@@ -38,12 +38,14 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 			}
 		}
 	}
-	text := ""
+	source.Chat = handler.lidToPn(source.Chat, "handling message chat")
+	source.Sender = handler.lidToPn(source.Sender, "handling message sender")
+	isEdit := false
 	{
 		if pm := message.GetProtocolMessage(); pm != nil {
 			if em := pm.GetEditedMessage(); em != nil {
 				message = em
-				text = "[EDIT] "
+				isEdit = true
 			}
 		}
 	}
