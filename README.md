@@ -97,7 +97,7 @@ Look at the [build instructions](./docs/BUILDING.md). This project is being deve
   *Note:* On headless clients such as Spectrum, the QR code will be wrapped in a message by a fake contact called "Logon QR Code". You may need to temporarily configure your UI to accept messages from unsolicited users for linking purposes.  
   Wait until the connection has been fully set up. Unfortunately, there is no progress indicator while keys are exchanged and old messages are fetched. Usually, a couple of seconds is enough. Some power users with many groups and contacts reported the process can take more than a minute. If the plug-in is not yet ready, outgoing messages may be dropped silently (see issue #142).
 
-You may want to have a loot at the documentation of all the [settings](./docs/SETTINGS.md) the plug-in offers.
+**You probably want to have a look at the documentation of all the [settings](./docs/SETTINGS.md) the plug-in offers.**
 
 Some in-depth documentation about obscure details can be found in the [notes](./docs/NOTES.md).
 
