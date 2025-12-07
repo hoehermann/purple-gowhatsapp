@@ -16,6 +16,7 @@ import (
 
 func (handler *Handler) handle_message(message *waE2E.Message, id string, source types.MessageSource, name *string, timestamp time.Time, is_historical bool) {
 	//handler.log.Infof("message: %#v", message)
+	text := ""
 	if source.Chat == types.StatusBroadcastJID {
 		if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, false) {
 			// some people find status broadcasts annoying
@@ -26,6 +27,7 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 			// we just treat those messages as if they were direct messages
 			source.Chat = source.Sender
 			source.IsGroup = false
+			text = "[STATUS] "
 		}
 	}
 	if handler.blocklist != nil {
@@ -99,6 +101,9 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 	if text == "" {
 		handler.log.Warnf("Received a message without any text.")
 	} else {
+		if isEdit {
+			text = "[EDIT] " + text
+		}
 		// note: info.PushName always denotes the sender (not the chat)
 		purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, false, source.Sender.ToNonAD().String(), name, timestamp, text, &id)
 		handler.addToCache(CachedMessage{id: id, text: text, timestamp: timestamp})
@@ -107,5 +112,7 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 			handler.mark_read_if_on_receival(source.Chat)
 		}
 	}
-	handler.handle_attachment(message, id, source, timestamp)
+	if !isEdit { // edited messages contain the changed texts, but attachments are absent since they cannot be changed
+		handler.handle_attachment(message, id, source, timestamp)
+	}
 }
