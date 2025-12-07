@@ -2,6 +2,8 @@
 
 WhatsApp is very picky about media messages. This is actually a good thing for ensuring compatibility on all devices and clients (Android, iOS, all browsers for WhatsApp Web…).
 
+Whenever a given file does not fulfill any of the following criteria, it is sent as a document message.
+
 ##### Image Message
 
 An image may be sent as an image message (JPEG, `image/jpeg`). This is relatively straight-forward.
@@ -20,7 +22,7 @@ Additional recommendations:
 
 * Channels: 1 (mono)
 
-This kind of message is also known as "push to talk" (PTT). While it is possible to send other audio formats as non-voice audio messages, this plug-in only considers data for voice messages. Everything else is send as a document message.
+This kind of message is also known as "push to talk" (PTT). While it is possible to send other audio formats as non-voice audio messages, this plug-in only considers audio data for voice messages.
 
 ##### Video Message
 

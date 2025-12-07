@@ -99,7 +99,7 @@ Look at the [build instructions](./docs/BUILDING.md). This project is being deve
 
 **You probably want to have a look at the documentation of all the [settings](./docs/SETTINGS.md) the plug-in offers.**
 
-Some in-depth documentation about obscure details can be found in the [notes](./docs/NOTES.md).
+Some in-depth documentation about obscure details can be found in the [notes](./docs/NOTES.md). **Read this if you want to send files.**
 
 #### Acknowledgements
 
