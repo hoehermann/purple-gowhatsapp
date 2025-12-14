@@ -35,6 +35,7 @@ static void xfer_init(PurpleXfer *xfer) {
     const char * local_file_name = purple_xfer_get_local_filename(xfer);
     PurpleAccount *account = purple_xfer_get_account(xfer);
     char *error = gowhatsapp_go_download_attachment(account, (char *)local_file_name, gwamsg->download_handle);
+    gwamsg->download_handle = 0; // the handle has been consumed by the go part and must not be considered again
     if (error && error[0]) {
         purple_xfer_error(purple_xfer_get_type(xfer), account, xfer->who, error); 
         purple_xfer_cancel_local(xfer);
@@ -50,7 +51,11 @@ static void xfer_init(PurpleXfer *xfer) {
 static void xfer_release(PurpleXfer * xfer) {
     if (xfer->data != NULL) {
         gowhatsapp_message_t * gwamsg = xfer->data;
-        gowhatsapp_go_download_attachment(gwamsg->account, NULL, gwamsg->download_handle); // free the handle
+        if (gwamsg->download_handle) {
+            gowhatsapp_go_download_attachment(gwamsg->account, NULL, gwamsg->download_handle); // free the handle
+            // freeing the handle is necessary when the request to receive a file is denied or otherwise cancelled locally
+            // without ever calling gowhatsapp_go_download_attachment
+        }
         gowhatsapp_free_message(gwamsg);
         xfer->data = NULL;
     }
