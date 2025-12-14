@@ -199,30 +199,24 @@ char * create_symlinks(PurpleAccount *account, const char *template, time_t time
 }
 #endif
 
-void download_to_templated_destination(gowhatsapp_message_t *gwamsg, const char *local_path_template)
-{
+void download_to_templated_destination(gowhatsapp_message_t *gwamsg, const char *local_path_template) {
     // assume a contact sent this file
     PurpleMessageFlags flags = PURPLE_MESSAGE_RECV;
-    if (purple_strequal(purple_account_get_username(gwamsg->account), gwamsg->senderJid))
-    {
+    if (purple_strequal(purple_account_get_username(gwamsg->account), gwamsg->senderJid)) {
         // we actually sent this file (from a different device)
         flags = PURPLE_MESSAGE_SEND | PURPLE_MESSAGE_REMOTE_SEND;
     }
     char *local_path = gowhatsapp_attachment_fill_template(local_path_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
     char *error = gowhatsapp_go_download_attachment(gwamsg->account, local_path, gwamsg->download_handle);
-    if (error && error[0])
-    {
+    if (error && error[0]) {
         gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId, TRUE);
-    }
-    else
-    {
-#ifndef WIN32
-        create_symlinks(gwamsg->account, local_path_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
-#endif
+    } else {
+        #ifndef WIN32
+            create_symlinks(gwamsg->account, local_path_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
+        #endif
         const char *url_template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_OPTION, GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_DEFAULT);
         char *url = gowhatsapp_go_url_from_local_path(local_path);
-        if (url_template && url_template[0])
-        {
+        if (url_template && url_template[0]) {
             url = gowhatsapp_attachment_fill_template(url_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
         }
         gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, url, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, 0, gwamsg->messageId, TRUE);
@@ -253,9 +247,9 @@ void gowhatsapp_handle_attachment(gowhatsapp_message_t *gwamsg) {
     if (inline_only) {
         download_to_temporary_directory(gwamsg);
     } else {
-        // local path for auto-downloader
         const char *local_path_template = purple_account_get_string(gwamsg->account, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_OPTION, GOWHATSAPP_ATTACHMENT_PATH_TEMPLATE_DEFAULT);
         if (local_path_template && local_path_template[0]) {
+            // local path set, invoke auto-downloader
             download_to_templated_destination(gwamsg, local_path_template);
         } else {
             download_via_xfer_mechanism(gwamsg);
