@@ -34,16 +34,6 @@ func (handler *Handler) send_presence(presence_str string) {
 		err := handler.client.SendPresence(context.TODO(), presence)
 		if err != nil {
 			purple_error(handler.account, fmt.Sprintf("Failed to send presence: %v", err), ERROR_FATAL)
-		} else {
-			// Using SetForceActiveDeliveryReceipts is a custom feature requested by https://github.com/theassemblerguy
-			setting := purple_get_string(handler.account, C.GOWHATSAPP_CLIENT_APPEARANCE_OPTION, C.GOWHATSAPP_CLIENT_APPEARANCE_CHOICE_DEFAULT)
-			if setting == C.GoString(C.GOWHATSAPP_CLIENT_APPEARANCE_CHOICE_ONLINE) {
-				handler.client.SetForceActiveDeliveryReceipts(true)
-			} else if setting == C.GoString(C.GOWHATSAPP_CLIENT_APPEARANCE_CHOICE_OFFLINE) {
-				handler.client.SetForceActiveDeliveryReceipts(false)
-			} else {
-				// default is to do nothing
-			}
 		}
 	} else {
 		purple_error(handler.account, fmt.Sprintf("Unknown presence %s (this is a bug).", presence_str), ERROR_FATAL)

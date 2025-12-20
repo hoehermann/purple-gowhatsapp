@@ -125,26 +125,6 @@ gowhatsapp_add_account_options(GList *account_options)
         account_options = g_list_append(account_options, option);
     }
 
-    {
-        GList *choices = NULL;
-        choices = add_choice(choices, "appear online but inactive", GOWHATSAPP_CLIENT_APPEARANCE_CHOICE_DEFAULT);
-        choices = add_choice(choices, "appear online and active", GOWHATSAPP_CLIENT_APPEARANCE_CHOICE_ONLINE);
-        choices = add_choice(choices, "appear offline but receive messages", GOWHATSAPP_CLIENT_APPEARANCE_CHOICE_OFFLINE);
-        option = purple_account_option_list_new( // MEMCHECK: account_options takes ownership
-            "Appearance",
-            GOWHATSAPP_CLIENT_APPEARANCE_OPTION,
-            choices
-        );
-        account_options = g_list_append(account_options, option);
-    }
-        
-    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
-        "Passive client",
-        GOWHATSAPP_PASSIVE_OPTION,
-        FALSE
-        );
-    account_options = g_list_append(account_options, option);
-
     option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
         "Discard old messages",
         GOWHATSAPP_DISCARD_OLD_MESSAGES_OPTION,

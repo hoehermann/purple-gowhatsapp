@@ -75,10 +75,6 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// no need to forward to purple
 		// TODO: find out how this is related to the PushNameSetting event
 	case *events.Connected:
-		// Using SetPassive is a custom feature requested by https://github.com/theassemblerguy
-		if purple_get_bool(handler.account, C.GOWHATSAPP_PASSIVE_OPTION, false) {
-			handler.client.SetPassive(context.TODO(), true)
-		}
 		// connected – start downloading profile pictures now.
 		go handler.profile_picture_downloader()
 		handler.handle_connected()
