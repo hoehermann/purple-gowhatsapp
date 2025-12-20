@@ -70,7 +70,7 @@ int gowhatsapp_send_chat(PurpleConnection *pc, int id, const gchar *message, Pur
 
 // handle_attachment
 void gowhatsapp_handle_attachment(gowhatsapp_message_t *gwamsg);
-char * gowhatsapp_attachment_fill_template(const char *template, time_t timestamp, const char *hash, const char *filename, const char *extension, const char *remote, const char *sender, const char *messageid, PurpleMessageFlags flags);
+char * gowhatsapp_attachment_fill_template(const char *template, time_t timestamp, const char *hash, const char *filename, const char *extension, const char *remote, const char *sender, const char *title, const char *alias, const char *messageid, PurpleMessageFlags flags);
 
 // send_file
 PurpleXfer * gowhatsapp_new_xfer(PurpleConnection *pc, const char *who);

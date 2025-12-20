@@ -55,6 +55,8 @@
 	* `$direction`: Whether this attachment was "received" (sent by a contact) or "sent" (other device on the own account).
 	* `$remote`: The ID of the contact or group chat this attachment has been posted to.
 	* `$sender`: The ID of the contact who posted this attachment to the group chat. Empty if not posted in a group chat.
+	* `$name`: The human readable name of the contact who sent the attachment. Local alias supplied by the buddy list takes precedence over the name supplied by the server.
+	* `$title`: The human readable title of the group chat what was posted to. Local alias supplied by the buddy list takes precedence over the title supplied by the server.
 	* `$messageid`: The ID of the message.
 	* `$hash`: The file's SHA256 (useful for avoiding clashes and for de-duplication, not set for profile pictures).
 	* `$filename`: The sender-supplied file-name (only for Document messages and profile pictures, otherwise empty). Does not contain the extension.
