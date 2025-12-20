@@ -35,7 +35,7 @@ static void xfer_init(PurpleXfer *xfer) {
     const char * local_file_name = purple_xfer_get_local_filename(xfer);
     PurpleAccount *account = purple_xfer_get_account(xfer);
     char *error = gowhatsapp_go_download_attachment(account, (char *)local_file_name, gwamsg->download_handle);
-    gwamsg->download_handle = 0; // the handle has been consumed by the go part and must not be considered again
+    // NOTE: gowhatsapp_go_delete_handle(gwamsg->download_handle) will be called via xfer_release
     if (error && error[0]) {
         purple_xfer_error(purple_xfer_get_type(xfer), account, xfer->who, error); 
         purple_xfer_cancel_local(xfer);
@@ -52,9 +52,8 @@ static void xfer_release(PurpleXfer * xfer) {
     if (xfer->data != NULL) {
         gowhatsapp_message_t * gwamsg = xfer->data;
         if (gwamsg->download_handle) {
-            gowhatsapp_go_download_attachment(gwamsg->account, NULL, gwamsg->download_handle); // free the handle
-            // freeing the handle is necessary when the request to receive a file is denied or otherwise cancelled locally
-            // without ever calling gowhatsapp_go_download_attachment
+            gowhatsapp_go_delete_handle(gwamsg->download_handle);
+            gwamsg->download_handle = 0;
         }
         gowhatsapp_free_message(gwamsg);
         xfer->data = NULL;
@@ -95,7 +94,7 @@ static void download_via_xfer_mechanism(gowhatsapp_message_t *gwamsg) {
     
     purple_xfer_set_init_fnc(xfer, xfer_init);
     
-    // be very sure to release the data no matter what
+    // be very sure to release the data no matter what code-path is taken
     purple_xfer_set_end_fnc(xfer, xfer_release);
     purple_xfer_set_request_denied_fnc(xfer, xfer_release);
     purple_xfer_set_cancel_recv_fnc(xfer, xfer_release);
@@ -213,6 +212,7 @@ void download_to_templated_destination(gowhatsapp_message_t *gwamsg, const char 
     }
     char *local_path = gowhatsapp_attachment_fill_template(local_path_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, gwamsg->messageId, flags);
     char *error = gowhatsapp_go_download_attachment(gwamsg->account, local_path, gwamsg->download_handle);
+    gowhatsapp_go_delete_handle(gwamsg->download_handle);
     if (error && error[0]) {
         gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId, TRUE);
     } else {
@@ -236,6 +236,7 @@ void download_to_templated_destination(gowhatsapp_message_t *gwamsg, const char 
 static gboolean download_to_temporary_directory(gowhatsapp_message_t *gwamsg) {
     char *local_path_tmp = g_strdup(g_build_filename(g_get_tmp_dir(), g_strdup_printf("whatsapp_image_%s%s", gwamsg->hash_hex, gwamsg->extension), NULL));
     char *error = gowhatsapp_go_download_attachment(gwamsg->account, local_path_tmp, gwamsg->download_handle);
+    gowhatsapp_go_delete_handle(gwamsg->download_handle);
     if (error && error[0]) {
         gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId, TRUE);
     } else {

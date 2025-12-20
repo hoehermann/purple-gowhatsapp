@@ -128,13 +128,18 @@ func gowhatsapp_go_download_attachment(account *PurpleAccount, local_file_path *
 			message := h.Value().(whatsmeow.DownloadableMessage)
 			err = handler.download_attachment(C.GoString(local_file_path), message)
 		}
-		h.Delete()
 		if err == nil {
 			return nil
 		}
 		return C.CString(fmt.Sprintf("Failed to download attachment due to %v", err))
 	}
 	return C.CString("Not connected.")
+}
+
+//export gowhatsapp_go_delete_handle
+func gowhatsapp_go_delete_handle(download_handle C.uintptr_t) {
+	h := cgo.Handle(download_handle)
+	h.Delete()
 }
 
 //export gowhatsapp_go_mark_read_conversation
