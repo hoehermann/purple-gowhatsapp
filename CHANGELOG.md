@@ -1,3 +1,18 @@
+# 1.21.0
+
+* Update: Depends on whatsmeow v0.0.0-20251217143725-11cf47c62d32.
+* Update: Requires Go 1.25.5.
+* Feature: Resolve hidden user server (`@lid`) IDs to phone number IDs.
+* Feature: Creates symlinks aliasing directories after storing automatically downloaded files.
+* Feature: Support `$name` and `$title` in automatic download file path template.
+* Feature: Remove "passive client mode".
+* Feature: Remove "client-appearance".
+* Change: Prefix status messages with „[STATUS]“ for distinction from ordinary messages.
+* Change: Option `handle-images` can now inline images without asking the user where to store them first via setting `inline`, `xfer` or `both` (was: Boolean option `inline-images`).
+* Change: Default database options busy_timeout is now 3 seconds (was: unset), journal_mode is now WAL (was: the default DELETE)
+* Bugfix: Double free of Go attachment handle after purple xfer failed.
+* Bugfix: Release table of replacements after filling the path template.
+
 # 1.20.0
 
 * Update: Depends on whatsmeow v0.0.0-20250617170509-947866bb9f75.

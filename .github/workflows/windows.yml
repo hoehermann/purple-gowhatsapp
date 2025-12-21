@@ -6,7 +6,6 @@ on:
     branches: [whatsmeow]
 
 jobs:
-
   build:
     runs-on: windows-2022
     steps:
@@ -47,14 +46,19 @@ jobs:
         strip --strip-all build/glue/libwhatsmeow.dll
         cp build/glue/libwhatsmeow.dll libwhatsmeow.dll
 
-    # go list -m -f '{{.Version}}' go.mau.fi/whatsmeow | cut -d- -f 2
+    - name: Prepare Release Info
+      run: |
+        $COMMIT_DATE = (git log -1 --date=format:'%Y%m%d' --format='%ad')
+        echo "COMMIT_DATE=$COMMIT_DATE" | Out-File -FilePath $Env:GITHUB_ENV -Append
+
+     # go list -m -f '{{.Version}}' go.mau.fi/whatsmeow | cut -d- -f 2
     
-    - name: Create Release
+    - name: Create Nightly Release
       #if: contains(github.ref, 'tags/v')
       uses: ncipollo/release-action@v1
       with:
         artifacts: libwhatsmeow-debug.dll,libwhatsmeow.dll
-        tag: nightly-${{ github.sha }}
-        name: Nightly ${{ github.sha }}
+        tag: nightly-${{ env.COMMIT_DATE }}
+        name: Nightly ${{ env.COMMIT_DATE }}
         allowUpdates: true
         artifactErrorsFailBuild: true
