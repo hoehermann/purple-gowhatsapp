@@ -137,4 +137,4 @@
   * `.*` trust anything.
   * `^$` trust nothing (default).
   
-  In case of image, video or audio files, further conditions need to be met, see below. 
+  In case of image, video or audio files, further conditions need to be met, see [NOTES.md](./NOTES.md). 
