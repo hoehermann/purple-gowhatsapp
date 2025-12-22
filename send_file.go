@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"go.mau.fi/whatsmeow"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/proto"
 )
@@ -39,7 +39,7 @@ func (handler *Handler) send_file(who string, filename string) string {
 
 func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data []byte, filename string) error {
 	var err error = nil
-	var msg *waProto.Message = nil
+	var msg *waE2E.Message = nil
 	mimetype := http.DetectContentType(data)
 	handler.log.Infof("Attachment mime type is %s.", mimetype)
 	// TODO: redundant implementation in send_link_message. merge.
@@ -84,12 +84,12 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	}
 }
 
-func (handler *Handler) send_file_image(data []byte, mimetype string) (*waProto.Message, error) {
+func (handler *Handler) send_file_image(data []byte, mimetype string) (*waE2E.Message, error) {
 	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaImage)
 	if err != nil {
 		return nil, err
 	}
-	msg := &waProto.Message{ImageMessage: &waProto.ImageMessage{
+	msg := &waE2E.Message{ImageMessage: &waE2E.ImageMessage{
 		URL:           proto.String(uploaded.URL),
 		DirectPath:    proto.String(uploaded.DirectPath),
 		MediaKey:      uploaded.MediaKey,
@@ -101,7 +101,7 @@ func (handler *Handler) send_file_image(data []byte, mimetype string) (*waProto.
 	return msg, nil
 }
 
-func (handler *Handler) send_file_audio(data []byte, mimetype string, seconds uint32, c_waveform [C.WAVEFORM_SAMPLES_COUNT]C.char) (*waProto.Message, error) {
+func (handler *Handler) send_file_audio(data []byte, mimetype string, seconds uint32, c_waveform [C.WAVEFORM_SAMPLES_COUNT]C.char) (*waE2E.Message, error) {
 	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaAudio)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (handler *Handler) send_file_audio(data []byte, mimetype string, seconds ui
 	for i := range c_waveform {
 		waveform[i] = byte(c_waveform[i]) // convert while copying
 	}
-	msg := &waProto.Message{AudioMessage: &waProto.AudioMessage{
+	msg := &waE2E.Message{AudioMessage: &waE2E.AudioMessage{
 		URL:           proto.String(uploaded.URL),
 		DirectPath:    proto.String(uploaded.DirectPath),
 		MediaKey:      uploaded.MediaKey,
@@ -125,12 +125,12 @@ func (handler *Handler) send_file_audio(data []byte, mimetype string, seconds ui
 	return msg, nil
 }
 
-func (handler *Handler) send_file_video(data []byte, mimetype string) (*waProto.Message, error) {
+func (handler *Handler) send_file_video(data []byte, mimetype string) (*waE2E.Message, error) {
 	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaVideo)
 	if err != nil {
 		return nil, err
 	}
-	msg := &waProto.Message{VideoMessage: &waProto.VideoMessage{
+	msg := &waE2E.Message{VideoMessage: &waE2E.VideoMessage{
 		URL:           proto.String(uploaded.URL),
 		DirectPath:    proto.String(uploaded.DirectPath),
 		MediaKey:      uploaded.MediaKey,
@@ -142,12 +142,12 @@ func (handler *Handler) send_file_video(data []byte, mimetype string) (*waProto.
 	return msg, nil
 }
 
-func (handler *Handler) send_file_document(data []byte, mimetype string, filename string) (*waProto.Message, error) {
+func (handler *Handler) send_file_document(data []byte, mimetype string, filename string) (*waE2E.Message, error) {
 	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaDocument)
 	if err != nil {
 		return nil, err
 	}
-	msg := &waProto.Message{DocumentMessage: &waProto.DocumentMessage{
+	msg := &waE2E.Message{DocumentMessage: &waE2E.DocumentMessage{
 		Title:         proto.String(filename),
 		URL:           proto.String(uploaded.URL),
 		DirectPath:    proto.String(uploaded.DirectPath),

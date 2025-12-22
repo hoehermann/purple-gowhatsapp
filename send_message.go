@@ -10,15 +10,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"go.mau.fi/whatsmeow"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
-	"go.mau.fi/whatsmeow/types"
-	"google.golang.org/protobuf/proto"
 	"io"
 	"net/http"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/proto/waE2E"
+	"go.mau.fi/whatsmeow/types"
+	"google.golang.org/protobuf/proto"
 )
 
 // from https://github.com/tulir/whatsmeow/blob/main/mdtest/main.go
@@ -50,14 +51,14 @@ func parseJID(arg string) (types.JID, error) {
  * Returns true on success.
  */
 func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, message string) bool {
-	msg := &waProto.Message{Conversation: &message}
+	msg := &waE2E.Message{Conversation: &message}
 	expiration_days := purple_get_int(handler.account, C.GOWHATSAPP_EXPIRATION_OPTION, 0)
 	if expiration_days > 0 {
 		expiration_seconds := uint32(expiration_days) * 24 * 60 * 60
-		msg = &waProto.Message{
-			ExtendedTextMessage: &waProto.ExtendedTextMessage{
+		msg = &waE2E.Message{
+			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 				Text: &message,
-				ContextInfo: &waProto.ContextInfo{
+				ContextInfo: &waE2E.ContextInfo{
 					Expiration: proto.Uint32(expiration_seconds),
 				},
 			},
@@ -177,7 +178,7 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		return false
 	}
 	data := b.Bytes()
-	var msg *waProto.Message = nil
+	var msg *waE2E.Message = nil
 	mimetype := http.DetectContentType(data) // do not trust the server. he is stupid.
 	// TODO: redundant implementation in send_file_bytes. merge.
 	switch mimetype {
