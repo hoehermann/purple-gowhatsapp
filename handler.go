@@ -9,10 +9,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/appstate"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -20,9 +20,8 @@ import (
 )
 
 type CachedMessage struct {
-	id        types.MessageID
-	text      string
-	timestamp time.Time
+	message *waE2E.Message
+	info    *types.MessageInfo
 }
 
 /*
@@ -99,7 +98,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// TODO: reflect this stte in the UI, maybe by setting purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
 		log.Warnf("KeepAlive timed out. Reconnecting in background...")
 	case *events.Message:
-		handler.handle_message(evt.Message, evt.Info.ID, evt.Info.MessageSource, &evt.Info.PushName, evt.Info.Timestamp, false)
+		handler.handle_message(evt.Message, evt.Info)
 	case *events.Receipt:
 		if evt.Type == types.ReceiptTypeRead || evt.Type == types.ReceiptTypeReadSelf {
 			log.Infof("%v was read by %s at %s", evt.MessageIDs, evt.SourceString(), evt.Timestamp)

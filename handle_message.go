@@ -14,10 +14,10 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
-func (handler *Handler) handle_message(message *waE2E.Message, id string, source types.MessageSource, name *string, timestamp time.Time, is_historical bool) {
+func (handler *Handler) handle_message(message *waE2E.Message, info types.MessageInfo) {
 	//handler.log.Infof("message: %#v", message)
 	text := ""
-	if source.Chat == types.StatusBroadcastJID {
+	if info.MessageSource.Chat == types.StatusBroadcastJID {
 		if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, false) {
 			// some people find status broadcasts annoying
 			handler.log.Warnf("Ignoring status broadcast.")
@@ -25,21 +25,21 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 		} else {
 			// the protocol implements status broadcasts in the form of a group
 			// we just treat those messages as if they were direct messages
-			source.Chat = source.Sender
-			source.IsGroup = false
+			info.MessageSource.Chat = info.MessageSource.Sender
+			info.MessageSource.IsGroup = false
 			text = "[STATUS] "
 		}
 	}
 	if handler.blocklist != nil {
 		// TODO find out whether locally checking the blocklist is actually necessary or if WhatsApp servers do the filtering for us
 		for _, blockedJID := range handler.blocklist.JIDs {
-			if blockedJID.ToNonAD() == source.Sender.ToNonAD() {
-				handler.log.Infof("Ignoring message from %s since they are on the blocklist.", source.Sender.ToNonAD().String())
+			if blockedJID.ToNonAD() == info.MessageSource.Sender.ToNonAD() {
+				handler.log.Infof("Ignoring message from %s since they are on the blocklist.", info.MessageSource.Sender.ToNonAD().String())
 			}
 		}
 	}
-	source.Chat = handler.lidToPn(source.Chat, "handling message chat")
-	source.Sender = handler.lidToPn(source.Sender, "handling message sender")
+	info.MessageSource.Chat = handler.lidToPn(info.MessageSource.Chat, "handling message chat")
+	info.MessageSource.Sender = handler.lidToPn(info.MessageSource.Sender, "handling message sender")
 	isEdit := false
 	{
 		if pm := message.GetProtocolMessage(); pm != nil {
@@ -75,15 +75,11 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 		rm := message.GetReactionMessage()
 		if rm != nil && rm.Text != nil && rm.Key != nil && rm.Key.ID != nil {
 			quote := ""
-			// the look-up currently does not work for outgoing image messages
-			// TODO: add/check all kinds of outgoing messages (I do not remember if text-messages are already working)
-			for i := range handler.cachedMessages {
-				if handler.cachedMessages[i].id == rm.Key.GetID() {
-					message := &handler.cachedMessages[i]
-					quote = fmt.Sprintf("message \"%.50s\" from %s", message.text, message.timestamp.Format(time.RFC822))
-					// TODO: add elipis to indicate message truncation
-					break
-				}
+			cached_message := handler.lookup_cached_message_by_id(rm.Key.GetID())
+			if cached_message != nil {
+				text := cached_message.message.GetConversation() // TODO: check if this works for quoting messages via ExtendedTextMessage, too
+				quote = fmt.Sprintf("message \"%.50s\" from %s", text, cached_message.info.Timestamp.Format(time.RFC822))
+				// TODO: add elipis to indicate message truncation
 			}
 			if quote == "" {
 				quote = fmt.Sprintf("unknown message with ID %s", rm.Key.GetID())
@@ -107,14 +103,10 @@ func (handler *Handler) handle_message(message *waE2E.Message, id string, source
 			text = "[EDIT] " + text
 		}
 		// note: info.PushName always denotes the sender (not the chat)
-		purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, false, source.Sender.ToNonAD().String(), name, timestamp, text, &id)
-		handler.addToCache(CachedMessage{id: id, text: text, timestamp: timestamp})
-		if !source.IsFromMe && !is_historical { // do not send receipt for own messages or historical messages
-			handler.mark_read_defer(id, source.Chat, source.Sender)
-			handler.mark_read_if_on_receival(source.Chat)
-		}
+		purple_display_text_message(handler.account, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, false, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text, &info.ID)
 	}
 	if !isEdit { // edited messages contain the changed texts, but attachments are absent since they cannot be changed
-		handler.handle_attachment(message, id, source, timestamp)
+		handler.handle_attachment(message, info.ID, info.MessageSource, info.Timestamp)
 	}
+	handler.add_to_cache(CachedMessage{message: message, info: &info})
 }

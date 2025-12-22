@@ -41,6 +41,25 @@ func parseJID(arg string) (types.JID, error) {
 }
 
 /*
+ * Examines the text for a request to reply to a message. Syntax is
+ * ?reply ID text
+ * The message is looked up in handler.cachedMessages.
+ * On success, modifies the text and returns the cached message to reply to.
+ * If the message cannot be found (or there is no request), does nothing to the text and returns nil.
+ */
+func (handler *Handler) prepare_quote(text *string) *CachedMessage {
+	parts := strings.Split(*text, " ")
+	if len(parts) >= 3 && (parts[0] == "?reply" || parts[0] == "?r") {
+		cached_message := handler.lookup_cached_message_by_id(parts[1])
+		if cached_message != nil {
+			*text = strings.Join(parts[2:], " ")
+			return cached_message
+		}
+	}
+	return nil
+}
+
+/*
  * Sends a plain text message to a recipient.
  *
  * Sending may happen asynchronously.
@@ -53,8 +72,8 @@ func parseJID(arg string) (types.JID, error) {
 func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, message string) bool {
 	msg := &waE2E.Message{Conversation: &message}
 	expiration_days := purple_get_int(handler.account, C.GOWHATSAPP_EXPIRATION_OPTION, 0)
-	if expiration_days > 0 {
-		expiration_seconds := uint32(expiration_days) * 24 * 60 * 60
+	expiration_seconds := uint32(expiration_days) * 24 * 60 * 60
+	if expiration_seconds > 0 {
 		msg = &waE2E.Message{
 			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 				Text: &message,
@@ -62,6 +81,23 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 					Expiration: proto.Uint32(expiration_seconds),
 				},
 			},
+		}
+	}
+	cached_message := handler.prepare_quote(&message)
+	if cached_message != nil {
+		participant := cached_message.info.Sender.ToNonAD().String()
+		msg = &waE2E.Message{
+			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+				Text: &message,
+				ContextInfo: &waE2E.ContextInfo{
+					StanzaID:      &cached_message.info.ID,
+					Participant:   &participant,
+					QuotedMessage: cached_message.message,
+				},
+			},
+		}
+		if expiration_seconds > 0 {
+			msg.ExtendedTextMessage.ContextInfo.Expiration = proto.Uint32(expiration_seconds)
 		}
 	}
 	msgID := handler.client.GenerateMessageID()
@@ -78,7 +114,11 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			recipientJid := recipient.ToNonAD().String()
 			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, resp.Timestamp, message, &msgID)
 		}
-		handler.addToCache(CachedMessage{id: resp.ID, text: message, timestamp: resp.Timestamp})
+		info := types.MessageInfo{
+			ID:        resp.ID,
+			Timestamp: resp.Timestamp,
+		}
+		handler.add_to_cache(CachedMessage{message: msg, info: &info})
 		return true
 	}
 }
@@ -227,7 +267,12 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		return false
 	} else {
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s has been forwarded.", link))
-		handler.addToCache(CachedMessage{id: send_response.ID, text: link, timestamp: send_response.Timestamp})
+		info := types.MessageInfo{
+			ID:        send_response.ID,
+			Timestamp: send_response.Timestamp,
+		}
+		msg.Conversation = &link // hack to preserve link in cache
+		handler.add_to_cache(CachedMessage{message: msg, info: &info})
 		return true
 	}
 }

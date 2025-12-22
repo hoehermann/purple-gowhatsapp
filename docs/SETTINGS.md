@@ -24,7 +24,7 @@
     * `never`: never
   
 * `message-cache-size` int  
-  Stores a number (default: 100) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions.
+  Stores a number (default: 1000) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions.
 
 * `discard-old-messages` bool  
   If set to true (default: false), messages older than the connection will be discarded.  
