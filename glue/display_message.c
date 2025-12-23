@@ -58,7 +58,7 @@ void gowhatsapp_display_text_message(
     // add message ID to visible text
     // for https://github.com/Juliaria08 in https://github.com/hoehermann/purple-gowhatsapp/issues/206
     gchar * text_with_id = NULL;
-    if (purple_account_get_bool(account, GOWHATSAPP_DISPLAY_MESSAGE_ID_OPTION, FALSE)) {
+    if (purple_account_get_bool(account, GOWHATSAPP_DISPLAY_MESSAGE_ID_OPTION, FALSE) && messageId != NULL) {
         text_with_id = g_strdup_printf("%s <span lang=\"id\">%s</span>", escaped_text, messageId); // MEMCHECK: released here (see below)
     } else {
         text_with_id = g_strdup(escaped_text); // MEMCHECK: released here (see below)
