@@ -85,14 +85,14 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 	}
 	cached_message := handler.prepare_quote(&message)
 	if cached_message != nil {
-		participant := cached_message.info.Sender.ToNonAD().String()
+		participant := cached_message.Info.Sender.ToNonAD().String()
 		msg = &waE2E.Message{
 			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 				Text: &message,
 				ContextInfo: &waE2E.ContextInfo{
-					StanzaID:      &cached_message.info.ID,
+					StanzaID:      &cached_message.Info.ID,
 					Participant:   &participant,
-					QuotedMessage: cached_message.message,
+					QuotedMessage: &cached_message.Message,
 				},
 			},
 		}
@@ -118,7 +118,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			ID:        resp.ID,
 			Timestamp: resp.Timestamp,
 		}
-		handler.add_to_cache(CachedMessage{message: msg, info: &info})
+		handler.add_to_cache(msg, info)
 		return true
 	}
 }
@@ -272,7 +272,7 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 			Timestamp: send_response.Timestamp,
 		}
 		msg.Conversation = &link // hack to preserve link in cache
-		handler.add_to_cache(CachedMessage{message: msg, info: &info})
+		handler.add_to_cache(msg, info)
 		return true
 	}
 }

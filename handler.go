@@ -20,8 +20,8 @@ import (
 )
 
 type CachedMessage struct {
-	message *waE2E.Message
-	info    *types.MessageInfo
+	Message waE2E.Message
+	Info    types.MessageInfo
 }
 
 /*

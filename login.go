@@ -160,6 +160,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		pictureRequests:  make(chan ProfilePictureRequest, 1000), // I hope that no one has more than 1000 contacts
 	}
 	handlers[account] = &handler
+	handler.LoadCachedMessages("/tmp/cached_messages.json")
 	handler.client.AddEventHandler(handler.eventHandler)
 
 	if proxy_address != "" {
@@ -265,6 +266,7 @@ func close(account *PurpleAccount) {
 			// ignore silently and continue
 		}
 		handler.client.Disconnect()
+		handler.SaveCachedMessages("/tmp/cached_messages.json")
 		delete(handlers, account)
 	}
 }
