@@ -7,7 +7,6 @@ import "C"
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -109,13 +108,13 @@ func (handler *Handler) profile_picture_downloader() {
 func (handler *Handler) lidToPn(jid types.JID, application_context string) types.JID {
 	if jid.Server == types.HiddenUserServer {
 		pnJid, err := handler.client.Store.LIDs.GetPNForLID(context.TODO(), jid)
-		errmsg := fmt.Sprintf(" (error: %v)", err)
 		if err == nil {
-			errmsg = ""
-			handler.log.Infof("Looked up LID \"%s\" -> \"%s\"%s for %s.", jid.ToNonAD().String(), pnJid.ToNonAD().String(), errmsg, application_context)
+			handler.log.Infof("Looked up LID \"%s\" -> \"%s\" for %s.", jid.ToNonAD().String(), pnJid.ToNonAD().String(), application_context)
 			if !pnJid.IsEmpty() {
 				jid = pnJid
 			}
+		} else {
+			handler.log.Infof("Error while looking up LID \"%s\" for %s: %v", jid.ToNonAD().String(), application_context, err)
 		}
 	}
 	return jid
