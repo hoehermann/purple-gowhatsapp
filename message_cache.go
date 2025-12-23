@@ -59,11 +59,11 @@ func (handler *Handler) lookup_cached_message_by_id(id string) *CachedMessage {
 func (handler *Handler) SaveCachedMessages(filePath string) {
 	file, err := os.Create(filePath)
 	if err != nil {
-		handler.log.Errorf("Failed to create file: %v", err)
+		handler.log.Errorf("Failed to create cached messages file: %v", err)
 		return
 	}
 	defer file.Close()
-	data, err := json.MarshalIndent(handler.cachedMessages, "", "  ")
+	data, err := json.Marshal(handler.cachedMessages)
 	if err != nil {
 		handler.log.Errorf("Failed to marshal cached messages to JSON: %v", err)
 		return
@@ -71,6 +71,7 @@ func (handler *Handler) SaveCachedMessages(filePath string) {
 	_, err = file.Write(data)
 	if err != nil {
 		handler.log.Errorf("Failed to write cached messages to file: %v", err)
+		return
 	}
 }
 
@@ -78,18 +79,21 @@ func (handler *Handler) SaveCachedMessages(filePath string) {
 func (handler *Handler) LoadCachedMessages(filePath string) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		handler.log.Errorf("Failed to open file: %v", err)
+		handler.log.Errorf("Failed to open cached messages file: %v", err)
+		return
 	}
 	defer file.Close()
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		handler.log.Errorf("Failed to read file: %v", err)
+		handler.log.Errorf("Failed to read cached messages file: %v", err)
+		return
 	}
 	var cachedMessages []CachedMessage
 	err = json.Unmarshal(data, &cachedMessages)
 	if err != nil {
 		handler.log.Errorf("Failed to unmarshal cached messages: %v", err)
+		return
 	}
 	handler.cachedMessages = cachedMessages
-	handler.log.Infof("Loaded cached messages: %v", cachedMessages)
+	handler.log.Infof("Loaded %d cached messages.", len(cachedMessages))
 }

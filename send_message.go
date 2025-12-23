@@ -44,19 +44,17 @@ func parseJID(arg string) (types.JID, error) {
  * Examines the text for a request to reply to a message. Syntax is
  * ?reply ID text
  * The message is looked up in handler.cachedMessages.
- * On success, modifies the text and returns the cached message to reply to.
- * If the message cannot be found (or there is no request), does nothing to the text and returns nil.
+ * Returns (isReply, quoted message, text without command)
+ * In case no appropriate message was found in the cache, the nil message is returned.
  */
-func (handler *Handler) prepare_quote(text *string) *CachedMessage {
-	parts := strings.Split(*text, " ")
+func (handler *Handler) prepare_reply(text string) (bool, *CachedMessage, string) {
+	parts := strings.Split(text, " ")
 	if len(parts) >= 3 && (parts[0] == "?reply" || parts[0] == "?r") {
 		cached_message := handler.lookup_cached_message_by_id(parts[1])
-		if cached_message != nil {
-			*text = strings.Join(parts[2:], " ")
-			return cached_message
-		}
+		text = strings.Join(parts[2:], " ")
+		return true, cached_message, text
 	}
-	return nil
+	return false, nil, text
 }
 
 /*
@@ -83,21 +81,26 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			},
 		}
 	}
-	cached_message := handler.prepare_quote(&message)
-	if cached_message != nil {
-		participant := cached_message.Info.Sender.ToNonAD().String()
-		msg = &waE2E.Message{
-			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-				Text: &message,
-				ContextInfo: &waE2E.ContextInfo{
-					StanzaID:      &cached_message.Info.ID,
-					Participant:   &participant,
-					QuotedMessage: &cached_message.Message,
+	is_reply, cached_message, message := handler.prepare_reply(message)
+	if is_reply {
+		if cached_message == nil {
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Unable to prepare reply: Quoted message not found in cache.")
+			return false
+		} else {
+			participant := cached_message.Info.Sender.ToNonAD().String()
+			msg = &waE2E.Message{
+				ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+					Text: &message,
+					ContextInfo: &waE2E.ContextInfo{
+						StanzaID:      &cached_message.Info.ID,
+						Participant:   &participant,
+						QuotedMessage: &cached_message.Message,
+					},
 				},
-			},
-		}
-		if expiration_seconds > 0 {
-			msg.ExtendedTextMessage.ContextInfo.Expiration = proto.Uint32(expiration_seconds)
+			}
+			if expiration_seconds > 0 {
+				msg.ExtendedTextMessage.ContextInfo.Expiration = proto.Uint32(expiration_seconds)
+			}
 		}
 	}
 	msgID := handler.client.GenerateMessageID()
