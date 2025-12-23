@@ -74,11 +74,11 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 		msg, err = handler.send_file_document(data, mimetype, basename)
 	}
 	if err != nil {
-		return fmt.Errorf("Failed to upload file: %v", err)
+		return fmt.Errorf("failed to upload file: %v", err)
 	}
 	send_response, err := handler.client.SendMessage(context.Background(), recipient, msg)
 	if err != nil {
-		return fmt.Errorf("Error sending file: %v", err)
+		return fmt.Errorf("error sending file: %v", err)
 	}
 	handler.add_to_cache(msg, send_response.ID, send_response.Timestamp, send_response.Sender)
 	return nil

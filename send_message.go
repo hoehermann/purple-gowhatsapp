@@ -31,9 +31,9 @@ func parseJID(arg string) (types.JID, error) {
 	} else {
 		recipient, err := types.ParseJID(arg)
 		if err != nil {
-			return recipient, fmt.Errorf("Invalid JID %s: %v", arg, err)
+			return recipient, fmt.Errorf("invalid JID %s: %v", arg, err)
 		} else if recipient.User == "" {
-			return recipient, fmt.Errorf("Invalid JID %s: no server specified", arg)
+			return recipient, fmt.Errorf("invalid JID %s: no server specified", arg)
 		}
 		return recipient, nil
 	}
@@ -50,6 +50,9 @@ func (handler *Handler) prepare_reply(text string) (bool, *CachedMessage, string
 	parts := strings.Split(text, " ")
 	if len(parts) >= 3 && (parts[0] == "?reply" || parts[0] == "?r") {
 		cached_message := handler.lookup_cached_message_by_id(parts[1])
+		if cached_message == nil {
+			handler.lookup_cached_message_by_substring(parts[1])
+		}
 		text = strings.Join(parts[2:], " ")
 		return true, cached_message, text
 	}

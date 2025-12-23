@@ -8,6 +8,7 @@ import "C"
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"time"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
@@ -54,6 +55,18 @@ func (handler *Handler) lookup_cached_message_by_id(id string) *CachedMessage {
 	// TODO: add/check all kinds of outgoing messages (I do not remember if text-messages are already working)
 	for i := range handler.cachedMessages {
 		if handler.cachedMessages[i].ID == id {
+			return &handler.cachedMessages[i]
+		}
+	}
+	return nil
+}
+
+func (handler *Handler) lookup_cached_message_by_substring(needle string) *CachedMessage {
+	for i := range handler.cachedMessages {
+		message := &handler.cachedMessages[i].Message
+		conversation := message.GetConversation()
+		text := message.GetExtendedTextMessage().GetText()
+		if strings.Contains(conversation, needle) || strings.Contains(text, needle) {
 			return &handler.cachedMessages[i]
 		}
 	}
