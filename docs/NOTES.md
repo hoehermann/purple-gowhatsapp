@@ -49,8 +49,14 @@ A file is sent as-is.
 
 #### Slash Commands
 
-This plug-in supports a couple of "IRC-style" commands. The user can write them in any chat. These features are experimental hacks. They have been included due to user reuqets. Use them with care.
-        
+This plug-in supports a couple of "IRC-style" commands. The user can write them in any chat. 
+
+* `?reply ID text` and `?reply needle text`  
+  The text is sent as a reply. The message to be quoted must have been previously received and cached. In case the ID lookup fails, the most recent message containing the needle is searched. If there are no matches, an error is shown.
+
+* `?logout`  
+  Performs a log-out. The QR-code will be requested upon connecting again.
+
 * `?versions`  
   Show version information.
   
@@ -60,8 +66,8 @@ This plug-in supports a couple of "IRC-style" commands. The user can write them 
 * `?participants` alias `?members`  
   Request the current list of participants. Can only be used in group chat conversations.
 
+These features are experimental hacks. They have been included due to user requests. Use them with care.
+
 * `?presenceavailable`, `?presenceunavailable`, `?presence`  
   Overrides the presence which is being sent to WhatsApp servers. The displayed connection state may no longer match the advertised connection state. This can be used to appear unavailable while still being able to receive messages for logging or notification purposes. Using this command may result in unexpected behaviour. Use `?presence` (without a suffix) to give back control to the plug-in's internals.
 
-* `?logout`  
-  Performs a log-out. The QR-code will be requested upon connecting again.

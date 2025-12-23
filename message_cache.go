@@ -16,17 +16,18 @@ import (
 )
 
 type CachedMessage struct {
-	Message   waE2E.Message
 	ID        types.MessageID
-	Timestamp time.Time
+	Chat      types.JID
 	Sender    types.JID
+	Timestamp time.Time
+	Message   waE2E.Message
 }
 
 /*
  * Add a message to the message cache to it can be looked up later.
  * Useful for replying to a specific message and for displaying relevant information when dealing with reactions.
  */
-func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID, timestamp time.Time, sender types.JID) {
+func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID, chat types.JID, sender types.JID, timestamp time.Time) {
 	handler.cachedMessages = append(handler.cachedMessages, CachedMessage{
 		// an in-place copy of the message must be created due to protobuf relying on exclusive access
 		Message: waE2E.Message{
@@ -41,11 +42,12 @@ func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID,
 			DocumentMessage:     message.DocumentMessage,
 		},
 		ID:        id,
-		Timestamp: timestamp,
+		Chat:      chat,
 		Sender:    sender,
+		Timestamp: timestamp,
 	})
 	// from https://www.delftstack.com/howto/go/queue-implementation-in-golang/
-	if len(handler.cachedMessages) > purple_get_int(handler.account, C.GOWHATSAPP_MESSAGE_CACHE_SIZE_OPTION, 1000) {
+	if len(handler.cachedMessages) > purple_get_int(handler.account, C.GOWHATSAPP_MESSAGE_CACHE_SIZE_OPTION, 0) {
 		handler.cachedMessages = handler.cachedMessages[1:]
 	}
 }
@@ -61,13 +63,17 @@ func (handler *Handler) lookup_cached_message_by_id(id string) *CachedMessage {
 	return nil
 }
 
-func (handler *Handler) lookup_cached_message_by_substring(needle string) *CachedMessage {
-	for i := range handler.cachedMessages {
-		message := &handler.cachedMessages[i].Message
-		conversation := message.GetConversation()
-		text := message.GetExtendedTextMessage().GetText()
-		if strings.Contains(conversation, needle) || strings.Contains(text, needle) {
-			return &handler.cachedMessages[i]
+func (handler *Handler) lookup_cached_message_by_substring(chat types.JID, needle string) *CachedMessage {
+	for i := len(handler.cachedMessages) - 1; i >= 0; i-- {
+		handler.log.Infof("lookup: „%s“ is „%s“: %v", handler.cachedMessages[i].Chat.ToNonAD(), chat.ToNonAD(), handler.cachedMessages[i].Chat.ToNonAD() == chat.ToNonAD())
+		if handler.cachedMessages[i].Chat.ToNonAD() == chat.ToNonAD() {
+			message := &handler.cachedMessages[i].Message
+			conversation := message.GetConversation()
+			text := message.GetExtendedTextMessage().GetText()
+			handler.log.Infof("lookup „%s“ in „%s“: %v or in „%s“: %v", needle, conversation, strings.Contains(conversation, needle), text, strings.Contains(text, needle))
+			if strings.Contains(conversation, needle) || strings.Contains(text, needle) {
+				return &handler.cachedMessages[i]
+			}
 		}
 	}
 	return nil

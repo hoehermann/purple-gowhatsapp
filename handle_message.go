@@ -108,5 +108,5 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 	if !isEdit { // edited messages contain the changed texts, but attachments are absent since they cannot be changed
 		handler.handle_attachment(message, info.ID, info.MessageSource, info.Timestamp)
 	}
-	handler.add_to_cache(message, info.ID, info.Timestamp, info.MessageSource.Sender)
+	handler.add_to_cache(message, info.ID, info.MessageSource.Chat, info.MessageSource.Sender, info.Timestamp)
 }

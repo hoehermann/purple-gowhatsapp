@@ -46,12 +46,12 @@ func parseJID(arg string) (types.JID, error) {
  * Returns (isReply, quoted message, text without command)
  * In case no appropriate message was found in the cache, the nil message is returned.
  */
-func (handler *Handler) prepare_reply(text string) (bool, *CachedMessage, string) {
+func (handler *Handler) prepare_reply(chat types.JID, text string) (bool, *CachedMessage, string) {
 	parts := strings.Split(text, " ")
 	if len(parts) >= 3 && (parts[0] == "?reply" || parts[0] == "?r") {
 		cached_message := handler.lookup_cached_message_by_id(parts[1])
 		if cached_message == nil {
-			handler.lookup_cached_message_by_substring(parts[1])
+			cached_message = handler.lookup_cached_message_by_substring(chat, parts[1])
 		}
 		text = strings.Join(parts[2:], " ")
 		return true, cached_message, text
@@ -83,7 +83,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			},
 		}
 	}
-	is_reply, cached_message, message := handler.prepare_reply(message)
+	is_reply, cached_message, message := handler.prepare_reply(recipient, message)
 	if is_reply {
 		if cached_message == nil {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Unable to prepare reply: Quoted message not found in cache.")
@@ -119,7 +119,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			msgID := send_response.ID
 			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, send_response.Timestamp, message, &msgID)
 		}
-		handler.add_to_cache(msg, send_response.ID, send_response.Timestamp, send_response.Sender)
+		handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
 		return true
 	}
 }
@@ -269,7 +269,7 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 	} else {
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s has been forwarded.", link)) // TODO: do not omit message ID in this particular case
 		msg.Conversation = &link                                                                                                           // hack to preserve link in cache
-		handler.add_to_cache(msg, send_response.ID, send_response.Timestamp, send_response.Sender)
+		handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
 		return true
 	}
 }
