@@ -78,7 +78,7 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 			cached_message := handler.lookup_cached_message_by_id(rm.Key.GetID())
 			if cached_message != nil {
 				text := cached_message.Message.GetConversation() // TODO: check if this works for quoting messages via ExtendedTextMessage, too
-				quote = fmt.Sprintf("message \"%.50s\" from %s", text, cached_message.Info.Timestamp.Format(time.RFC822))
+				quote = fmt.Sprintf("message \"%.50s\" from %s", text, cached_message.Timestamp.Format(time.RFC822))
 				// TODO: add elipis to indicate message truncation
 			}
 			if quote == "" {
@@ -108,5 +108,5 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 	if !isEdit { // edited messages contain the changed texts, but attachments are absent since they cannot be changed
 		handler.handle_attachment(message, info.ID, info.MessageSource, info.Timestamp)
 	}
-	handler.add_to_cache(message, info)
+	handler.add_to_cache(message, info.ID, info.Timestamp, info.MessageSource.Sender)
 }

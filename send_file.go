@@ -76,15 +76,11 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	if err != nil {
 		return fmt.Errorf("Failed to upload file: %v", err)
 	}
-	resp, err := handler.client.SendMessage(context.Background(), recipient, msg, whatsmeow.SendRequestExtra{ID: msgID})
+	send_response, err := handler.client.SendMessage(context.Background(), recipient, msg)
 	if err != nil {
 		return fmt.Errorf("Error sending file: %v", err)
 	}
-	info := types.MessageInfo{
-		ID:        resp.ID,
-		Timestamp: resp.Timestamp,
-	}
-	handler.add_to_cache(msg, info)
+	handler.add_to_cache(msg, send_response.ID, send_response.Timestamp, send_response.Sender)
 	return nil
 }
 

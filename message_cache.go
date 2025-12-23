@@ -8,21 +8,24 @@ import "C"
 import (
 	"encoding/json"
 	"os"
+	"time"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 )
 
 type CachedMessage struct {
-	Message waE2E.Message
-	Info    types.MessageInfo
+	Message   waE2E.Message
+	ID        types.MessageID
+	Timestamp time.Time
+	Sender    types.JID
 }
 
 /*
  * Add a message to the message cache to it can be looked up later.
  * Useful for replying to a specific message and for displaying relevant information when dealing with reactions.
  */
-func (handler *Handler) add_to_cache(message *waE2E.Message, info types.MessageInfo) {
+func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID, timestamp time.Time, sender types.JID) {
 	handler.cachedMessages = append(handler.cachedMessages, CachedMessage{
 		// an in-place copy of the message must be created due to protobuf relying on exclusive access
 		Message: waE2E.Message{
@@ -36,7 +39,9 @@ func (handler *Handler) add_to_cache(message *waE2E.Message, info types.MessageI
 			StickerMessage:      message.StickerMessage,
 			DocumentMessage:     message.DocumentMessage,
 		},
-		Info: info, // TODO: trim down to ID and Sender (nothing more is needed for creating qouted messages)
+		ID:        id,
+		Timestamp: timestamp,
+		Sender:    sender,
 	})
 	// from https://www.delftstack.com/howto/go/queue-implementation-in-golang/
 	if len(handler.cachedMessages) > purple_get_int(handler.account, C.GOWHATSAPP_MESSAGE_CACHE_SIZE_OPTION, 1000) {
@@ -48,7 +53,7 @@ func (handler *Handler) lookup_cached_message_by_id(id string) *CachedMessage {
 	// TODO: check whether the look-up does work for outgoing image messages
 	// TODO: add/check all kinds of outgoing messages (I do not remember if text-messages are already working)
 	for i := range handler.cachedMessages {
-		if handler.cachedMessages[i].Info.ID == id {
+		if handler.cachedMessages[i].ID == id {
 			return &handler.cachedMessages[i]
 		}
 	}

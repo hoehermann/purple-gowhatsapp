@@ -86,12 +86,12 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Unable to prepare reply: Quoted message not found in cache.")
 			return false
 		} else {
-			participant := cached_message.Info.Sender.ToNonAD().String()
+			participant := cached_message.Sender.ToNonAD().String()
 			msg = &waE2E.Message{
 				ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 					Text: &message,
 					ContextInfo: &waE2E.ContextInfo{
-						StanzaID:      &cached_message.Info.ID,
+						StanzaID:      &cached_message.ID,
 						Participant:   &participant,
 						QuotedMessage: &cached_message.Message,
 					},
@@ -102,7 +102,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			}
 		}
 	}
-	resp, err := handler.client.SendMessage(context.Background(), recipient, msg)
+	send_response, err := handler.client.SendMessage(context.Background(), recipient, msg)
 	if err != nil {
 		errmsg := fmt.Sprintf("Error sending message: %v", err)
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, errmsg)
@@ -113,14 +113,10 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS) {
 			ownJid := handler.client.Store.ID.ToNonAD().String()
 			recipientJid := recipient.ToNonAD().String()
-			msgID := resp.ID
-			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, resp.Timestamp, message, &msgID)
+			msgID := send_response.ID
+			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, send_response.Timestamp, message, &msgID)
 		}
-		info := types.MessageInfo{
-			ID:        resp.ID,
-			Timestamp: resp.Timestamp,
-		}
-		handler.add_to_cache(msg, info)
+		handler.add_to_cache(msg, send_response.ID, send_response.Timestamp, send_response.Sender)
 		return true
 	}
 }
@@ -268,13 +264,9 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		handler.log.Infof("Error while sending media message: %v", err)
 		return false
 	} else {
-		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s has been forwarded.", link))
-		info := types.MessageInfo{
-			ID:        send_response.ID,
-			Timestamp: send_response.Timestamp,
-		}
-		msg.Conversation = &link // hack to preserve link in cache
-		handler.add_to_cache(msg, info)
+		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s has been forwarded.", link)) // TODO: do not omit message ID in this particular case
+		msg.Conversation = &link                                                                                                           // hack to preserve link in cache
+		handler.add_to_cache(msg, send_response.ID, send_response.Timestamp, send_response.Sender)
 		return true
 	}
 }
