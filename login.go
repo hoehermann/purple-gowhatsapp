@@ -9,6 +9,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -157,10 +158,10 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		log:              log,
 		client:           whatsmeow.NewClient(device, PurpleLogger(account, "Client")),
 		deferredReceipts: make(map[types.JID]map[types.JID][]types.MessageID),
-		pictureRequests:  make(chan ProfilePictureRequest, 1000), // I hope that no one has more than 1000 contacts
+		pictureRequests:  make(chan ProfilePictureRequest, 1000), // I hope that no user has more than 1000 contacts
 	}
 	handlers[account] = &handler
-	handler.LoadCachedMessages("/tmp/cached_messages.json")
+	handler.LoadCachedMessages(filepath.Join(purple_user_dir, username+".json"))
 	handler.client.AddEventHandler(handler.eventHandler)
 
 	if proxy_address != "" {
@@ -253,20 +254,17 @@ func (handler *Handler) prune_devices(deviceJid types.JID) {
 /*
  * This is the go part of purple's close() function.
  */
-func close(account *PurpleAccount) {
-	handler, ok := handlers[account]
-	if ok {
-		// tell the background downloader to terminate
-		select {
-		case handler.pictureRequests <- ProfilePictureRequest{}:
-			// termination request sent
-			// nothing to do here
-		default:
-			// termination request not sent
-			// ignore silently and continue
-		}
-		handler.client.Disconnect()
-		handler.SaveCachedMessages("/tmp/cached_messages.json")
-		delete(handlers, account)
+func (handler *Handler) close(account *PurpleAccount, purple_user_dir string, username string) {
+	// tell the background downloader to terminate
+	select {
+	case handler.pictureRequests <- ProfilePictureRequest{}:
+		// termination request sent
+		// nothing to do here
+	default:
+		// termination request not sent
+		// ignore silently and continue
 	}
+	handler.client.Disconnect()
+	handler.SaveCachedMessages(filepath.Join(purple_user_dir, username+".json"))
+	delete(handlers, account)
 }

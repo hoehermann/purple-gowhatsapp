@@ -63,8 +63,11 @@ func gowhatsapp_go_login(account *PurpleAccount, purple_user_dir *C.char, userna
 }
 
 //export gowhatsapp_go_close
-func gowhatsapp_go_close(account *PurpleAccount) {
-	close(account)
+func gowhatsapp_go_close(account *PurpleAccount, purple_user_dir *C.char, username *C.char) {
+	handler, ok := handlers[account]
+	if ok {
+		handler.close(account, C.GoString(purple_user_dir), C.GoString(username))
+	}
 }
 
 //export gowhatsapp_go_logout

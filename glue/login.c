@@ -70,7 +70,9 @@ void
 gowhatsapp_close(PurpleConnection *pc)
 {
     PurpleAccount * account = purple_connection_get_account(pc);
-    gowhatsapp_go_close(account);
+    char *username = (char *)purple_account_get_username(account); // cgo does not suport const
+    char *user_dir = (char *)purple_user_dir(); // cgo does not suport const
+    gowhatsapp_go_close(account, user_dir, username);
     
     WhatsappProtocolData *wpd = (WhatsappProtocolData *)purple_connection_get_protocol_data(pc);
     purple_connection_set_protocol_data(pc, NULL);
