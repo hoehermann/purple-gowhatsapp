@@ -109,12 +109,12 @@ func (handler *Handler) lidToPn(jid types.JID, application_context string) types
 	if jid.Server == types.HiddenUserServer {
 		pnJid, err := handler.client.Store.LIDs.GetPNForLID(context.TODO(), jid)
 		if err == nil {
-			handler.log.Infof("Looked up LID \"%s\" -> \"%s\" for %s.", jid.ToNonAD().String(), pnJid.ToNonAD().String(), application_context)
+			//handler.log.Infof("Looked up LID \"%s\" -> \"%s\" for %s.", jid.ToNonAD().String(), pnJid.ToNonAD().String(), application_context)
 			if !pnJid.IsEmpty() {
 				jid = pnJid
 			}
 		} else {
-			handler.log.Infof("Error while looking up LID \"%s\" for %s: %v", jid.ToNonAD().String(), application_context, err)
+			handler.log.Warnf("Error while looking up LID \"%s\" for %s: %v", jid.ToNonAD().String(), application_context, err)
 		}
 	}
 	return jid

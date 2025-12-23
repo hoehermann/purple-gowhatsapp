@@ -65,12 +65,12 @@ func (handler *Handler) lookup_cached_message_by_id(id string) *CachedMessage {
 
 func (handler *Handler) lookup_cached_message_by_substring(chat types.JID, needle string) *CachedMessage {
 	for i := len(handler.cachedMessages) - 1; i >= 0; i-- {
-		handler.log.Infof("lookup: „%s“ is „%s“: %v", handler.cachedMessages[i].Chat.ToNonAD(), chat.ToNonAD(), handler.cachedMessages[i].Chat.ToNonAD() == chat.ToNonAD())
+		//handler.log.Infof("lookup: „%s“ is „%s“: %v", handler.cachedMessages[i].Chat.ToNonAD(), chat.ToNonAD(), handler.cachedMessages[i].Chat.ToNonAD() == chat.ToNonAD())
 		if handler.cachedMessages[i].Chat.ToNonAD() == chat.ToNonAD() {
 			message := &handler.cachedMessages[i].Message
 			conversation := message.GetConversation()
 			text := message.GetExtendedTextMessage().GetText()
-			handler.log.Infof("lookup „%s“ in „%s“: %v or in „%s“: %v", needle, conversation, strings.Contains(conversation, needle), text, strings.Contains(text, needle))
+			//handler.log.Infof("lookup „%s“ in „%s“: %v or in „%s“: %v", needle, conversation, strings.Contains(conversation, needle), text, strings.Contains(text, needle))
 			if strings.Contains(conversation, needle) || strings.Contains(text, needle) {
 				return &handler.cachedMessages[i]
 			}
