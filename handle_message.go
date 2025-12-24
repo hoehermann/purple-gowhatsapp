@@ -16,6 +16,13 @@ import (
 
 func (handler *Handler) handle_message(message *waE2E.Message, info types.MessageInfo) {
 	//handler.log.Infof("message: %#v", message)
+	if message.SenderKeyDistributionMessage != nil {
+		// Apparently, a SenderKeyDistributionMessage can share the a message ID with a conversation message which is to arrive later
+		// I do not need this message type in the front-end, so I rather drop it
+		// This should be safe (as in "will not inadvertedly drop message with actual payload") since all …Messsage fields seem to be mutually exclusive
+		handler.log.Infof("Ignoring SenderKeyDistributionMessage.")
+		return
+	}
 	text := ""
 	if info.MessageSource.Chat == types.StatusBroadcastJID {
 		if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, false) {
@@ -77,6 +84,7 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 			quote := fmt.Sprintf("unknown message with ID %s", rm.Key.GetID())
 			cached_message := handler.lookup_cached_message_by_id(rm.Key.GetID())
 			if cached_message != nil {
+				handler.log.Infof("Lookup yielded message: %#v", &cached_message.Message)
 				text := cached_message.Message.GetConversation() // TODO: check if this works for quoting an ExtendedTextMessage
 				if text != "" {
 					ellipsis := ""

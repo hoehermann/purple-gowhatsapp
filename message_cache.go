@@ -28,10 +28,12 @@ type CachedMessage struct {
  * Useful for replying to a specific message and for displaying relevant information when dealing with reactions.
  */
 func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID, chat types.JID, sender types.JID, timestamp time.Time) {
+	//handler.log.Infof("add_to_cache: %s %#v", id, message)
 	handler.cachedMessages = append(handler.cachedMessages, CachedMessage{
-		// an in-place copy of the message must be created due to protobuf relying on exclusive access
+		// an in-place copy of the message must be created field-by-field due to protobuf demanding exclusive authority or something (mutexes are involved)
 		Message: waE2E.Message{
 			// TODO: find out which fields of message are actually needed for creating qouted messages
+			// it might be a good idea to clear out the MessageContextInfo from the ExtendedTextMessage
 			Conversation:        message.Conversation,
 			ExtendedTextMessage: message.ExtendedTextMessage,
 			ImageMessage:        message.ImageMessage,
@@ -53,8 +55,6 @@ func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID,
 }
 
 func (handler *Handler) lookup_cached_message_by_id(id string) *CachedMessage {
-	// TODO: check whether the look-up does work for outgoing image messages
-	// TODO: add/check all kinds of outgoing messages (I do not remember if text-messages are already working)
 	for i := range handler.cachedMessages {
 		if handler.cachedMessages[i].ID == id {
 			return &handler.cachedMessages[i]
