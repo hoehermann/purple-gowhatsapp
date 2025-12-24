@@ -74,15 +74,38 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 	{
 		rm := message.GetReactionMessage()
 		if rm != nil && rm.Text != nil && rm.Key != nil && rm.Key.ID != nil {
-			quote := ""
+			quote := fmt.Sprintf("unknown message with ID %s", rm.Key.GetID())
 			cached_message := handler.lookup_cached_message_by_id(rm.Key.GetID())
 			if cached_message != nil {
-				text := cached_message.Message.GetConversation() // TODO: check if this works for quoting messages via ExtendedTextMessage, too
-				quote = fmt.Sprintf("message \"%.50s\" from %s", text, cached_message.Timestamp.Format(time.RFC822))
-				// TODO: add elipis to indicate message truncation
-			}
-			if quote == "" {
-				quote = fmt.Sprintf("unknown message with ID %s", rm.Key.GetID())
+				text := cached_message.Message.GetConversation() // TODO: check if this works for quoting an ExtendedTextMessage
+				if text != "" {
+					ellipsis := ""
+					if len(text) > 50 {
+						ellipsis = "…" // add elipis to indicate message body truncation
+					}
+					quote = fmt.Sprintf("message „%.50s%s“", text, ellipsis)
+				} else {
+					message_type := "message of unknown type"
+					if cached_message.Message.ImageMessage != nil {
+						message_type = "image"
+					}
+					if cached_message.Message.VideoMessage != nil {
+						message_type = "video"
+					}
+					if cached_message.Message.PtvMessage != nil {
+						message_type = "voice message"
+					}
+					if cached_message.Message.AudioMessage != nil {
+						message_type = "audio message"
+					}
+					if cached_message.Message.StickerMessage != nil {
+						message_type = "sticker"
+					}
+					if cached_message.Message.DocumentMessage != nil {
+						message_type = "document"
+					}
+					quote = fmt.Sprintf("%s from %s", message_type, cached_message.Timestamp.Format(time.RFC822))
+				}
 			}
 			if *rm.Text == "" {
 				text += fmt.Sprintf("removed their reaction to %s.", quote)
