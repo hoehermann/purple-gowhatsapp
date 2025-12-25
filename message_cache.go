@@ -28,20 +28,26 @@ type CachedMessage struct {
  * Useful for replying to a specific message and for displaying relevant information when dealing with reactions.
  */
 func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID, chat types.JID, sender types.JID, timestamp time.Time) {
-	//handler.log.Infof("add_to_cache: %s %#v", id, message)
+	if message.GetReactionMessage() != nil {
+		// ReactionMessage cannot be referred to, do not cache
+		return
+	}
+	handler.log.Infof("add_to_cache: %s %#v", id, message)
 	handler.cachedMessages = append(handler.cachedMessages, CachedMessage{
 		// an in-place copy of the message must be created field-by-field due to protobuf demanding exclusive authority or something (mutexes are involved)
 		Message: waE2E.Message{
 			// TODO: find out which fields of message are actually needed for creating qouted messages
 			// it might be a good idea to clear out the MessageContextInfo from the ExtendedTextMessage
-			Conversation:        message.Conversation,
-			ExtendedTextMessage: message.ExtendedTextMessage,
-			ImageMessage:        message.ImageMessage,
-			VideoMessage:        message.VideoMessage,
-			PtvMessage:          message.PtvMessage,
-			AudioMessage:        message.AudioMessage,
-			StickerMessage:      message.StickerMessage,
-			DocumentMessage:     message.DocumentMessage,
+			Conversation:          message.Conversation,
+			ExtendedTextMessage:   message.ExtendedTextMessage,
+			ImageMessage:          message.ImageMessage,
+			VideoMessage:          message.VideoMessage,
+			PtvMessage:            message.PtvMessage,
+			AudioMessage:          message.AudioMessage,
+			StickerMessage:        message.StickerMessage,
+			DocumentMessage:       message.DocumentMessage,
+			PollCreationMessageV3: message.PollCreationMessageV3,
+			PollCreationMessageV5: message.PollCreationMessageV5,
 		},
 		ID:        id,
 		Chat:      chat,

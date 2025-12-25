@@ -92,7 +92,7 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		// TODO: reflect this stte in the UI, maybe by setting purple_connection_set_state(pc, PURPLE_CONNECTION_CONNECTING);
 		log.Warnf("KeepAlive timed out. Reconnecting in background...")
 	case *events.Message:
-		handler.handle_message(evt.Message, evt.Info)
+		handler.handle_message(evt.Message, evt.Info, evt)
 	case *events.Receipt:
 		if evt.Type == types.ReceiptTypeRead || evt.Type == types.ReceiptTypeReadSelf {
 			log.Infof("%v was read by %s at %s", evt.MessageIDs, evt.SourceString(), evt.Timestamp)

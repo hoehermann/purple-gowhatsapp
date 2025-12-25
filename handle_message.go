@@ -6,16 +6,18 @@ package main
 import "C"
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 )
 
-func (handler *Handler) handle_message(message *waE2E.Message, info types.MessageInfo) {
-	//handler.log.Infof("message: %#v", message)
+func (handler *Handler) handle_message(message *waE2E.Message, info types.MessageInfo, evt *events.Message) {
+	handler.log.Infof("message: %#v", message)
 	if message.SenderKeyDistributionMessage != nil {
 		// Apparently, a SenderKeyDistributionMessage can share the a message ID with a conversation message which is to arrive later
 		// I do not need this message type in the front-end, so I rather drop it
@@ -122,10 +124,44 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 			}
 		}
 	}
-	if message.GetPollCreationMessage() != nil || message.GetPollCreationMessageV2() != nil || message.GetPollCreationMessageV3() != nil {
-		text = "created a poll, but this plug-in cannot display polls."
-		// TODO: display poll content
-		// TODO: also use GetPollUpdateMessage()
+	if message.GetPollCreationMessage() != nil || message.GetPollCreationMessageV2() != nil {
+		text = "created a kind of poll this plug-in cannot display."
+	}
+	{
+		pcm := message.GetPollCreationMessageV3()
+		if pcm != nil {
+			handler.log.Warnf("message poll creation: %#v", pcm)
+			text = fmt.Sprintf("[POLL] %s\n", pcm.GetName())
+			for i, option := range pcm.GetOptions() {
+				text += fmt.Sprintf("%d: %s\n", i+1, option.GetOptionName())
+			}
+			text += fmt.Sprintf("One may chose up to %d answers.", pcm.GetSelectableOptionsCount())
+		}
+	}
+	{
+		pcm := message.GetPollCreationMessageV5()
+		if pcm != nil {
+			handler.log.Warnf("message poll creation: %#v", pcm)
+			text = fmt.Sprintf("[POLL] %s\n", pcm.GetName())
+			for i, option := range pcm.GetOptions() {
+				text += fmt.Sprintf("%d: %s\n", i+1, option.GetOptionName())
+			}
+			text += fmt.Sprintf("One may chose up to %d answers.", pcm.GetSelectableOptionsCount())
+		}
+	}
+	{
+		pum := message.GetPollUpdateMessage()
+		if pum != nil {
+			decrypted, err := handler.client.DecryptPollVote(context.TODO(), evt)
+			if err != nil {
+				handler.log.Warnf("Failed to decrypt vote: %v", err)
+			} else {
+				handler.log.Infof("Selected options in decrypted vote:")
+				for _, option := range decrypted.SelectedOptions {
+					handler.log.Infof("- %X", option)
+				}
+			}
+		}
 	}
 	if text == "" {
 		handler.log.Warnf("Received a message without any text.")
