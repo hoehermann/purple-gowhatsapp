@@ -22,6 +22,15 @@ gowhatsapp_add_account_options(GList *account_options)
         );
     account_options = g_list_append(account_options, option);
     
+    char * device_name = g_strdup_printf(GOWHATSAPP_DEVICE_NAME_DEFAULT,  g_get_host_name());
+    option = purple_account_option_string_new( // MEMCHECK: account_options takes ownership
+        "Device name",
+        GOWHATSAPP_DEVICE_NAME_OPTION,
+        device_name
+        );
+    account_options = g_list_append(account_options, option);
+    g_free(device_name);
+    
     {
         GList *choices = NULL;
         choices = add_choice(choices, "Immediately", GOWHATSAPP_SEND_RECEIPT_CHOICE_IMMEDIATELY);
@@ -70,13 +79,6 @@ gowhatsapp_add_account_options(GList *account_options)
         256
         );
     account_options = g_list_append(account_options, option);
-
-    option = purple_account_option_int_new(
-        "Maximum linked file-size (MB)",
-        GOWHATSAPP_EMBED_MAX_FILE_SIZE_OPTION,
-        0
-        );
-    account_options = g_list_append(account_options, option);
     
     option = purple_account_option_string_new( // MEMCHECK: account_options takes ownership
         "Attachment file path template",
@@ -89,6 +91,13 @@ gowhatsapp_add_account_options(GList *account_options)
         "Attachment base url",
         GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_OPTION,
         GOWHATSAPP_ATTACHMENT_URL_TEMPLATE_DEFAULT
+        );
+    account_options = g_list_append(account_options, option);
+
+    option = purple_account_option_int_new(
+        "Maximum linked file-size (MB)",
+        GOWHATSAPP_EMBED_MAX_FILE_SIZE_OPTION,
+        0
         );
     account_options = g_list_append(account_options, option);
     

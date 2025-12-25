@@ -83,7 +83,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	}
 
 	// set our name (displayed in "linked devices")
-	store.DeviceProps.Os = proto.String("purple-whatsmeow")
+	store.DeviceProps.Os = proto.String(purple_get_device_name(account))
 
 	// limit fetching history since we cannot even parse it
 	store.DeviceProps.HistorySyncConfig = &waCompanionReg.DeviceProps_HistorySyncConfig{

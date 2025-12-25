@@ -641,5 +641,11 @@ func purple_update_group(account *PurpleAccount, group *types.GroupInfo) {
 	}
 }
 
+func purple_get_device_name(account *PurpleAccount) string {
+	c_device_name := C.CString(fmt.Sprintf("purple-whatsmeow on %s", C.GoString(C.g_get_host_name())))
+	defer C.free(unsafe.Pointer(c_device_name))
+	return purple_get_string(account, C.GOWHATSAPP_DEVICE_NAME_OPTION, c_device_name)
+}
+
 func main() {
 }
