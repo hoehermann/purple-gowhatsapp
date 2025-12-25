@@ -7,6 +7,7 @@ import "C"
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"strings"
 	"time"
@@ -16,8 +17,24 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 )
 
+func GetAnyPollCreationMessage(message *waE2E.Message) *waE2E.PollCreationMessage {
+	if message.PollCreationMessageV5 != nil {
+		return message.PollCreationMessageV5
+	}
+	if message.PollCreationMessageV3 != nil {
+		return message.PollCreationMessageV3
+	}
+	if message.PollCreationMessageV2 != nil {
+		return message.PollCreationMessageV2
+	}
+	if message.PollCreationMessage != nil {
+		return message.PollCreationMessage
+	}
+	return nil
+}
+
 func (handler *Handler) handle_message(message *waE2E.Message, info types.MessageInfo, evt *events.Message) {
-	handler.log.Infof("message: %#v", message)
+	//handler.log.Infof("message: %#v", message)
 	if message.SenderKeyDistributionMessage != nil {
 		// Apparently, a SenderKeyDistributionMessage can share the a message ID with a conversation message which is to arrive later
 		// I do not need this message type in the front-end, so I rather drop it
@@ -86,7 +103,7 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 			quote := fmt.Sprintf("unknown message with ID %s", rm.Key.GetID())
 			cached_message := handler.lookup_cached_message_by_id(rm.Key.GetID())
 			if cached_message != nil {
-				handler.log.Infof("Lookup yielded message: %#v", &cached_message.Message)
+				//handler.log.Infof("Lookup yielded message: %#v", &cached_message.Message)
 				text := cached_message.Message.GetConversation() // TODO: check if this works for quoting an ExtendedTextMessage
 				if text != "" {
 					ellipsis := ""
@@ -124,48 +141,78 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 			}
 		}
 	}
-	if message.GetPollCreationMessage() != nil || message.GetPollCreationMessageV2() != nil {
-		text = "created a kind of poll this plug-in cannot display."
-	}
 	{
-		pcm := message.GetPollCreationMessageV3()
+		pcm := GetAnyPollCreationMessage(message)
 		if pcm != nil {
-			handler.log.Warnf("message poll creation: %#v", pcm)
+			//handler.log.Infof("message poll creation: %#v", pcm)
 			text = fmt.Sprintf("[POLL] %s\n", pcm.GetName())
 			for i, option := range pcm.GetOptions() {
+				if option.OptionHash == nil {
+					// taken from whatsmeow.HashPollOptions()
+					hash := fmt.Sprintf("%X", sha256.Sum256([]byte(option.GetOptionName())))
+					option.OptionHash = &hash
+				}
 				text += fmt.Sprintf("%d: %s\n", i+1, option.GetOptionName())
+				//handler.log.Infof("message poll creation option #%d: %#v", i, option)
 			}
-			text += fmt.Sprintf("One may chose up to %d answers.", pcm.GetSelectableOptionsCount())
-		}
-	}
-	{
-		pcm := message.GetPollCreationMessageV5()
-		if pcm != nil {
-			handler.log.Warnf("message poll creation: %#v", pcm)
-			text = fmt.Sprintf("[POLL] %s\n", pcm.GetName())
-			for i, option := range pcm.GetOptions() {
-				text += fmt.Sprintf("%d: %s\n", i+1, option.GetOptionName())
+			selectable_options := pcm.GetSelectableOptionsCount()
+			switch selectable_options {
+			case 0:
+				text += "One may chose multiple answers."
+			case 1:
+				text += "One may chose one answer."
+			default:
+				text += fmt.Sprintf("One may chose up to %d answers.", selectable_options)
 			}
-			text += fmt.Sprintf("One may chose up to %d answers.", pcm.GetSelectableOptionsCount())
 		}
 	}
 	{
 		pum := message.GetPollUpdateMessage()
 		if pum != nil {
-			decrypted, err := handler.client.DecryptPollVote(context.TODO(), evt)
-			if err != nil {
-				handler.log.Warnf("Failed to decrypt vote: %v", err)
+			cached_message := handler.lookup_cached_message_by_id(pum.GetPollCreationMessageKey().GetID())
+			if cached_message == nil {
+				text = "voted in a poll, but this plug-in failed to keep track of the poll."
 			} else {
-				handler.log.Infof("Selected options in decrypted vote:")
-				for _, option := range decrypted.SelectedOptions {
-					handler.log.Infof("- %X", option)
+				decrypted, err := handler.client.DecryptPollVote(context.TODO(), evt)
+				if err != nil {
+					handler.log.Warnf("Failed to decrypt poll vote: %v", err)
+				} else {
+					pcm := GetAnyPollCreationMessage(&cached_message.Message)
+					text = fmt.Sprintf("voted in poll „%s“ for", pcm.GetName())
+					if len(decrypted.SelectedOptions) == 0 {
+						text += " nothing (removed vote)"
+					} else {
+						for index, option_hash := range decrypted.SelectedOptions {
+							hash := fmt.Sprintf("%X", option_hash)
+							var option_name *string = nil
+							for _, option := range pcm.Options {
+								if option.GetOptionHash() == hash {
+									option_name = option.OptionName
+								}
+							}
+							if option_name == nil {
+								handler.log.Warnf("Failed look-up poll vote option %s in %#v", hash, &cached_message.Message)
+								text += " an unknown option"
+							} else {
+								separator := ""
+								if len(decrypted.SelectedOptions) > 1 {
+									if index > 0 {
+										separator = ","
+									}
+									if index == len(decrypted.SelectedOptions)-1 {
+										separator = " and"
+									}
+								}
+								text += fmt.Sprintf("%s „%s“", separator, *option_name)
+							}
+						}
+					}
+					text += "."
 				}
 			}
 		}
 	}
-	if text == "" {
-		handler.log.Warnf("Received a message without any text.")
-	} else {
+	if text != "" {
 		if isEdit {
 			text = "[EDIT] " + text
 		}
