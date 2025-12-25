@@ -16,9 +16,11 @@ Standard features:
 * Sending opus audio files as voice messages.
 * Sending mp4 video files as video messages.
 * Sending other files as documents.
+* Replying to a specific message.
 * Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures ([Markus "nihilus" Gothe](https://github.com/nihilus) for [Peter "theassemblerguy" Bachmaier](https://github.com/theassemblerguy)).
 * Sending receipts (configurable).
 * Displaying reactions.
+* Displaying polls (but no participating in them).
 * Support for socks5 proxies.
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
 * Under the hood: Reasonable callback mechanism thanks to [Eion Robb](https://github.com/EionRobb).
@@ -52,7 +54,6 @@ Known issues:
   * Stickers may or may not appear animated depending on loader.
 * Special messages:
   * Voice calls are not supported (a warning is displayed).
-  * Polls are not supported (a warning is displayed).
   * Other special messages are ignored silently.
 * No support for mark-up in outgoing messages.  
   Note: Due to the internal use of [purple_markup_strip_html](https://docs.imfreedom.org/pidgin2/util_8h.html#a0f02bb7e180bb04fb74c8f39564902ee), you need to use a br-tag instead of newline. Pidgin does that automatically, but other clients might not.
@@ -68,7 +69,6 @@ Other planned features:
 * Gracefully handle group updates.
 * Action to refresh groups.
 * Support [sending mentions](https://github.com/tulir/whatsmeow/discussions/259).
-* Support replying to a specific message.
 
 These features will not be worked on:
 

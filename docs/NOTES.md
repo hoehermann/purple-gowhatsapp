@@ -52,7 +52,7 @@ A file is sent as-is.
 This plug-in supports a couple of "IRC-style" commands. The user can write them in any chat. 
 
 * `?reply ID text` and `?reply needle text`  
-  The text is sent as a reply. The message to be quoted must have been previously received and cached. In case the ID lookup fails, the most recent message containing the needle is searched. If there are no matches, an error is shown.
+  The text is sent as a reply. The message to be quoted must have been previously received and cached. In case the ID lookup fails, the most recent message containing the needle is searched. Command argument separation happens on space, so the needle can only be a single word. If there are no matches, an error is shown.
 
 * `?logout`  
   Performs a log-out. The QR-code will be requested upon connecting again.
