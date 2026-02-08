@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script generates a "full" version number:
-# Pattern: <major>.<minor>.<bugfix>r<revision>_<whatsmeow date>
-# Example: 1.0.0r42_20220101010101
+# Pattern: <major>.<minor>.<bugfix>_<revision>_<whatsmeow date>
+# Example: 1.0.0_42_20220101010101
 # The actual whatsmeow date is only known for sure if whatsmeow is available in GOPATH.
 # The version string must not end in a new-line else it will mess up build scripts.
 cd "$(dirname "$0")/.."
@@ -19,4 +19,4 @@ if [[ -n "${wmdate}" ]]
 then
   wmdate=_${wmdate}
 fi
-printf "%sr%s%s" "${version}" "${revision}" "${wmdate}"
+printf "%s_%s%s" "${version}" "${revision}" "${wmdate}"
