@@ -104,7 +104,10 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 			cached_message := handler.lookup_cached_message_by_id(rm.Key.GetID())
 			if cached_message != nil {
 				//handler.log.Infof("Lookup yielded message: %#v", &cached_message.Message)
-				text := cached_message.Message.GetConversation() // TODO: check if this works for quoting an ExtendedTextMessage
+				text := cached_message.Message.GetConversation()
+				if cached_message.Message.ExtendedTextMessage != nil {
+					text = cached_message.Message.ExtendedTextMessage.GetText()
+				}
 				if text != "" {
 					ellipsis := ""
 					if len(text) > 50 {

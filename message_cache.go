@@ -33,13 +33,16 @@ func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID,
 		return
 	}
 	//handler.log.Infof("add_to_cache: %s %#v", id, message)
+	etm := message.ExtendedTextMessage
+	if etm != nil {
+		// TODO: find out which fields of message are actually needed for creating qouted messages
+		etm.ContextInfo.QuotedMessage.MessageContextInfo = nil
+	}
 	handler.cachedMessages = append(handler.cachedMessages, CachedMessage{
 		// an in-place copy of the message must be created field-by-field due to protobuf demanding exclusive authority or something (mutexes are involved)
 		Message: waE2E.Message{
-			// TODO: find out which fields of message are actually needed for creating qouted messages
-			// it might be a good idea to clear out the MessageContextInfo from the ExtendedTextMessage
 			Conversation:          message.Conversation,
-			ExtendedTextMessage:   message.ExtendedTextMessage,
+			ExtendedTextMessage:   etm,
 			ImageMessage:          message.ImageMessage,
 			VideoMessage:          message.VideoMessage,
 			PtvMessage:            message.PtvMessage,
@@ -55,7 +58,7 @@ func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID,
 		Chat:      chat,
 		Sender:    sender,
 		Timestamp: timestamp,
-		// also necessary for BuildPollVote: FromMe, IsGroup
+		// TODO: also add FromMe and IsGroup since they are necessary for BuildPollVote
 	})
 	// from https://www.delftstack.com/howto/go/queue-implementation-in-golang/
 	if len(handler.cachedMessages) > purple_get_int(handler.account, C.GOWHATSAPP_MESSAGE_CACHE_SIZE_OPTION, 0) {
