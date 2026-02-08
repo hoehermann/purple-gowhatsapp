@@ -8,12 +8,11 @@ static void gowhatsapp_display_image_inline(gowhatsapp_message_t *gwamsg, const 
     const gboolean inline_images = !purple_strequal(purple_account_get_string(gwamsg->account, GOWHATSAPP_HANDLE_IMAGES_OPTION, GOWHATSAPP_HANDLE_IMAGES_CHOICE_BOTH), GOWHATSAPP_HANDLE_IMAGES_CHOICE_ATTACHMENT);
     if (inline_images && pixbuf_is_loadable_image_mimetype(gwamsg->mimetype)) {
         gchar *data = NULL;
-	    size_t len;
-	    GError *err = NULL;
-	    if (g_file_get_contents(local_file_path, &data, &len, &err)) {
+        size_t len;
+        GError *err = NULL;
+        if (g_file_get_contents(local_file_path, &data, &len, &err)) {
             int img_id = purple_imgstore_add_with_id(data, len, NULL); // MEMCHECK: released by purple_imgstore_unref_by_id (see below)
             if (img_id > 0) {
-                // at this point, the image data in gwamsg->blob is not our memory to free any more
                 gchar * text = g_strdup_printf("<img id=\"%u\"/>", img_id); // MEMCHECK: released here
                 gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, NULL, PURPLE_MESSAGE_IMAGES, gwamsg->messageId, FALSE);
                 g_free(text);
