@@ -15,7 +15,7 @@ jobs:
 
     - uses: actions/setup-go@v6
       with:
-        go-version: '1.25.5' # I want latest, but I need to select some arbitrary version for installing the 32bit variant, see https://github.com/actions/setup-go/issues/347#issuecomment-1699466025
+        go-version: '1.26.0' # I want latest, but I need to select some arbitrary version for installing the 32bit variant, see https://github.com/actions/setup-go/issues/347#issuecomment-1699466025
         architecture: x32
 
     - name: Install x86 GCC
