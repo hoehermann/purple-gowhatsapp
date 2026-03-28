@@ -1,3 +1,14 @@
+# 1.22.0
+
+* Update: Depends on whatsmeow v0.0.0-20260327181659-02ec817e7cf4.
+* Update: Requires Go 1.26.0.
+* Feature: Local device name can be set to be shown when linking.
+* Feature: An internal message cache can be activated by setting `message-cache-size` to a greater than zero value.
+* Feature: The internal message cache can be used for replying to a specific message.
+* Feature: Polls are displayed albeit in a rather awkward fashion.
+* Change: Message is sent without modifications when `bridge-compatibility` is set to `true` (was: HTML is stripped, losing newlines).
+* Change: The full version string now uses an underscore for separating the revision count from the patch number.
+
 # 1.21.0
 
 * Update: Depends on whatsmeow v0.0.0-20251217143725-11cf47c62d32.
