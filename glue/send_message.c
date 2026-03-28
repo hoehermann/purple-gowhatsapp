@@ -2,10 +2,17 @@
 #include "libwhatsmeow.h"
 
 static int
-send_message(PurpleConnection *pc, const gchar *who, const gchar *message, gboolean is_group) 
-{
-    // strip html similar to these reasons: https://github.com/majn/telegram-purple/issues/12 and https://github.com/majn/telegram-purple/commit/fffe7519d7269cf4e5029a65086897c77f5283ac
-    char *msg = purple_markup_strip_html(message); // Note: This turns newlines into spaces and <br> tags into newlines
+send_message(PurpleConnection *pc, const gchar *who, const gchar *message, gboolean is_group) {
+    char *msg = NULL;
+    if (purple_account_get_bool(purple_connection_get_account(pc), GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION, FALSE)) {
+        // Bridge Mode: Spectrum allegedly does not do HTML and bitlbee is probably plain-text anyways, so use message as it is, preserving new-lines
+        // see https://github.com/hoehermann/purple-gowhatsapp/issues/257
+        msg = g_strdup(message);
+    } {
+        // Strip HTML similar to these reasons: https://github.com/majn/telegram-purple/issues/12 and https://github.com/majn/telegram-purple/commit/fffe7519d7269cf4e5029a65086897c77f5283ac
+        // Note: This turns newlines into spaces and <br> tags into newlines
+        msg = purple_markup_strip_html(message);
+    }
     PurpleAccount *account = purple_connection_get_account(pc);
     char *w = (char *)who; // cgo does not suport const
     int ret = gowhatsapp_go_send_message(account, w, msg, is_group);
@@ -14,7 +21,7 @@ send_message(PurpleConnection *pc, const gchar *who, const gchar *message, gbool
 }
 
 int
-gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message, PurpleMessageFlags flags){
+gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message, PurpleMessageFlags flags) {
     if (is_command(message)) {
         return execute_command(pc, message, who, NULL);
     } else {
