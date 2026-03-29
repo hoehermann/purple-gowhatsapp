@@ -94,6 +94,15 @@ gowhatsapp_add_account_options(GList *account_options)
         );
     account_options = g_list_append(account_options, option);
 
+    #ifndef WIN32
+    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
+        "Alias attachment directories with symlinks",
+        GOWHATSAPP_ATTACHMENT_SYMLINK_OPTION,
+        TRUE
+        );
+    account_options = g_list_append(account_options, option);
+    #endif
+
     option = purple_account_option_int_new(
         "Maximum linked file-size (MB)",
         GOWHATSAPP_EMBED_MAX_FILE_SIZE_OPTION,

@@ -66,8 +66,10 @@
   Example: `/var/run/purple/$remote/$filename$hash$extension`
 
   There is no shell expansion (`~` will not become the home directory). Relative paths are resolved to the application's working directory. Using an absolute path is recommended.
-  
-  On Linux, there is also a second path with `$remote` and `$sender` being replaced by the respective human readable aliases as stored in the purple buddy list with symbolic links pointing to the actual directories being created. This feature is not available on Windows since there is no straight-forward API to create a directory junction.
+
+* `attachment-symlink` bool   
+  Linux only: Uses the template to derive the attachment's local file path again, but with `$remote` and `$sender` being replaced by the respective human readable aliases (as stored in the purple buddy list). Symbolic links pointing to the numeric directories are created. Enabled by default.  
+  This feature is not available on Windows since there is no straight-forward C API to create a directory junction.
 
 * `attachment-url-template` string  
   This is a template for an URL to write to the conversation after a file has been stored directly. For the supported place-holders, see `attachment-path-template`.
