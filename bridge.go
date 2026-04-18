@@ -612,6 +612,25 @@ func purple_get_string(account *PurpleAccount, key *C.char, default_value *C.cha
 }
 
 /*
+ * Gets the alias of the contact.
+ *
+ * In case no alias is found, returns the input jid string.
+ */
+func purple_get_alias(account *PurpleAccount, jid string) string {
+	var c_alias *C.char = nil
+	if C.gowhatsapp_account_exists(account) == 1 {
+		who := C.CString(jid)
+		defer C.free(unsafe.Pointer(who))
+		c_alias = C.gowhatsapp_blist_get_alias(account, who)
+	}
+	if c_alias == nil {
+		return jid
+	} else {
+		return C.GoString(c_alias)
+	}
+}
+
+/*
  * Forward credential string to purple.
  */
 func purple_set_credentials(account *PurpleAccount, credentials string) {

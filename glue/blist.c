@@ -141,3 +141,17 @@ gowhatsapp_find_blist_chat(PurpleAccount *account, const char *jid)
 
     return NULL;
 }
+
+/*
+ * Returns the alias of the contact or NULL.
+ *
+ * The alias is owned by the blist and must not be released.
+ */
+const char * gowhatsapp_blist_get_alias(PurpleAccount *account, const char *who) {
+    PurpleBuddy *buddy = purple_blist_find_buddy(account, who);
+    if (buddy == NULL) {
+        return NULL;
+    } else {
+        return purple_buddy_get_alias(buddy);
+    }
+}
