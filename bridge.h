@@ -91,3 +91,6 @@ extern int gowhatsapp_account_exists(PurpleAccount *account);
 
 // for releasing the memory of a message struct
 void gowhatsapp_free_message(gowhatsapp_message_t *gwamsg);
+
+// for looking up alias locally
+extern const char * gowhatsapp_blist_get_alias(PurpleAccount *account, const char *who);

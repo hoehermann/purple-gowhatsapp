@@ -92,7 +92,15 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 				}
 			}
 			if etm.Text != nil {
-				text += *etm.Text
+				etmText := *etm.Text
+				for _, mentioned := range etm.GetContextInfo().GetMentionedJID() {
+					mentionedJID, err := types.ParseJID(mentioned)
+					if err == nil {
+						alias := purple_get_alias(handler.account, handler.lidToPn(mentionedJID, "resolving mention").ToNonAD().String())
+						etmText = strings.ReplaceAll(etmText, mentionedJID.User, alias)
+					}
+				}
+				text += etmText
 			}
 		}
 
