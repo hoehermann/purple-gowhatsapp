@@ -33,7 +33,7 @@ func parseJID(arg string) (types.JID, error) {
 		if err != nil {
 			return recipient, fmt.Errorf("invalid JID %s: %v", arg, err)
 		} else if recipient.User == "" {
-			return recipient, fmt.Errorf("invalid JID %s: no server specified", arg)
+			return recipient, fmt.Errorf("invalid JID %s: no user specified", arg)
 		}
 		return recipient, nil
 	}
