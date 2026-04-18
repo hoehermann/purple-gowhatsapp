@@ -34,7 +34,7 @@ func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID,
 	}
 	//handler.log.Infof("add_to_cache: %s %#v", id, message)
 	etm := message.ExtendedTextMessage
-	if etm != nil {
+	if etm != nil && etm.ContextInfo != nil && etm.ContextInfo.QuotedMessage != nil {
 		// TODO: find out which fields of message are actually needed for creating qouted messages
 		etm.ContextInfo.QuotedMessage.MessageContextInfo = nil
 	}
