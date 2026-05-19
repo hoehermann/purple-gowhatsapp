@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20) # for cmake_path
 
-if (NOT (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+if (NOT (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "AppleClang"))
   message(FATAL_ERROR "This project uses cgo which is incompatible with anything but the Clang or GNU C Compiler (see https://github.com/golang/go/issues/36283). Your compiler is ${CMAKE_C_COMPILER_ID}.")
 endif()
 
