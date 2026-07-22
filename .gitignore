@@ -3,3 +3,4 @@ ignore
 vendor
 *.so
 libwhatsmeow.*
+build
