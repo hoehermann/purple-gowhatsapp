@@ -35,7 +35,7 @@ type Handler struct {
 }
 
 /*
- * This plug-in can handle multiple connections (identified by user-supplied name).
+ * This plug-in can handle multiple connections (identified by system-supplied pointer).
  */
 var handlers = make(map[*PurpleAccount]*Handler)
 
