@@ -4,9 +4,9 @@ Dependencies:
 
 * libpurple
 * pkg-config
-* cmake (3.20 or newer)
+* cmake (optional, 3.24 or newer)
 * make
-* go (1.25.3 or newer)
+* go (the version mentioned in go.mod or newer)
 * gcc (9.2.0 or newer)
 * libgdk-pixbuf-2.0 (optional)
 * libopusfile (optional)
@@ -15,7 +15,7 @@ For Ubuntu, or Debian compliant Linux flavors, use the apt package manager to in
 
     sudo apt install libpurple-dev pkg-config cmake make gcc libgdk-pixbuf2.0-dev libopusfile-dev
 
-In case it is really recent, you can use the go compiler shipped with your distribution (e.g. Arch Linux). All others need to obtain a recent version from https://golang.org/dl/.
+In case your distribution is fairly recent or rolling, you can use the go compiler shipped with your distribution (e.g. Arch Linux). All others need to obtain the current version from https://golang.org/dl/.
 
 For systems with pkg-config, a Makefile exists. For all others, this project uses CMake.
 
@@ -44,7 +44,7 @@ CMake will try to set-up a development environment automatically.
 
 Additional dependencies (must be 32 bit aka. win32 aka. x86 aka. 386 aka. i686):
 
-* [go 1.25.3 or newer](https://go.dev/dl/go1.25.3.windows-386.msi)
+* [go 1.26.5 or newer](https://go.dev/dl/go1.26.5.windows-386.msi)
 * [gcc 13.2 or newer](https://packages.msys2.org/package/mingw-w64-i686-gcc)
 
 This is known to work with MSYS make and CMake generator "MSYS Makefiles". go and gcc must be in `%PATH%`.  
