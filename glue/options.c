@@ -200,6 +200,13 @@ gowhatsapp_add_account_options(GList *account_options)
     account_options = g_list_append(account_options, option);
     
     option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
+        "Ignore channel (newsletter) messages",
+        GOWHATSAPP_IGNORE_NEWSLETTERS_OPTION,
+        TRUE
+        );
+    account_options = g_list_append(account_options, option);
+    
+    option = purple_account_option_bool_new( // MEMCHECK: account_options takes ownership
         "Protocol bridge compatibility mode",
         GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION,
         FALSE
