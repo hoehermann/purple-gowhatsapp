@@ -4,9 +4,23 @@
 #include "pixbuf.h"
 #include "glib/gstdio.h"
 
+/*
+ * gdk-pixbuf does not always ship loaders for all image formats (e.g. WebP).
+ * A frontend that renders images itself can opt in to inline all image types
+ * through this account option.
+ */
+static gboolean
+gowhatsapp_attachment_is_inline_image(gowhatsapp_message_t *gwamsg) {
+    if (pixbuf_is_loadable_image_mimetype(gwamsg->mimetype)) {
+        return TRUE;
+    }
+    return purple_account_get_bool(gwamsg->account, GOWHATSAPP_INLINE_ALL_IMAGES_OPTION, FALSE)
+        && gwamsg->mimetype != NULL && g_str_has_prefix(gwamsg->mimetype, "image/");
+}
+
 static void gowhatsapp_display_image_inline(gowhatsapp_message_t *gwamsg, const char *local_file_path) {
     const gboolean inline_images = !purple_strequal(purple_account_get_string(gwamsg->account, GOWHATSAPP_HANDLE_IMAGES_OPTION, GOWHATSAPP_HANDLE_IMAGES_CHOICE_BOTH), GOWHATSAPP_HANDLE_IMAGES_CHOICE_ATTACHMENT);
-    if (inline_images && pixbuf_is_loadable_image_mimetype(gwamsg->mimetype)) {
+    if (inline_images && gowhatsapp_attachment_is_inline_image(gwamsg)) {
         gchar *data = NULL;
         size_t len;
         GError *err = NULL;
@@ -249,7 +263,7 @@ static gboolean download_to_temporary_directory(gowhatsapp_message_t *gwamsg) {
 
 void gowhatsapp_handle_attachment(gowhatsapp_message_t *gwamsg) {
     gboolean inline_only = purple_strequal(purple_account_get_string(gwamsg->account, GOWHATSAPP_HANDLE_IMAGES_OPTION, GOWHATSAPP_HANDLE_IMAGES_CHOICE_BOTH), GOWHATSAPP_HANDLE_IMAGES_CHOICE_INLINE);
-    inline_only &= pixbuf_is_loadable_image_mimetype(gwamsg->mimetype); // only inline images which can be loaded
+    inline_only &= gowhatsapp_attachment_is_inline_image(gwamsg); // only inline images which can be loaded
     if (inline_only) {
         download_to_temporary_directory(gwamsg);
     } else {
