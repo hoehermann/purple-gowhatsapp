@@ -42,6 +42,13 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 		handler.log.Infof("Ignoring SenderKeyDistributionMessage.")
 		return
 	}
+	if info.MessageSource.Chat.Server == types.NewsletterServer {
+		// Channel (newsletter) posts would show up as chats with a raw JID.
+		if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_NEWSLETTERS_OPTION, true) {
+			handler.log.Infof("Ignoring channel (newsletter) message.")
+			return
+		}
+	}
 	text := ""
 	if info.MessageSource.Chat == types.StatusBroadcastJID {
 		if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_STATUS_BROADCAST_OPTION, false) {
