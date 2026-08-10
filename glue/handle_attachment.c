@@ -84,7 +84,14 @@ static void download_via_xfer_mechanism(gowhatsapp_message_t *gwamsg) {
     }
     
     PurpleXfer * xfer = purple_xfer_new(gwamsg->account, PURPLE_XFER_RECEIVE, sender);
-    char *filename = g_strdup_printf("%s%s%s", gwamsg->hash_hex, gwamsg->filename, gwamsg->extension);
+    char *filename = NULL;
+    if (gwamsg->filename != NULL && gwamsg->filename[0]) {
+        // suggest the original file name (documents have one)
+        filename = g_strdup_printf("%s%s", gwamsg->filename, gwamsg->extension);
+    } else {
+        // fall back to the content hash for nameless media
+        filename = g_strdup_printf("%s%s", gwamsg->hash_hex, gwamsg->extension);
+    }
     purple_xfer_set_filename(xfer, filename);
     g_free(filename);
     purple_xfer_set_size(xfer, gwamsg->filesize);
