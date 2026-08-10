@@ -130,6 +130,7 @@ static PurplePluginProtocolInfo prpl_info = {
     .tooltip_text = gowhatsapp_tooltip_text,
     // file transfer
     .new_xfer = gowhatsapp_new_xfer,
+    .send_typing = gowhatsapp_send_typing,
     .send_file = gowhatsapp_send_file,
     #if PURPLE_VERSION_CHECK(2,14,0)
     .chat_send_file = gowhatsapp_chat_send_file,

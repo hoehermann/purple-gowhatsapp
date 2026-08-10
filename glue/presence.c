@@ -146,3 +146,11 @@ void gowhatsapp_request_profile_picture(PurpleAccount *account, PurpleBuddy *bud
         gowhatsapp_go_request_profile_picture(account, buddy->name, (char *)picture_date, (char *)picture_id); // cgo does not suport const
     }
 }
+/*
+ * purple wants to signal a typing state change to the remote user.
+ */
+unsigned int gowhatsapp_send_typing(PurpleConnection *pc, const gchar *who, PurpleTypingState state) {
+    PurpleAccount *account = purple_connection_get_account(pc);
+    gowhatsapp_go_send_typing(account, (char *)who, state == PURPLE_TYPING);
+    return 0; // no need to call serv_send_typing again while state is unchanged
+}

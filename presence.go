@@ -72,3 +72,22 @@ func (handler *Handler) subscribe_presence(who string) {
 		handler.log.Warnf("Unable to subscribe for presence updates of %s.", jid.String())
 	}
 }
+
+/*
+ * Informs the other party this user started or stopped composing a message.
+ */
+func (handler *Handler) send_typing(who string, typing bool) {
+	recipient, err := types.ParseJID(who)
+	if err != nil {
+		handler.log.Warnf("send_typing: %v is not a valid JID: %v", who, err)
+		return
+	}
+	state := types.ChatPresencePaused
+	if typing {
+		state = types.ChatPresenceComposing
+	}
+	err = handler.client.SendChatPresence(context.Background(), recipient, state, types.ChatPresenceMediaText)
+	if err != nil {
+		handler.log.Warnf("send_typing failed: %v", err)
+	}
+}
