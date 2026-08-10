@@ -84,6 +84,14 @@ func gowhatsapp_go_logout(account *PurpleAccount) {
 	}
 }
 
+//export gowhatsapp_go_send_typing
+func gowhatsapp_go_send_typing(account *PurpleAccount, who *C.char, typing C.int) {
+	handler, ok := handlers[account]
+	if ok {
+		go handler.send_typing(C.GoString(who), Cint_to_bool(typing))
+	}
+}
+
 //export gowhatsapp_go_send_message
 func gowhatsapp_go_send_message(account *PurpleAccount, who *C.char, message *C.char, is_group C.int) int {
 	handler, ok := handlers[account]

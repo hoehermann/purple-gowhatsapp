@@ -66,6 +66,7 @@ void gowhatsapp_for_all_buddies(PurpleAccount *account, void(*func)(PurpleAccoun
 
 // send_message
 int gowhatsapp_send_im(PurpleConnection *pc, const gchar *who, const gchar *message, PurpleMessageFlags flags);
+unsigned int gowhatsapp_send_typing(PurpleConnection *pc, const gchar *who, PurpleTypingState state);
 int gowhatsapp_send_chat(PurpleConnection *pc, int id, const gchar *message, PurpleMessageFlags flags);
 
 // handle_attachment
