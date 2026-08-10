@@ -44,7 +44,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	handler.log.Infof("Attachment mime type is %s.", mimetype)
 	// TODO: redundant implementation in send_link_message. merge.
 	switch mimetype {
-	case "image/jpeg":
+	case "image/jpeg", "image/png":
 		msg, err = handler.send_file_image(data, mimetype)
 	case "application/ogg", "audio/ogg":
 		opusfile_info := C.opusfile_get_info(C.CBytes(data), C.size_t(len(data)))

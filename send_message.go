@@ -223,8 +223,8 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 	mimetype := http.DetectContentType(data) // do not trust the server. he is stupid.
 	// TODO: redundant implementation in send_file_bytes. merge.
 	switch mimetype {
-	case "image/jpeg":
-		// send jpeg as ImageMessage
+	case "image/jpeg", "image/png":
+		// send jpeg or png as ImageMessage
 		// no checks here
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Compatible file detected. Forwarding as image message…")
 		msg, err = handler.send_file_image(data, mimetype)
