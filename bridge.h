@@ -49,6 +49,13 @@ enum gowhatsapp_attachment_type {
     FOREACH_ATTACHMENT_TYPE(GENERATE_ATTACHMENT_ENUM)
 };
 
+// Subtypes of a text message: a live message just arrived, a history message
+// is an old one replayed from the primary device and is displayed as such.
+enum gowhatsapp_text_subtype {
+    gowhatsapp_text_subtype_live = 0,
+    gowhatsapp_text_subtype_history,
+};
+
 // Structure to communicate go → purple.
 // This holds all data for incoming messages, error messages, login data, etc.
 // NOTE: If the cgo and gcc compilers disagree on padding or alignment, chaos will ensue.

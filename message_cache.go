@@ -38,6 +38,8 @@ func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID,
 		// TODO: find out which fields of message are actually needed for creating qouted messages
 		etm.ContextInfo.QuotedMessage.MessageContextInfo = nil
 	}
+	handler.cacheMutex.Lock()
+	defer handler.cacheMutex.Unlock()
 	handler.cachedMessages = append(handler.cachedMessages, CachedMessage{
 		// an in-place copy of the message must be created field-by-field due to protobuf demanding exclusive authority or something (mutexes are involved)
 		Message: waE2E.Message{
