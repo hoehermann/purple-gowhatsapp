@@ -6,16 +6,20 @@
 
 /*
  * gdk-pixbuf does not always ship loaders for all image formats (e.g. WebP).
- * A frontend that renders images itself can opt in to inline all image types
- * through this account option.
+ * On builds where the frontend renders images itself (currently only known
+ * for the macOS/Adium frontend), inline all image types regardless of
+ * pixbuf support.
  */
 static gboolean
 gowhatsapp_attachment_is_inline_image(gowhatsapp_message_t *gwamsg) {
     if (pixbuf_is_loadable_image_mimetype(gwamsg->mimetype)) {
         return TRUE;
     }
-    return purple_account_get_bool(gwamsg->account, GOWHATSAPP_INLINE_ALL_IMAGES_OPTION, FALSE)
-        && gwamsg->mimetype != NULL && g_str_has_prefix(gwamsg->mimetype, "image/");
+#ifdef GOWHATSAPP_INLINE_ALL_IMAGES
+    return gwamsg->mimetype != NULL && g_str_has_prefix(gwamsg->mimetype, "image/");
+#else
+    return FALSE;
+#endif
 }
 
 static void gowhatsapp_display_image_inline(gowhatsapp_message_t *gwamsg, const char *local_file_path) {
