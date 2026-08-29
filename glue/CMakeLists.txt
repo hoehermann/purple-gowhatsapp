@@ -33,6 +33,7 @@ if (WIN32 AND CMAKE_C_COMPILER_ID STREQUAL GNU AND CMAKE_C_COMPILER_VERSION VERS
 endif()
 if (APPLE)
     target_link_libraries(${TARGET_NAME} PRIVATE "-framework CoreFoundation" "-framework Security" resolv)
+    target_compile_definitions(${TARGET_NAME} PRIVATE GOWHATSAPP_INLINE_ALL_IMAGES)
 endif()
 
 if (WIN32)
