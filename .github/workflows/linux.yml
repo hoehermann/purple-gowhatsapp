@@ -2,8 +2,6 @@ name: Linux
 on:
   push:
     branches: [whatsmeow]
-  pull_request:
-    branches: [whatsmeow]
 
 jobs:
   build:
@@ -23,7 +21,7 @@ jobs:
         
     - uses: actions/setup-go@v6
       with:
-        go-version: '>=1.26.0'
+        go-version: '>=1.27.0'
         
     - name: make
       run: |
