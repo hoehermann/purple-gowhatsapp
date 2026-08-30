@@ -26,6 +26,7 @@
     MESSAGE_TYPE(attachment) \
     MESSAGE_TYPE(profile_picture) \
     MESSAGE_TYPE(group) \
+    MESSAGE_TYPE(receipt) \
     MESSAGE_TYPE(max) \
 
 #define GENERATE_MESSAGE_ENUM(ENUM) gowhatsapp_message_type_##ENUM,
@@ -47,6 +48,23 @@ enum gowhatsapp_message_type {
 
 enum gowhatsapp_attachment_type {
     FOREACH_ATTACHMENT_TYPE(GENERATE_ATTACHMENT_ENUM)
+};
+
+// The stations of a message's life, mirroring the ticks in the official client:
+// sent is this instance's own message having reached the server (the id becomes known here),
+// delivered and read are the remote end confirming, read_self is another device of this
+// account having read an incoming message.
+#define FOREACH_RECEIPT_TYPE(RECEIPT_TYPE) \
+    RECEIPT_TYPE(sent) \
+    RECEIPT_TYPE(delivered) \
+    RECEIPT_TYPE(read) \
+    RECEIPT_TYPE(read_self) \
+    RECEIPT_TYPE(max) \
+
+#define GENERATE_RECEIPT_ENUM(ENUM) gowhatsapp_receipt_type_##ENUM,
+
+enum gowhatsapp_receipt_type {
+    FOREACH_RECEIPT_TYPE(GENERATE_RECEIPT_ENUM)
 };
 
 // Structure to communicate go → purple.

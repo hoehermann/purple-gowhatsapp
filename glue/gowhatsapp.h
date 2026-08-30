@@ -4,6 +4,17 @@
 #define GOWHATSAPP_NAME "whatsmeow"  // name to refer to this plug-in (in logs)
 #define GOWHATSAPP_PRPL_ID "prpl-hehoe-whatsmeow"
 
+/*
+ * Signal emitted on the protocol plug-in (find it via purple_find_prpl or
+ * purple_connection_get_prpl) whenever a receipt comes in: a message was sent
+ * by this instance, delivered to the remote end, read there, or read by
+ * another device of this account. Arguments: the PurpleConnection and a
+ * GHashTable of borrowed strings with the keys
+ * chat, sender, id, type (a gowhatsapp_receipt_type name), isGroup ("0"/"1"),
+ * timestamp (seconds since the epoch, as decimal string).
+ */
+#define GOWHATSAPP_SIGNAL_RECEIPT "gowhatsapp-receipt"
+
 #define GOWHATSAPP_STATUS_STR_AVAILABLE "available" // this must match whatsmeow's types.PresenceAvailable
 #define GOWHATSAPP_STATUS_STR_AWAY      "unavailable" // this must match whatsmeow's types.PresenceUnavailable
 #define GOWHATSAPP_STATUS_STR_OFFLINE   "offline"
@@ -89,6 +100,7 @@ void gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg);
 
 // receipts
 void gowhatsapp_receipts_init(PurpleConnection *pc);
+void gowhatsapp_handle_receipt(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
 
 // commands
 enum gowhatsapp_command {
