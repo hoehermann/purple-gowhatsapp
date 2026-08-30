@@ -23,6 +23,12 @@
     * `on-answer`: as soon as the user sends an answer (default)
     * `never`: never
   
+* `reaction-display` string choice  
+  Selects how incoming reactions are shown:
+  
+    * `text`: as a plain message like "reacted with X to message Y" (default, previous behaviour)
+    * `none`: not at all. Front-ends and plug-ins can still draw them by listening to the `gowhatsapp-reaction` signal, which also resolves messages the textual rendering can only call "unknown".
+  
 * `message-cache-size` int  
   Stores a number (default: 0) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions or quoting the message while replying to a specific message. See the [notes](./NOTES.md) for details on how to use the reply feature.  
   Note: Cached messages are persisted to the purple home directory as `username.json`.

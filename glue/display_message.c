@@ -65,7 +65,27 @@ void gowhatsapp_display_text_message(
     }
 
     g_free(escaped_text);
-    
+
+    // Let consumers associate the conversation line that is about to appear with
+    // the protocol-level id later reactions refer to; the conversation write APIs
+    // below cannot carry it.
+    if (messageId != NULL && messageId[0] != 0 && connection != NULL) {
+        gchar *timestamp_string = g_strdup_printf("%ld", (long)timestamp);
+        GHashTable *details = g_hash_table_new(g_str_hash, g_str_equal); // MEMCHECK: values are borrowed, receivers must copy
+        g_hash_table_insert(details, "chat", (gpointer)remoteJid);
+        g_hash_table_insert(details, "sender", (gpointer)senderJid);
+        g_hash_table_insert(details, "id", (gpointer)messageId);
+        g_hash_table_insert(details, "isGroup", isGroup ? "1" : "0");
+        // isOutgoing is this instance's own success echo, not "from me": a message
+        // sent by another device of this account arrives with "0" here, so a
+        // consumer can treat it like any other displayed message
+        g_hash_table_insert(details, "isOutgoing", isOutgoing ? "1" : "0");
+        g_hash_table_insert(details, "timestamp", timestamp_string);
+        purple_signal_emit(purple_connection_get_prpl(connection), GOWHATSAPP_SIGNAL_MESSAGE_ID, connection, details);
+        g_hash_table_destroy(details);
+        g_free(timestamp_string);
+    }
+
     if (isGroup) {
         gowhatsapp_enter_group_chat(connection, remoteJid, NULL);
         purple_serv_got_chat_in(connection, g_str_hash(remoteJid), senderJid, flags, text_with_id, timestamp);

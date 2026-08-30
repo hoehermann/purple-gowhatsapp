@@ -115,6 +115,16 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 	{
 		rm := message.GetReactionMessage()
 		if rm != nil && rm.Text != nil && rm.Key != nil && rm.Key.ID != nil {
+			// always hand the structured reaction to the purple part: front-ends and
+			// plug-ins listening to the gowhatsapp-reaction signal attach it to the
+			// message it names by id, which works even where the textual rendering
+			// below can only say "unknown message" (messages without text, or
+			// messages that have left the cache)
+			purple_reaction(handler.account, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, info.MessageSource.Sender.ToNonAD().String(), rm.Key.GetID(), *rm.Text, info.Timestamp)
+			setting := purple_get_string(handler.account, C.GOWHATSAPP_REACTION_DISPLAY_OPTION, C.GOWHATSAPP_REACTION_DISPLAY_CHOICE_TEXT)
+			if setting != C.GoString(C.GOWHATSAPP_REACTION_DISPLAY_CHOICE_TEXT) {
+				return
+			}
 			quote := fmt.Sprintf("unknown message with ID %s", rm.Key.GetID())
 			cached_message := handler.lookup_cached_message_by_id(rm.Key.GetID())
 			if cached_message != nil {

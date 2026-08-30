@@ -94,6 +94,15 @@ static GList * actions(PurplePlugin *plugin, gpointer context) {
 static gboolean
 libpurple2_plugin_load(PurplePlugin *plugin)
 {
+    // see the GOWHATSAPP_SIGNAL_* comments in gowhatsapp.h for the semantics
+    purple_signal_register(plugin, GOWHATSAPP_SIGNAL_MESSAGE_ID,
+        purple_marshal_VOID__POINTER_POINTER, NULL, 2,
+        purple_value_new(PURPLE_TYPE_SUBTYPE, PURPLE_SUBTYPE_CONNECTION),
+        purple_value_new(PURPLE_TYPE_POINTER));
+    purple_signal_register(plugin, GOWHATSAPP_SIGNAL_REACTION,
+        purple_marshal_VOID__POINTER_POINTER, NULL, 2,
+        purple_value_new(PURPLE_TYPE_SUBTYPE, PURPLE_SUBTYPE_CONNECTION),
+        purple_value_new(PURPLE_TYPE_POINTER));
     return TRUE;
 }
 
@@ -101,6 +110,7 @@ static gboolean
 libpurple2_plugin_unload(PurplePlugin *plugin)
 {
     purple_signals_disconnect_by_handle(plugin);
+    purple_signals_unregister_by_instance(plugin);
     return TRUE;
 }
 
