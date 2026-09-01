@@ -1,0 +1,46 @@
+name: Linux
+on:
+  push:
+    branches: [whatsmeow]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - name: install deps
+      run: |
+        sudo apt update
+        sudo apt install -y libglib2.0-dev libopusfile-dev
+        # We only need these to build, not to run.  Skip the dependency check.
+        sudo apt download libpurple0 libpurple-dev libgdk-pixbuf2.0-dev
+        sudo dpkg --force-depends -i libpurple0*.deb libpurple-dev*.deb libgdk-pixbuf2.0-dev*.deb
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - uses: actions/setup-go@v6
+      with:
+        go-version: '>=1.27.0'
+        
+    - name: make
+      run: |
+        cmake -B build -S .
+        cmake --build build
+        cpack -G DEB -B build --config build/CPackConfig.cmake
+
+    - name: Prepare Release Info
+      run: |
+        COMMIT_DATE=$(git log -1 --date=format:'%Y%m%d' --format='%ad')
+        echo "COMMIT_DATE=$COMMIT_DATE" >> "$GITHUB_ENV"
+        PLUGIN_VERSION=$(cat VERSION)
+        echo "PLUGIN_VERSION=$PLUGIN_VERSION" >> "$GITHUB_ENV"
+       
+    - name: release nightly
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: build/*.deb
+        tag: nightly-${{ env.COMMIT_DATE }}
+        name: Nightly ${{ env.COMMIT_DATE }}
+        allowUpdates: true
+        artifactErrorsFailBuild: true
