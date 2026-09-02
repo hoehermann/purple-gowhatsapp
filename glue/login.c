@@ -64,6 +64,7 @@ gowhatsapp_login(PurpleAccount *account)
     g_free(proxy_address);
     
     gowhatsapp_receipts_init(pc);
+    gowhatsapp_history_init(pc);
 }
 
 void

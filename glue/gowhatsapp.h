@@ -15,6 +15,8 @@ typedef struct {
     PurpleRoomlist *roomlist;
     // when this connection was established
     time_t connected_at_timestamp;
+    // not before this may a new conversation ask the phone for history, see history.c
+    time_t history_requests_from;
 } WhatsappProtocolData;
 
 // options
@@ -89,6 +91,11 @@ void gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg);
 
 // receipts
 void gowhatsapp_receipts_init(PurpleConnection *pc);
+
+// history fetched from the primary device
+void gowhatsapp_history_init(PurpleConnection *pc);
+void gowhatsapp_display_history_message(gowhatsapp_message_t *gwamsg);
+void gowhatsapp_history_suppress_requests(gboolean suppress);
 
 // commands
 enum gowhatsapp_command {
