@@ -4,6 +4,24 @@
 #define GOWHATSAPP_NAME "whatsmeow"  // name to refer to this plug-in (in logs)
 #define GOWHATSAPP_PRPL_ID "prpl-hehoe-whatsmeow"
 
+/*
+ * Signals emitted on the protocol plug-in (find it via purple_find_prpl or
+ * purple_connection_get_prpl). Both carry the PurpleConnection and a
+ * GHashTable of borrowed strings.
+ *
+ * GOWHATSAPP_SIGNAL_MESSAGE_ID fires right before a message is written into a
+ * conversation, so consumers can associate the line that is about to appear
+ * with the protocol-level id later reactions refer to. Keys:
+ * chat, sender, id, isGroup ("0"/"1"), isOutgoing ("0"/"1"),
+ * timestamp (seconds since the epoch, as decimal string).
+ *
+ * GOWHATSAPP_SIGNAL_REACTION fires when a reaction comes in: sender put emoji
+ * onto the message named by id, or took it back (empty emoji). Keys:
+ * chat, sender, id, emoji, isGroup ("0"/"1"), timestamp.
+ */
+#define GOWHATSAPP_SIGNAL_MESSAGE_ID "gowhatsapp-message-id"
+#define GOWHATSAPP_SIGNAL_REACTION "gowhatsapp-reaction"
+
 #define GOWHATSAPP_STATUS_STR_AVAILABLE "available" // this must match whatsmeow's types.PresenceAvailable
 #define GOWHATSAPP_STATUS_STR_AWAY      "unavailable" // this must match whatsmeow's types.PresenceUnavailable
 #define GOWHATSAPP_STATUS_STR_OFFLINE   "offline"
@@ -89,6 +107,9 @@ void gowhatsapp_handle_profile_picture(gowhatsapp_message_t *gwamsg);
 
 // receipts
 void gowhatsapp_receipts_init(PurpleConnection *pc);
+
+// reactions
+void gowhatsapp_handle_reaction(PurpleConnection *pc, gowhatsapp_message_t *gwamsg);
 
 // commands
 enum gowhatsapp_command {
