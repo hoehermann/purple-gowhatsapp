@@ -81,6 +81,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 		return fmt.Errorf("error sending file: %v", err)
 	}
 	handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
+	handler.receipt_sent(recipient, recipient.Server == types.GroupServer, send_response)
 	return nil
 }
 

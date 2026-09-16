@@ -44,6 +44,18 @@ gowhatsapp_add_account_options(GList *account_options)
         );
         account_options = g_list_append(account_options, option);
     }
+
+    {
+        GList *choices = NULL;
+        choices = add_choice(choices, "None", GOWHATSAPP_RECEIPT_DISPLAY_CHOICE_NONE);
+        choices = add_choice(choices, "Text", GOWHATSAPP_RECEIPT_DISPLAY_CHOICE_TEXT);
+        option = purple_account_option_list_new( // MEMCHECK: account_options takes ownership
+            "Display received receipts",
+            GOWHATSAPP_RECEIPT_DISPLAY_OPTION,
+            choices
+        );
+        account_options = g_list_append(account_options, option);
+    }
     
     {
         GList *choices = NULL;

@@ -23,6 +23,12 @@
     * `on-answer`: as soon as the user sends an answer (default)
     * `never`: never
   
+* `receipt-display` string choice  
+  Selects how receipts received for own sent messages are shown:
+  
+    * `none`: not at all (default). Front-ends and plug-ins can still draw them by listening to the `gowhatsapp-receipt` signal.
+    * `text`: a read receipt appears as a system message in the conversation window (can be chatty when many messages are read at once)
+  
 * `message-cache-size` int  
   Stores a number (default: 0) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions or quoting the message while replying to a specific message. See the [notes](./NOTES.md) for details on how to use the reply feature.  
   Note: Cached messages are persisted to the purple home directory as `username.json`.
