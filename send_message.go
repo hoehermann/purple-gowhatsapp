@@ -14,10 +14,12 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
+	"golang.org/x/net/html"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -70,20 +72,44 @@ func (handler *Handler) prepare_reply(chat types.JID, text string) (bool, *Cache
  * Returns true on success.
  */
 func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, message string) bool {
-	msg := &waE2E.Message{Conversation: &message}
+	stripped_message, image_ids := decompose_html(message)
+	handler.log.Infof("After decomposing, message is „%s“ with %d images.", stripped_message, len(image_ids))
+	if len(image_ids) > 1 {
+		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "May only sent one image per message.")
+		return false
+	}
+	if len(image_ids) == 1 {
+		if len(stripped_message) > 0 {
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "May send an image or some text, but not both in the same message.")
+			return false
+		}
+		data := purple_imgstore_find_by_id(image_ids[0])
+		send_response, err := handler.send_file_bytes(recipient, isGroup, data, "image")
+		if err != nil {
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, err.Error())
+			return false
+		}
+		setting := purple_get_string(handler.account, C.GOWHATSAPP_ECHO_OPTION, C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS)
+		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS) {
+			// injects the original message (with the image tag)
+			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, handler.client.Store.ID.ToNonAD().String(), nil, send_response.Timestamp, message, nil)
+		}
+		return true
+	}
+	msg := &waE2E.Message{Conversation: &stripped_message}
 	expiration_days := purple_get_int(handler.account, C.GOWHATSAPP_EXPIRATION_OPTION, 0)
 	expiration_seconds := uint32(expiration_days) * 24 * 60 * 60
 	if expiration_seconds > 0 {
 		msg = &waE2E.Message{
 			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-				Text: &message,
+				Text: &stripped_message,
 				ContextInfo: &waE2E.ContextInfo{
 					Expiration: proto.Uint32(expiration_seconds),
 				},
 			},
 		}
 	}
-	is_reply, cached_message, message := handler.prepare_reply(recipient, message)
+	is_reply, cached_message, stripped_message := handler.prepare_reply(recipient, stripped_message)
 	if is_reply {
 		if cached_message == nil {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Unable to prepare reply: Quoted message not found in cache.")
@@ -92,7 +118,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			participant := cached_message.Sender.ToNonAD().String()
 			msg = &waE2E.Message{
 				ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-					Text: &message,
+					Text: &stripped_message,
 					ContextInfo: &waE2E.ContextInfo{
 						StanzaID:      &cached_message.ID,
 						Participant:   &participant,
@@ -271,5 +297,42 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		msg.Conversation = &link                                                                                                           // hack to preserve link in cache
 		handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
 		return true
+	}
+}
+
+func decompose_html(htmldata string) (string, []int) {
+	var plaintext strings.Builder
+	var image_ids []int
+	tokenizer := html.NewTokenizer(strings.NewReader(htmldata))
+	for {
+		next := tokenizer.Next()
+		switch {
+		case next == html.ErrorToken:
+			return plaintext.String(), image_ids
+		case next == html.StartTagToken:
+			token := tokenizer.Token()
+			switch {
+			case strings.EqualFold(token.Data, "img"):
+				for _, attr := range token.Attr {
+					if attr.Key == "id" {
+						image_id, err := strconv.Atoi(attr.Val)
+						if err == nil {
+							image_ids = append(image_ids, image_id)
+						}
+					}
+				}
+			case strings.EqualFold(token.Data, "br"):
+				plaintext.WriteString("\n")
+			case strings.EqualFold(token.Data, "b"):
+				// TODO
+			case strings.EqualFold(token.Data, "i"):
+				// TODO
+			}
+		case next == html.EndTagToken:
+			// TODO
+		case next == html.TextToken:
+			token := tokenizer.Token()
+			plaintext.WriteString(token.Data)
+		}
 	}
 }

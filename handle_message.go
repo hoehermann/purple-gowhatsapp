@@ -15,6 +15,7 @@ import (
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
+	"golang.org/x/net/html"
 )
 
 func GetAnyPollCreationMessage(message *waE2E.Message) *waE2E.PollCreationMessage {
@@ -234,6 +235,8 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 		if isEdit {
 			text = "[EDIT] " + text
 		}
+		// WhatsApp is a plain-text protocol (allowing < and >), but Pidgin expects HTML (demanding br and swallowing things which are looking like tags)
+		text := strings.ReplaceAll(html.EscapeString(text), "\n", "<br>")
 		// note: info.PushName always denotes the sender (not the chat)
 		purple_display_text_message(handler.account, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, false, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text, &info.ID)
 	}
