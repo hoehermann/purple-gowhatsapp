@@ -163,6 +163,16 @@ func gowhatsapp_go_mark_read_conversation(account *PurpleAccount, who *C.char) {
 	}
 }
 
+//export gowhatsapp_go_request_history
+func gowhatsapp_go_request_history(account *PurpleAccount, who *C.char, count C.int) {
+	handler, ok := handlers[account]
+	if ok {
+		handler.request_history(C.GoString(who), int(count))
+	} else {
+		// no connection, fail silently
+	}
+}
+
 //export gowhatsapp_go_send_presence
 func gowhatsapp_go_send_presence(account *PurpleAccount, presence *C.char) {
 	handler, ok := handlers[account]
@@ -436,6 +446,29 @@ func purple_display_text_message(account *PurpleAccount, remoteJid string, isGro
 	}
 	if id != nil {
 		cmessage.messageId = C.CString(*id)
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
+ * This will display one message fetched from the primary device's history.
+ * It travels the same path as a live text message, but marked as history so
+ * the C part shows it as a delayed replay instead of fresh news.
+ */
+func purple_display_history_message(account *PurpleAccount, remoteJid string, isGroup bool, senderJid string, pushName *string, timestamp time.Time, text string, id string) {
+	cmessage := C.struct_gowhatsapp_message{
+		account:   account,
+		msgtype:   C.char(C.gowhatsapp_message_type_text),
+		subtype:   C.char(C.gowhatsapp_text_subtype_history),
+		remoteJid: C.CString(remoteJid),
+		senderJid: C.CString(senderJid),
+		messageId: C.CString(id),
+		timestamp: C.time_t(timestamp.Unix()),
+		text:      C.CString(text),
+		isGroup:   bool_to_Cchar(isGroup),
+	}
+	if pushName != nil {
+		cmessage.name = C.CString(*pushName)
 	}
 	C.gowhatsapp_process_message_bridge(cmessage)
 }

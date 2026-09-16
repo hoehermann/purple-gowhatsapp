@@ -9,9 +9,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
+	"time"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/appstate"
+	"go.mau.fi/whatsmeow/proto/waHistorySync"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -29,9 +32,11 @@ type Handler struct {
 	client           *whatsmeow.Client
 	deferredReceipts map[types.JID]map[types.JID][]types.MessageID // holds ID and sender of a received message so the receipt can be sent later.
 	cachedMessages   []CachedMessage                               // for looking up reactions and quotes
+	cacheMutex       sync.Mutex                                    // cachedMessages is reached from purple's thread as well, see handle_history.go
 	pictureRequests  chan ProfilePictureRequest
 	httpClient       *http.Client // for executing picture requests
 	blocklist        *types.Blocklist
+	historyRequests  map[string]time.Time // chats a history request was recently sent for, see request_history
 }
 
 /*
@@ -116,7 +121,11 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 				}
 			}
 		}
-		// TODO: handle historical conversations obtained by evt.Data.GetConversations() utilising client.ParseWebMessage
+		if evt.Data.GetSyncType() == waHistorySync.HistorySync_ON_DEMAND {
+			// the phone answering a request_history call, see handle_history.go
+			handler.handle_history_sync(evt.Data)
+		}
+		// TODO: handle the initial historical conversations (INITIAL_BOOTSTRAP, RECENT) the same way
 	case *events.AppState:
 		log.Debugf("App state event: %+v / %+v", evt.Index, evt.SyncActionValue)
 	case *events.LoggedOut:

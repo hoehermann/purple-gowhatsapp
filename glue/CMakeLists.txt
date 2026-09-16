@@ -17,6 +17,7 @@ add_library(${TARGET_NAME} SHARED
     "presence.c"
     "options.c"
     "receipt.c"
+    "history.c"
     "pixbuf.c"
     "pixbuf.h"
     "commands.c"

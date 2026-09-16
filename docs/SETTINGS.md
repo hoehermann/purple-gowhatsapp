@@ -23,6 +23,13 @@
     * `on-answer`: as soon as the user sends an answer (default)
     * `never`: never
   
+* `fetch-history-on-open` int  
+  Asks the primary device for this many messages preceding the newest one known of a conversation, when the user opens it (default: 0, off). A request size of 50 works well.
+  
+  The phone answers asynchronously, only while WhatsApp is running on it, and it hands out a given stretch of history once: asking again for what has already been delivered is answered with nothing. There is no error in either case, so the plug-in logs what each request and answer contained. Note also that a device announces whether it can receive history on demand while it is being linked, so an account linked by an earlier version of this plug-in has to be linked again before the phone answers at all.
+  
+  Fetched messages are shown as delayed messages carrying their message ids. Conversations the message cache knows are asked about from the newest cached message; for the others the request names no message and asks for what came before now, which the phone may or may not answer. Works best with a `message-cache-size` above zero.
+  
 * `message-cache-size` int  
   Stores a number (default: 0) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions or quoting the message while replying to a specific message. See the [notes](./NOTES.md) for details on how to use the reply feature.  
   Note: Cached messages are persisted to the purple home directory as `username.json`.

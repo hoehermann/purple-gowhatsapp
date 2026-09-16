@@ -12,12 +12,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/proto/waCompanionReg"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
@@ -86,12 +86,17 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 	// set our name (displayed in "linked devices")
 	store.DeviceProps.Os = proto.String(purple_get_device_name(account))
 
-	// limit fetching history since we cannot even parse it
-	store.DeviceProps.HistorySyncConfig = &waCompanionReg.DeviceProps_HistorySyncConfig{
-		FullSyncDaysLimit:   proto.Uint32(1),
-		FullSyncSizeMbLimit: proto.Uint32(1),
-		StorageQuotaMb:      proto.Uint32(1),
-	}
+	/* Limit the history the phone pushes when the device is linked: this plug-in
+	 * shows what arrives from then on, and a large bootstrap payload would only
+	 * be downloaded to be thrown away. The remaining properties whatsmeow fills
+	 * in are left alone; replacing the whole configuration used to drop them,
+	 * including the readiness for on-demand history, and these properties are
+	 * announced exactly once, while linking, so a device that never claimed it
+	 * can take on-demand history will not be sent any. See handle_history.go. */
+	store.DeviceProps.HistorySyncConfig.FullSyncDaysLimit = proto.Uint32(1)
+	store.DeviceProps.HistorySyncConfig.FullSyncSizeMbLimit = proto.Uint32(1)
+	store.DeviceProps.HistorySyncConfig.StorageQuotaMb = proto.Uint32(1)
+	store.DeviceProps.HistorySyncConfig.OnDemandReady = proto.Bool(true)
 
 	// find device (and session) information in database
 	// expects user-supplied credentials to be in the form "deviceJid|registrationId".
@@ -159,6 +164,7 @@ func login(account *PurpleAccount, purple_user_dir string, username string, cred
 		client:           whatsmeow.NewClient(device, PurpleLogger(account, "Client")),
 		deferredReceipts: make(map[types.JID]map[types.JID][]types.MessageID),
 		pictureRequests:  make(chan ProfilePictureRequest, 1000), // I hope that no user has more than 1000 contacts
+		historyRequests:  make(map[string]time.Time),
 	}
 	handlers[account] = &handler
 	handler.LoadCachedMessages(filepath.Join(purple_user_dir, username+".json"))

@@ -73,6 +73,13 @@ gowhatsapp_add_account_options(GList *account_options)
                 );
     account_options = g_list_append(account_options, option);
 
+    option = purple_account_option_int_new(
+                "History to fetch from phone when a conversation opens (0 to disable)",
+                GOWHATSAPP_FETCH_HISTORY_OPTION,
+                0
+                );
+    account_options = g_list_append(account_options, option);
+
     option = purple_account_option_int_new( // MEMCHECK: account_options takes ownership
         "QR code size (pixels)",
         GOWHATSAPP_QRCODE_SIZE_OPTION,
