@@ -1,13 +1,13 @@
 module github.com/hoehermann/purple-gowhatsapp
 
-go 1.27.0
+go 1.27.1
 
 require (
 	github.com/alfg/mp4 v0.0.0-20210728035756-55ea58c08aeb
 	github.com/lib/pq v1.10.4
 	github.com/mdp/qrterminal/v3 v3.0.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-	go.mau.fi/whatsmeow v0.0.0-20260821141805-33cfac511629
+	go.mau.fi/whatsmeow v0.0.0-20260909164725-b25a56d63729
 	google.golang.org/protobuf v1.36.12
 	modernc.org/sqlite v1.34.5
 )
