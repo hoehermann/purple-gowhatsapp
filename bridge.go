@@ -677,5 +677,15 @@ func purple_get_device_name(account *PurpleAccount) string {
 	return purple_get_string(account, C.GOWHATSAPP_DEVICE_NAME_OPTION, c_device_name)
 }
 
+func purple_imgstore_find_by_id(image_id int) []byte {
+	image := C.purple_imgstore_find_by_id(C.int(image_id))
+	if image != nil {
+		ptr := C.purple_imgstore_get_data(image)
+		size := C.purple_imgstore_get_size(image)
+		return unsafe.Slice((*byte)(unsafe.Pointer(ptr)), size)
+	}
+	return make([]byte, 0)
+}
+
 func main() {
 }

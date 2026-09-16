@@ -30,14 +30,14 @@ func (handler *Handler) send_file(who string, filename string) string {
 	if err != nil {
 		return fmt.Sprintf("Failed to open %s: %v", filename, err)
 	}
-	err = handler.send_file_bytes(recipient, isGroup, data, filename)
+	_, err = handler.send_file_bytes(recipient, isGroup, data, filename)
 	if err != nil {
 		return err.Error()
 	}
 	return ""
 }
 
-func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data []byte, filename string) error {
+func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data []byte, filename string) (*whatsmeow.SendResponse, error) {
 	var err error = nil
 	var msg *waE2E.Message = nil
 	mimetype := http.DetectContentType(data)
@@ -74,14 +74,14 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 		msg, err = handler.send_file_document(data, mimetype, basename)
 	}
 	if err != nil {
-		return fmt.Errorf("failed to upload file: %v", err)
+		return nil, fmt.Errorf("failed to upload file: %v", err)
 	}
 	send_response, err := handler.client.SendMessage(context.Background(), recipient, msg)
 	if err != nil {
-		return fmt.Errorf("error sending file: %v", err)
+		return nil, fmt.Errorf("error sending file: %v", err)
 	}
 	handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
-	return nil
+	return &send_response, nil
 }
 
 func (handler *Handler) send_file_image(data []byte, mimetype string) (*waE2E.Message, error) {

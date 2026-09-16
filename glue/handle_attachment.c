@@ -32,7 +32,7 @@ static void gowhatsapp_display_image_inline(gowhatsapp_message_t *gwamsg, const 
             int img_id = purple_imgstore_add_with_id(data, len, NULL); // MEMCHECK: released by purple_imgstore_unref_by_id (see below)
             if (img_id > 0) {
                 gchar * text = g_strdup_printf("<img id=\"%u\"/>", img_id); // MEMCHECK: released here
-                gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, NULL, PURPLE_MESSAGE_IMAGES, gwamsg->messageId, FALSE);
+                gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, NULL, PURPLE_MESSAGE_IMAGES, gwamsg->messageId);
                 g_free(text);
                 purple_imgstore_unref_by_id(img_id);
             }
@@ -42,7 +42,7 @@ static void gowhatsapp_display_image_inline(gowhatsapp_message_t *gwamsg, const 
 
 static void gowhatsapp_display_caption(gowhatsapp_message_t *gwamsg) {
     if (gwamsg->text && gwamsg->text[0]) {
-        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, gwamsg->text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, 0, gwamsg->messageId, TRUE);
+        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, gwamsg->text, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, 0, gwamsg->messageId);
     }
 }
 
@@ -237,7 +237,7 @@ void download_to_templated_destination(gowhatsapp_message_t *gwamsg, const char 
     char *error = gowhatsapp_go_download_attachment(gwamsg->account, local_path, gwamsg->download_handle);
     gowhatsapp_go_delete_handle(gwamsg->download_handle);
     if (error && error[0]) {
-        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId, TRUE);
+        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId);
     } else {
         #ifndef WIN32
             if (purple_account_get_bool(gwamsg->account, GOWHATSAPP_ATTACHMENT_SYMLINK_OPTION, TRUE)) {
@@ -249,7 +249,7 @@ void download_to_templated_destination(gowhatsapp_message_t *gwamsg, const char 
         if (url_template && url_template[0]) {
             url = gowhatsapp_attachment_fill_template(url_template, gwamsg->timestamp, gwamsg->hash_hex, gwamsg->filename, gwamsg->extension, gwamsg->remoteJid, gwamsg->senderJid, chat_alias, buddy_alias, gwamsg->messageId, flags);
         }
-        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, url, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, 0, gwamsg->messageId, TRUE);
+        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, url, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, 0, gwamsg->messageId);
         g_free(url);
         gowhatsapp_display_image_inline(gwamsg, local_path);
         gowhatsapp_display_caption(gwamsg);
@@ -263,7 +263,7 @@ static gboolean download_to_temporary_directory(gowhatsapp_message_t *gwamsg) {
     char *error = gowhatsapp_go_download_attachment(gwamsg->account, local_path_tmp, gwamsg->download_handle);
     gowhatsapp_go_delete_handle(gwamsg->download_handle);
     if (error && error[0]) {
-        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId, TRUE);
+        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId);
     } else {
         gowhatsapp_display_image_inline(gwamsg, local_path_tmp);
         gowhatsapp_display_caption(gwamsg);

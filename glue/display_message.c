@@ -11,8 +11,7 @@ void gowhatsapp_display_text_message(
     const gboolean isOutgoing,
     const gchar * name,
     PurpleMessageFlags flags,
-    const gchar * messageId,
-    const gboolean escape
+    const gchar * messageId
 ) {
     g_return_if_fail(account != NULL);
     
@@ -45,26 +44,14 @@ void gowhatsapp_display_text_message(
         flags |= PURPLE_MESSAGE_RECV;
     }
 
-    // WhatsApp is a plain-text protocol, but Pidgin expects HTML
-    gchar * escaped_text = NULL;
-    if (escape) { // sometimes, text is already escaped
-        gchar * html = purple_markup_escape_text(text, -1); // converts to HTML except the line breakes
-        escaped_text = purple_strdup_withhtml(html); // converts newline characters to HTML br tags
-        g_free(html);
-    } else {
-        escaped_text = g_strdup(text); // MEMCHECK: released here (see below)
-    }
-
     // add message ID to visible text
     // for https://github.com/Juliaria08 in https://github.com/hoehermann/purple-gowhatsapp/issues/206
     gchar * text_with_id = NULL;
     if (purple_account_get_bool(account, GOWHATSAPP_DISPLAY_MESSAGE_ID_OPTION, FALSE) && messageId != NULL) {
-        text_with_id = g_strdup_printf("%s <span lang=\"id\">%s</span>", escaped_text, messageId); // MEMCHECK: released here (see below)
+        text_with_id = g_strdup_printf("%s <span lang=\"id\">%s</span>", text, messageId); // MEMCHECK: released here (see below)
     } else {
-        text_with_id = g_strdup(escaped_text); // MEMCHECK: released here (see below)
+        text_with_id = g_strdup(text); // MEMCHECK: released here (see below)
     }
-
-    g_free(escaped_text);
     
     if (isGroup) {
         gowhatsapp_enter_group_chat(connection, remoteJid, NULL);
