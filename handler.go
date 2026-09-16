@@ -63,10 +63,10 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 		handler.handle_connected()
 	case *events.PushName:
 		log.Infof("%#v", evt)
-		// other device changed our friendly name
-		// setting is regarded by whatsmeow internally
-		// no need to forward to purple
+		// someone changed their name (might even be our own name changed via other device)
 		// TODO: find out how this is related to the PushNameSetting event
+		jid := handler.lidToPn(evt.JID, "handling message chat")
+		purple_update_name(handler.account, jid.ToNonAD().String(), evt.NewPushName)
 	case *events.Connected:
 		// connected – start downloading profile pictures now.
 		go handler.profile_picture_downloader()
