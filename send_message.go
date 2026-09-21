@@ -84,7 +84,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			return false
 		}
 		data := purple_imgstore_find_by_id(image_ids[0])
-		send_response, err := handler.send_file_bytes(recipient, isGroup, data, "image")
+		send_response, err := handler.send_file_bytes(recipient, isGroup, data, "image", false)
 		if err != nil {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, err.Error())
 			return false
@@ -245,57 +245,13 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		return false
 	}
 	data := b.Bytes()
-	var msg *waE2E.Message = nil
-	mimetype := http.DetectContentType(data) // do not trust the server. he is stupid.
-	// TODO: redundant implementation in send_file_bytes. merge.
-	switch mimetype {
-	case "image/jpeg", "image/png":
-		// send jpeg or png as ImageMessage
-		// no checks here
-		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Compatible file detected. Forwarding as image message…")
-		msg, err = handler.send_file_image(data, mimetype)
-	case "application/ogg", "audio/ogg":
-		// send ogg file as AudioMessage
-		opusfile_info := C.opusfile_get_info(C.CBytes(data), C.size_t(len(data)))
-		seconds := int64(opusfile_info.length_seconds)
-		if seconds >= 0 {
-			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Compatible file detected. Forwarding as audio message…")
-			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus", uint32(seconds), opusfile_info.waveform)
-		} else {
-			handler.log.Infof("An ogg audio file was provided, but it was invalid.", err)
-			return false
-		}
-	case "video/mp4":
-		// send mp4 file as VideoMessage
-		err = check_mp4(data)
-		if err == nil {
-			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Compatible file detected. Forwarding as video message…")
-			msg, err = handler.send_file_video(data, "video/mp4")
-		} else {
-			handler.log.Infof("File incompatible: %s", err)
-			return false
-		}
-	default:
-		// send any other file type as DocumentMessage
-		if handler.check_url_trust(link) {
-			filename := filepath.Base(resp.Request.URL.Path)
-			msg, err = handler.send_file_document(data, mimetype, filename)
-		} else {
-			return false
-		}
-	}
+	filename := filepath.Base(resp.Request.URL.Path)
+	_, err = handler.send_file_bytes(recipient, isGroup, data, filename, handler.check_url_trust(link))
 	if err != nil {
 		handler.log.Infof("Error while sending file: %s", err)
 		return false
-	}
-	send_response, err := handler.client.SendMessage(context.Background(), recipient, msg)
-	if err != nil {
-		handler.log.Infof("Error while sending media message: %v", err)
-		return false
 	} else {
-		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s has been forwarded.", link)) // TODO: do not omit message ID in this particular case
-		msg.Conversation = &link                                                                                                           // hack to preserve link in cache
-		handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
+		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s has been forwarded.", link)) // TODO: specify whether image, video, audio or document message has been chosen
 		return true
 	}
 }

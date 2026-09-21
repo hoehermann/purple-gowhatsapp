@@ -30,19 +30,24 @@ func (handler *Handler) send_file(who string, filename string) string {
 	if err != nil {
 		return fmt.Sprintf("Failed to open %s: %v", filename, err)
 	}
-	_, err = handler.send_file_bytes(recipient, isGroup, data, filename)
+	_, err = handler.send_file_bytes(recipient, isGroup, data, filepath.Base(filename), true)
 	if err != nil {
 		return err.Error()
 	}
 	return ""
 }
 
-func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data []byte, filename string) (*whatsmeow.SendResponse, error) {
+/*
+ * Sends binary data as message.
+ * Type of message (image/voice/video/generic document) is decided by detecting magic bytes.
+ * The filename shall only be the basename, not the full path.
+ */
+// TODO: The allowDocument parameter feels whacky. Do that check in the caller.
+func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data []byte, filename string, allowDocument bool) (*whatsmeow.SendResponse, error) {
 	var err error = nil
 	var msg *waE2E.Message = nil
-	mimetype := http.DetectContentType(data)
+	mimetype := http.DetectContentType(data) // Do not trust the server-supplied mime-type. The server may be misconfigured or mistaken.
 	handler.log.Infof("Attachment mime type is %s.", mimetype)
-	// TODO: redundant implementation in send_link_message. merge.
 	switch mimetype {
 	case "image/jpeg", "image/png":
 		msg, err = handler.send_file_image(data, mimetype)
@@ -53,7 +58,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 		if seconds >= 0 {
 			msg, err = handler.send_file_audio(data, "audio/ogg; codecs=opus", uint32(seconds), opusfile_info.waveform)
 		} else {
-			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("An ogg audio file was provided, but it was invalid due to %v. Sending file as document...", err))
+			handler.log.Infof("An ogg audio file was provided, but it was invalid due to %v.", err)
 			err = nil // reset error for retrying to send as document
 		}
 	case "video/mp4":
@@ -61,17 +66,19 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 		if err == nil {
 			msg, err = handler.send_file_video(data, "video/mp4")
 		} else {
-			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s Sending file as document...", err))
+			handler.log.Infof("An mp4 video file was provided, but it was invalid due to %v.", err)
 			err = nil // reset error for retrying to send as document
 		}
 	default:
-		// generic other file. nothing special to do here.
+		// generic other file.
+		if !allowDocument {
+			return nil, fmt.Errorf("sending file as document message has been suppressed")
+		}
 	}
 	if msg == nil && err == nil {
-		basename := filepath.Base(filename)
-		basename = strings.TrimSuffix(basename, filepath.Ext(basename))
-		// WhatsApp server seems to add extention, remove it here.
-		msg, err = handler.send_file_document(data, mimetype, basename)
+		// WhatsApp server seems to add extention, so we must remove it.
+		filename = strings.TrimSuffix(filename, filepath.Ext(filename))
+		msg, err = handler.send_file_document(data, mimetype, filename)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %v", err)
@@ -80,6 +87,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	if err != nil {
 		return nil, fmt.Errorf("error sending file: %v", err)
 	}
+	msg.Conversation = &filename // this ends up in the cache, so the message may be looked up by the name of the file
 	handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
 	return &send_response, nil
 }
