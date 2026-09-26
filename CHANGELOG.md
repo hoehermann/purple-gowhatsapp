@@ -1,3 +1,29 @@
+# 1.26.0
+
+* Update: Depend on whatsmeow v0.0.0-20260909164725-b25a56d63729.
+* Feature: Changes to a contact's name are now considered.
+* Change: On MacOS builds, images of all types are being inlined unconditionally (was: account setting).
+
+# 1.25.0
+
+* Update: Depend on whatsmeow v0.0.0-20260730092514-662ad1dc6900.
+* Feature: Typing notifications are being sent.
+* Feature: Newsletter are ignored by default, configurable via account setting `ignore-newsletters`.
+* Feature: Images of all types can be inlined vie account setting `inline-all-images`.
+* Feature: Creation of symbolic links in the auto-downloader can be disabled via the account setting `attachment-symlink`.
+* Change: A PNG image is now sent as an image message (was: document message).
+* Change: The destination dialogue for an incoming document message suggests the sender-supplied file-name (was: use hash).
+
+# 1.24.0
+
+* Update: Depend on whatsmeow v0.0.0-20260630180629-b572e5bcb92b.
+
+# 1.23.0
+
+* Update: Depend on whatsmeow v0.0.0-20260416104156-3ff20cd3462a.
+* Feature: Can be built on MacOS.
+* Feature: Mentions are now resolved.
+
 # 1.22.0
 
 * Update: Depends on whatsmeow v0.0.0-20260327181659-02ec817e7cf4.
