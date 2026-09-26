@@ -120,6 +120,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, send_response.Timestamp, message, &msgID)
 		}
 		handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
+		handler.receipt_sent(recipient, isGroup, send_response)
 		return true
 	}
 }
@@ -270,6 +271,7 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("%s has been forwarded.", link)) // TODO: do not omit message ID in this particular case
 		msg.Conversation = &link                                                                                                           // hack to preserve link in cache
 		handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
+		handler.receipt_sent(recipient, isGroup, send_response)
 		return true
 	}
 }

@@ -441,6 +441,25 @@ func purple_display_text_message(account *PurpleAccount, remoteJid string, isGro
 }
 
 /*
+ * This hands a receipt to the C part: one station of one message's life
+ * (sent, delivered, read, read_self – see gowhatsapp_receipt_type).
+ * One call per message ID, since a single receipt event may confirm many messages.
+ */
+func purple_receipt(account *PurpleAccount, chat string, sender string, isGroup bool, timestamp time.Time, receiptType C.char, messageId string) {
+	cmessage := C.struct_gowhatsapp_message{
+		account:   account,
+		msgtype:   C.char(C.gowhatsapp_message_type_receipt),
+		subtype:   receiptType,
+		remoteJid: C.CString(chat),
+		senderJid: C.CString(sender),
+		messageId: C.CString(messageId),
+		timestamp: C.time_t(timestamp.Unix()),
+		isGroup:   bool_to_Cchar(isGroup),
+	}
+	C.gowhatsapp_process_message_bridge(cmessage)
+}
+
+/*
  * This will display a system message.
  * For soft errors regarding a specific conversation.
  * Single participants and group chats.
