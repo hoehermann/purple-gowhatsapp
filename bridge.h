@@ -26,6 +26,7 @@
     MESSAGE_TYPE(attachment) \
     MESSAGE_TYPE(profile_picture) \
     MESSAGE_TYPE(group) \
+    MESSAGE_TYPE(reaction) \
     MESSAGE_TYPE(max) \
 
 #define GENERATE_MESSAGE_ENUM(ENUM) gowhatsapp_message_type_##ENUM,
