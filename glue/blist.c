@@ -33,6 +33,11 @@ PurpleBuddy * gowhatsapp_ensure_buddy_in_blist(PurpleAccount *account, const cha
         return NULL;
     }
 
+    if (purple_str_has_suffix(identifier, "@g.us")) {
+        // groups are represented by chats. a buddy would offer a direct conversation with the group JID, which cannot work.
+        return NULL;
+    }
+
     PurpleBuddy *buddy = purple_blist_find_buddy(account, identifier);
 
     if (!buddy) {
