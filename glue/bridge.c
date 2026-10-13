@@ -64,6 +64,9 @@ void gowhatsapp_free_message(gowhatsapp_message_t *gwamsg) {
     g_free(gwamsg->extension);
     g_free(gwamsg->mimetype);
     g_free(gwamsg->messageId);
+    g_free(gwamsg->pairing_code);
+    g_free(gwamsg->pairing_qrdata);
+    g_free(gwamsg->pairing_qrterminal);
     g_strfreev(gwamsg->participants);
     g_free(gwamsg);
 }
