@@ -52,7 +52,9 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	case "image/jpeg", "image/png":
 		msg, err = handler.send_file_image(data, mimetype)
 	case "application/ogg", "audio/ogg":
-		opusfile_info := C.opusfile_get_info(C.CBytes(data), C.size_t(len(data)))
+		cdata := C.CBytes(data)
+		opusfile_info := C.opusfile_get_info(cdata, C.size_t(len(data)))
+		C.free(cdata)
 		seconds := int64(opusfile_info.length_seconds)
 		handler.log.Infof("Opus length is %d seconds.", seconds)
 		if seconds >= 0 {
