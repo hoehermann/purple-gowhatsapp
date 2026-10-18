@@ -59,6 +59,7 @@ void gowhatsapp_free_message(gowhatsapp_message_t *gwamsg) {
     g_free(gwamsg->text);
     g_free(gwamsg->name);
     // g_free(gwamsg->blob); this is cleared after handling the qrcode PNG or profile picture
+    // TODO: do free the blob here. in the situations where we want to keep it, we can transfer the pointer and then set it to NULL
     g_free(gwamsg->hash_hex);
     g_free(gwamsg->filename);
     g_free(gwamsg->extension);
