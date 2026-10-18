@@ -263,19 +263,6 @@ func gowhatsapp_go_get_contacts(account *PurpleAccount, flush C.int) {
 				handler.log.Warnf("Could not get contacts from store: %#v", err)
 			} else {
 				for jid, info := range contacts {
-					blocked := false
-					if handler.blocklist != nil {
-						// TODO find out whether locally checking the blocklist is actually necessary or if WhatsApp servers do the filtering for us
-						for _, blockedJID := range handler.blocklist.JIDs {
-							if blockedJID.ToNonAD() == jid {
-								blocked = true
-							}
-						}
-					}
-					if blocked {
-						handler.log.Infof("Ignoring contact %s since they are on the blocklist.", jid.ToNonAD().String())
-						continue
-					}
 					handler.log.Infof("Contact: %s %#v", jid.ToNonAD().String(), info)
 					cmessage := C.struct_gowhatsapp_message{
 						account:   account,

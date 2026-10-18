@@ -64,14 +64,6 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 			text = "[STATUS] "
 		}
 	}
-	if handler.blocklist != nil {
-		// TODO find out whether locally checking the blocklist is actually necessary or if WhatsApp servers do the filtering for us
-		for _, blockedJID := range handler.blocklist.JIDs {
-			if blockedJID.ToNonAD() == info.MessageSource.Sender.ToNonAD() {
-				handler.log.Infof("Ignoring message from %s since they are on the blocklist.", info.MessageSource.Sender.ToNonAD().String())
-			}
-		}
-	}
 	info.MessageSource.Chat = handler.lidToPn(info.MessageSource.Chat, "handling message chat")
 	info.MessageSource.Sender = handler.lidToPn(info.MessageSource.Sender, "handling message sender")
 	isEdit := false
