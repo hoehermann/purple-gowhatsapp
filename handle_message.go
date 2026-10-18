@@ -36,13 +36,6 @@ func GetAnyPollCreationMessage(message *waE2E.Message) *waE2E.PollCreationMessag
 
 func (handler *Handler) handle_message(message *waE2E.Message, info types.MessageInfo, evt *events.Message) {
 	//handler.log.Infof("message: %#v", message)
-	if message.SenderKeyDistributionMessage != nil {
-		// Apparently, a SenderKeyDistributionMessage can share the a message ID with a conversation message which is to arrive later
-		// I do not need this message type in the front-end, so I rather drop it
-		// This should be safe (as in "will not inadvertedly drop message with actual payload") since all …Messsage fields seem to be mutually exclusive
-		handler.log.Infof("Ignoring SenderKeyDistributionMessage.")
-		return
-	}
 	if info.MessageSource.Chat.Server == types.NewsletterServer {
 		// Channel (newsletter) posts would show up as chats with a raw JID.
 		if purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_NEWSLETTERS_OPTION, true) {
@@ -66,6 +59,22 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 	}
 	info.MessageSource.Chat = handler.lidToPn(info.MessageSource.Chat, "handling message chat")
 	info.MessageSource.Sender = handler.lidToPn(info.MessageSource.Sender, "handling message sender")
+	if message.SecretEncryptedMessage != nil {
+		decrypted_message, err := handler.client.DecryptSecretEncryptedMessage(context.TODO(), evt)
+		if err != nil {
+			purple_display_system_message(handler.account, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, "Explicitly decrypting secret message failed.")
+		} else {
+			//handler.log.Infof("decrypted_message: %#v", message)
+			message = decrypted_message
+		}
+	}
+	if message.SenderKeyDistributionMessage != nil {
+		// Apparently, a SenderKeyDistributionMessage can share the a message ID with a conversation message which is to arrive later
+		// I do not need this message type in the front-end, so I rather drop it
+		// This should be safe (as in "will not inadvertedly drop message with actual payload") since all …Messsage fields seem to be mutually exclusive
+		handler.log.Infof("Ignoring SenderKeyDistributionMessage.")
+		return
+	}
 	isEdit := false
 	{
 		if pm := message.GetProtocolMessage(); pm != nil {
