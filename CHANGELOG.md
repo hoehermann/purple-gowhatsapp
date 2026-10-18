@@ -1,3 +1,11 @@
+# 1.27.0
+
+* Update: Depend on whatsmeow v0.0.0-20261017175727-b2b1e71d45e2.
+* Update: Updated `purple-cmake`.
+* Feature: Secret encrypted messages are now decrypted.
+* Feature: Experimental support for sending a single in-lined image.
+* Bugfix: Reduce some memory leaks.
+
 # 1.26.0
 
 * Update: Depend on whatsmeow v0.0.0-20260909164725-b25a56d63729.
