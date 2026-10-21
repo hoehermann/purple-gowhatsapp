@@ -44,15 +44,15 @@ set(LIBRARY_DIRS ${PURPLE_LIBRARY_DIRS})
 set(LIBRARIES ${PURPLE_LIBRARIES} ${PIXBUF_LIBRARIES} ${OPUSFILE_LINK_LIBRARIES})
 
 # compiler flags
-set(CGO_CFLAGS "")
+string(STRIP "${CMAKE_C_FLAGS_INIT}" CGO_CFLAGS)
 foreach(INCLUDE_DIR ${INCLUDE_DIRS})
   list(APPEND CGO_CFLAGS "-I${INCLUDE_DIR}")
 endforeach()
 list(APPEND CGO_CFLAGS "-DPLUGIN_VERSION=${VERSION}")
-#message(STATUS "CGO_CFLAGS: ${CGO_CFLAGS}")
+list(APPEND CGO_CFLAGS ${CFLAGS})
 
 # linker flags
-set(CGO_LDFLAGS "")
+string(STRIP "${CMAKE_SHARED_LINKER_FLAGS_INIT}" CGO_LDFLAGS)
 foreach(LIBRARY_DIR ${LIBRARY_DIRS})
   list(APPEND CGO_LDFLAGS "-L${LIBRARY_DIR}")
 endforeach()
@@ -69,7 +69,6 @@ if (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_C_COMPILER_VERSION 
   # TODO: find out if clang need this
   list(APPEND CGO_LDFLAGS "-static-libgcc")
 endif()
-#message(STATUS "CGO_LDFLAGS: ${CGO_LDFLAGS}")
 
 # build cgo library
 # partly taken from https://github.com/mutse/go-cmake
