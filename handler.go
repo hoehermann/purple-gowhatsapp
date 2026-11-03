@@ -85,9 +85,10 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	case *events.Message:
 		handler.handle_message(evt.Message, evt.Info, evt)
 	case *events.Receipt:
-		if evt.Type == types.ReceiptTypeRead || evt.Type == types.ReceiptTypeReadSelf {
+		switch evt.Type {
+		case types.ReceiptTypeRead, types.ReceiptTypeReadSelf:
 			log.Infof("%v was read by %s at %s", evt.MessageIDs, evt.SourceString(), evt.Timestamp)
-		} else if evt.Type == types.ReceiptTypeDelivered {
+		case types.ReceiptTypeDelivered:
 			log.Infof("%s was delivered to %s at %s", evt.MessageIDs[0], evt.SourceString(), evt.Timestamp)
 		}
 	case *events.Presence:
