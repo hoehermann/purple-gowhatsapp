@@ -158,7 +158,14 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	case *events.UndecryptableMessage:
 		info := evt.Info
 		source := info.MessageSource
-		text := fmt.Sprintf("sent an undecryptable %s message. Check the message on your main device.", evt.UnavailableType)
+		unavailable_type := ""
+		if evt.UnavailableType != "" {
+			unavailable_type = fmt.Sprintf(" %s", evt.UnavailableType)
+		}
+		text := fmt.Sprintf("sent an undecryptable%s message. The message might arrive here later.", unavailable_type)
+		if evt.UnavailableType == "sender_drop" {
+			text = "sent a message which was not available when requested. Wake up your main device, then the message will be displayed here. Probably."
+		}
 		purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, false, source.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text, &info.ID)
 	default:
 		log.Warnf("Event type not handled: %#v", rawEvt)
