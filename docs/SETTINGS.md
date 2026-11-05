@@ -24,7 +24,7 @@
     * `never`: never
   
 * `message-cache-size` int  
-  Stores a number (default: 0) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions or quoting the message while replying to a specific message. See the [notes](./NOTES.md) for details on how to use the reply feature.  
+  Stores a number (default: 0) of messages in local volatile memory. Cached messages are used to provide context when displaying reactions or deleted messages or quoting the message while replying to a specific message. See the [notes](./NOTES.md) for details on how to use the reply feature.  
   Note: Cached messages are persisted to the purple home directory as `username.json`.
 
 * `discard-old-messages` bool  

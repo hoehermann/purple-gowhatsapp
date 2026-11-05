@@ -34,6 +34,7 @@ Other improvements:
 * Messages which only consist of a single URL may be sent as media messages (disabled by default).
 * Account can be logged out via purple action.
 * Reactions are displayed as messages.
+* Messages deleted for everyone are announced as messages.
 * There is an "away" state.
   * For compatibility with the auto-responder plug-in.
   * Other devices (i.e. the main phone) display notifications while plug-in connection is "away".
