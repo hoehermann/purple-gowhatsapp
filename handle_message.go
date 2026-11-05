@@ -34,6 +34,61 @@ func GetAnyPollCreationMessage(message *waE2E.Message) *waE2E.PollCreationMessag
 	return nil
 }
 
+/*
+ * Describes a shared location as text with a link to a map.
+ */
+func format_location(lm *waE2E.LocationMessage) string {
+	text := "[LOCATION]"
+	if name := lm.GetName(); name != "" {
+		text += " " + name
+	}
+	if address := lm.GetAddress(); address != "" {
+		text += "\n" + address
+	}
+	lat, lon := lm.GetDegreesLatitude(), lm.GetDegreesLongitude()
+	text += fmt.Sprintf("\n%f, %f\nhttps://www.openstreetmap.org/?mlat=%f&mlon=%f", lat, lon, lat, lon)
+	if url := lm.GetURL(); url != "" {
+		text += "\n" + url
+	}
+	if comment := lm.GetComment(); comment != "" {
+		text += "\n" + comment
+	}
+	return text
+}
+
+/*
+ * Describes a shared contact card as its name and phone numbers.
+ * The vCard is expected to have one property per line, as WhatsApp sends it.
+ */
+func format_contact(display_name string, vcard string) string {
+	name := display_name
+	var phones []string
+	for _, line := range strings.Split(strings.ReplaceAll(vcard, "\r\n", "\n"), "\n") {
+		key, value, found := strings.Cut(line, ":")
+		if !found {
+			continue
+		}
+		key = strings.ToUpper(strings.SplitN(key, ";", 2)[0])
+		if dot := strings.LastIndexByte(key, '.'); dot >= 0 {
+			key = key[dot+1:] // a grouped property such as item1.TEL
+		}
+		value = strings.TrimSpace(value)
+		if key == "FN" && name == "" {
+			name = value
+		} else if key == "TEL" && value != "" {
+			phones = append(phones, value)
+		}
+	}
+	if name == "" {
+		name = "unnamed contact"
+	}
+	text := "[CONTACT] " + name
+	for _, phone := range phones {
+		text += "\n" + phone
+	}
+	return text
+}
+
 func (handler *Handler) handle_message(message *waE2E.Message, info types.MessageInfo, evt *events.Message) {
 	//handler.log.Infof("message: %#v", message)
 	if info.MessageSource.Chat.Server == types.NewsletterServer {
@@ -184,6 +239,21 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 			default:
 				text += fmt.Sprintf("One may chose up to %d answers.", selectable_options)
 			}
+		}
+	}
+	{
+		if lm := message.GetLocationMessage(); lm != nil {
+			text = format_location(lm)
+		}
+		if cm := message.GetContactMessage(); cm != nil {
+			text = format_contact(cm.GetDisplayName(), cm.GetVcard())
+		}
+		if cam := message.GetContactsArrayMessage(); cam != nil {
+			contacts := make([]string, 0, len(cam.GetContacts()))
+			for _, cm := range cam.GetContacts() {
+				contacts = append(contacts, format_contact(cm.GetDisplayName(), cm.GetVcard()))
+			}
+			text = strings.Join(contacts, "\n")
 		}
 	}
 	{
