@@ -21,6 +21,7 @@ Standard features:
 * Sending receipts (configurable).
 * Displaying reactions.
 * Displaying polls (but no participating in them).
+* Displaying shared locations and contacts as text.
 * Support for socks5 proxies.
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
 * Under the hood: Reasonable callback mechanism thanks to [Eion Robb](https://github.com/EionRobb).
