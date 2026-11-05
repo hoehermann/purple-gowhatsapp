@@ -19,7 +19,7 @@ void gowhatsapp_display_text_message(
     
     if (flags & PURPLE_MESSAGE_SYSTEM) {
         if (senderJid == NULL) {
-            senderJid = g_strdup("system"); // g_strdup needed since senderJid is freed by caller
+            senderJid = "system";
         }
         gboolean bridge = purple_account_get_bool(account, GOWHATSAPP_BRIDGE_COMPATIBILITY_OPTION, FALSE);
         if (bridge) {
