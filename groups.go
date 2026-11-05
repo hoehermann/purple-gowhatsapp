@@ -34,3 +34,20 @@ func (handler *Handler) query_group_participants_retry(group_jid types.JID, seco
 	}
 	return []types.GroupParticipant{}
 }
+
+/*
+ * Channel (newsletter) messages carry no name of the channel.
+ * Fetch the names of all subscribed channels so their chats do not show the raw JID.
+ */
+func (handler *Handler) fetch_channel_names() {
+	channels, err := handler.client.GetSubscribedNewsletters(context.TODO())
+	if err != nil {
+		handler.log.Warnf("Failed to fetch subscribed channels: %v", err)
+		return
+	}
+	for _, channel := range channels {
+		if channel != nil && channel.ThreadMeta.Name.Text != "" {
+			purple_update_name(handler.account, channel.ID.String(), channel.ThreadMeta.Name.Text)
+		}
+	}
+}

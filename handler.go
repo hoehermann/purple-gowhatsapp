@@ -68,6 +68,9 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	case *events.Connected:
 		// connected – start downloading profile pictures now.
 		go handler.profile_picture_downloader()
+		if !purple_get_bool(handler.account, C.GOWHATSAPP_IGNORE_NEWSLETTERS_OPTION, true) {
+			go handler.fetch_channel_names()
+		}
 		handler.handle_connected()
 	case *events.Disconnected:
 		// TODO: Find out if it would be more sensible to handle this as a non-error disconnect.
