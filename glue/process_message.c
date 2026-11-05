@@ -48,7 +48,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
         return;
     }
     purple_debug_info(
-        GOWHATSAPP_NAME, "recieved %s (subtype %d) for account %p remote %s (isGroup %d) sender %s (alias %s, isOutgoing %d) sent %ld: %s\n",
+        GOWHATSAPP_NAME, "recieved %s (subtype %d) for account %p remote %s (isGroup %d) sender %s (alias %s, isOutgoing %d) sent %" G_GINT64_FORMAT ": %s\n",
         gowhatsapp_message_type_string[gwamsg->msgtype],
         gwamsg->subtype,
         gwamsg->account,
@@ -57,7 +57,7 @@ gowhatsapp_process_message(gowhatsapp_message_t *gwamsg)
         gwamsg->senderJid,
         gwamsg->name,
         gwamsg->isOutgoing,
-        gwamsg->timestamp,
+        (gint64)gwamsg->timestamp,
         gwamsg->text
     );
 
