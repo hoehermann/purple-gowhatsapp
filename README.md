@@ -20,7 +20,7 @@ Standard features:
 * Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures ([Markus "nihilus" Gothe](https://github.com/nihilus) for [Peter "theassemblerguy" Bachmaier](https://github.com/theassemblerguy)).
 * Sending receipts (configurable).
 * Displaying reactions.
-* Displaying polls (but no participating in them).
+* Displaying polls, voting in polls.
 * Support for socks5 proxies.
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
 * Under the hood: Reasonable callback mechanism thanks to [Eion Robb](https://github.com/EionRobb).

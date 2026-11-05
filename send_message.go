@@ -62,6 +62,94 @@ func (handler *Handler) prepare_reply(chat types.JID, text string) (bool, *Cache
 }
 
 /*
+ * Examines the text for a request to vote in a poll. Syntax is
+ * ?vote ID [OPTION…]
+ * ID is the poll's message ID or a part of its question.
+ * OPTION are the numbers of the chosen options, as shown with the poll.
+ * Without any option, the vote is removed.
+ * Returns (isVote, poll reference, chosen option numbers, error)
+ */
+func parse_vote_command(text string) (bool, string, []int, error) {
+	parts := strings.Fields(text)
+	if len(parts) == 0 || parts[0] != "?vote" {
+		return false, "", nil, nil
+	}
+	if len(parts) < 2 {
+		return true, "", nil, fmt.Errorf("usage is ?vote ID [OPTION…]")
+	}
+	var choices []int
+	for _, part := range strings.FieldsFunc(strings.Join(parts[2:], " "), func(r rune) bool { return r == ' ' || r == ',' }) {
+		choice, err := strconv.Atoi(part)
+		if err != nil {
+			return true, parts[1], nil, fmt.Errorf("%s is not an option number", part)
+		}
+		choices = append(choices, choice)
+	}
+	return true, parts[1], choices, nil
+}
+
+/*
+ * Votes in a poll from the message cache, replacing any earlier vote.
+ *
+ * Returns true on success.
+ */
+func (handler *Handler) send_poll_vote(recipient types.JID, isGroup bool, poll_reference string, choices []int) bool {
+	report := func(text string) {
+		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, text)
+	}
+	cached_message := handler.lookup_cached_poll(recipient, poll_reference)
+	if cached_message == nil {
+		report("Unable to vote: Poll not found in cache.")
+		return false
+	}
+	pcm := GetAnyPollCreationMessage(&cached_message.Message)
+	options := pcm.GetOptions()
+	option_names := []string{}
+	chosen := make(map[int]bool)
+	for _, choice := range choices {
+		if choice < 1 || choice > len(options) {
+			report(fmt.Sprintf("Unable to vote: The poll has no option %d.", choice))
+			return false
+		}
+		if !chosen[choice] {
+			chosen[choice] = true
+			option_names = append(option_names, options[choice-1].GetOptionName())
+		}
+	}
+	if selectable := pcm.GetSelectableOptionsCount(); selectable > 0 && len(option_names) > int(selectable) {
+		report(fmt.Sprintf("Unable to vote: The poll allows up to %d answers.", selectable))
+		return false
+	}
+	source := cached_message.Source
+	if source.Chat.IsEmpty() {
+		// cached before the message source was stored
+		source = types.MessageSource{
+			Chat:     cached_message.Chat,
+			Sender:   cached_message.Sender,
+			IsFromMe: handler.client.Store.ID != nil && cached_message.Sender.ToNonAD() == handler.client.Store.ID.ToNonAD(),
+			IsGroup:  cached_message.Chat.Server == types.GroupServer,
+		}
+	}
+	poll_info := types.MessageInfo{MessageSource: source, ID: cached_message.ID, Timestamp: cached_message.Timestamp}
+	vote, err := handler.client.BuildPollVote(context.TODO(), &poll_info, option_names)
+	if err != nil {
+		report(fmt.Sprintf("Unable to vote: %v", err))
+		return false
+	}
+	_, err = handler.client.SendMessage(context.TODO(), recipient, vote)
+	if err != nil {
+		report(fmt.Sprintf("Error sending vote: %v", err))
+		return false
+	}
+	if len(option_names) == 0 {
+		report(fmt.Sprintf("Removed your vote in poll „%s“.", pcm.GetName()))
+	} else {
+		report(fmt.Sprintf("Voted in poll „%s“ for „%s“.", pcm.GetName(), strings.Join(option_names, "“, „")))
+	}
+	return true
+}
+
+/*
  * Sends a plain text message to a recipient.
  *
  * Sending may happen asynchronously.
@@ -95,6 +183,14 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, handler.client.Store.ID.ToNonAD().String(), nil, send_response.Timestamp, message, nil)
 		}
 		return true
+	}
+	is_vote, poll_reference, choices, err := parse_vote_command(stripped_message)
+	if is_vote {
+		if err != nil {
+			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("Unable to vote: %v", err))
+			return false
+		}
+		return handler.send_poll_vote(recipient, isGroup, poll_reference, choices)
 	}
 	msg := &waE2E.Message{Conversation: &stripped_message}
 	expiration_days := purple_get_int(handler.account, C.GOWHATSAPP_EXPIRATION_OPTION, 0)
@@ -145,7 +241,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			msgID := send_response.ID
 			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, send_response.Timestamp, message, &msgID)
 		}
-		handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
+		handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, types.MessageSource{Chat: recipient, Sender: send_response.Sender, IsFromMe: true, IsGroup: isGroup}, send_response.Timestamp)
 		return true
 	}
 }

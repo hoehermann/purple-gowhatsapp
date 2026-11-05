@@ -19,6 +19,7 @@ type CachedMessage struct {
 	ID        types.MessageID
 	Chat      types.JID
 	Sender    types.JID
+	Source    types.MessageSource // chat and sender as whatsmeow knows them, needed for BuildPollVote
 	Timestamp time.Time
 	Message   waE2E.Message
 }
@@ -27,7 +28,7 @@ type CachedMessage struct {
  * Add a message to the message cache to it can be looked up later.
  * Useful for replying to a specific message and for displaying relevant information when dealing with reactions.
  */
-func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID, chat types.JID, sender types.JID, timestamp time.Time) {
+func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID, chat types.JID, sender types.JID, source types.MessageSource, timestamp time.Time) {
 	if message.GetReactionMessage() != nil {
 		// ReactionMessage cannot be referred to, do not cache
 		return
@@ -57,8 +58,8 @@ func (handler *Handler) add_to_cache(message *waE2E.Message, id types.MessageID,
 		ID:        id,
 		Chat:      chat,
 		Sender:    sender,
+		Source:    source,
 		Timestamp: timestamp,
-		// TODO: also add FromMe and IsGroup since they are necessary for BuildPollVote
 	})
 	// from https://www.delftstack.com/howto/go/queue-implementation-in-golang/
 	if len(handler.cachedMessages) > purple_get_int(handler.account, C.GOWHATSAPP_MESSAGE_CACHE_SIZE_OPTION, 0) {
@@ -70,6 +71,25 @@ func (handler *Handler) lookup_cached_message_by_id(id string) *CachedMessage {
 	for i := range handler.cachedMessages {
 		if handler.cachedMessages[i].ID == id {
 			return &handler.cachedMessages[i]
+		}
+	}
+	return nil
+}
+
+/*
+ * Looks up a poll by its message ID or by a part of its question.
+ */
+func (handler *Handler) lookup_cached_poll(chat types.JID, reference string) *CachedMessage {
+	cached_message := handler.lookup_cached_message_by_id(reference)
+	if cached_message != nil && GetAnyPollCreationMessage(&cached_message.Message) != nil {
+		return cached_message
+	}
+	for i := len(handler.cachedMessages) - 1; i >= 0; i-- {
+		if handler.cachedMessages[i].Chat.ToNonAD() == chat.ToNonAD() {
+			pcm := GetAnyPollCreationMessage(&handler.cachedMessages[i].Message)
+			if pcm != nil && strings.Contains(pcm.GetName(), reference) {
+				return &handler.cachedMessages[i]
+			}
 		}
 	}
 	return nil
