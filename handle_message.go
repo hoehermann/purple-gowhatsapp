@@ -111,6 +111,12 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 				}
 				text += etmText
 			}
+			// a link preview carries the title and the description of the linked page
+			for _, preview := range []string{etm.GetTitle(), etm.GetDescription()} {
+				if preview != "" {
+					text += "\n" + preview
+				}
+			}
 		}
 
 	}
