@@ -162,9 +162,14 @@ func (handler *Handler) download_attachment(local_file_path string, message what
 	if err != nil {
 		return err
 	}
-	file, err := os.Create(local_file_path)
+	// Download into memory rather than with DownloadToFile, which preallocates the file with
+	// fallocate(2) and fails on file systems without it. The download blocks purple's main loop,
+	// so bound it in time.
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	defer cancel()
+	data, err := handler.client.Download(ctx, message)
 	if err != nil {
 		return err
 	}
-	return handler.client.DownloadToFile(context.TODO(), message, file)
+	return os.WriteFile(local_file_path, data, 0o644)
 }
