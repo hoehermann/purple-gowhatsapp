@@ -3,6 +3,11 @@
 #include "constants.h"
 #include "pixbuf.h"
 #include "glib/gstdio.h"
+#ifdef WIN32
+#include <io.h> // for close
+#else
+#include <unistd.h> // for close
+#endif
 
 /*
  * gdk-pixbuf does not always ship loaders for all image formats (e.g. WebP).
@@ -258,8 +263,22 @@ void download_to_templated_destination(gowhatsapp_message_t *gwamsg, const char 
     g_free(local_path);
 }
 
-static gboolean download_to_temporary_directory(gowhatsapp_message_t *gwamsg) {
-    char *local_path_tmp = g_strdup(g_build_filename(g_get_tmp_dir(), g_strdup_printf("whatsapp_image_%s%s", gwamsg->hash_hex, gwamsg->extension), NULL));
+static void download_to_temporary_directory(gowhatsapp_message_t *gwamsg) {
+    // create a new file with a unique name: a fixed name in the shared temporary directory could have been prepared by someone else
+    char *name_template = g_strdup_printf("whatsapp_image_XXXXXX%s", gwamsg->extension);
+    char *local_path_tmp = NULL;
+    GError *tmp_error = NULL;
+    int fd = g_file_open_tmp(name_template, &local_path_tmp, &tmp_error);
+    g_free(name_template);
+    if (fd < 0) {
+        gowhatsapp_go_delete_handle(gwamsg->download_handle);
+        char *error = g_strdup_printf("Failed to create a temporary file: %s", tmp_error->message);
+        gowhatsapp_display_text_message(gwamsg->account, gwamsg->senderJid, gwamsg->remoteJid, error, gwamsg->timestamp, gwamsg->isGroup, gwamsg->isOutgoing, gwamsg->name, PURPLE_MESSAGE_ERROR, gwamsg->messageId);
+        g_free(error);
+        g_error_free(tmp_error);
+        return;
+    }
+    close(fd);
     char *error = gowhatsapp_go_download_attachment(gwamsg->account, local_path_tmp, gwamsg->download_handle);
     gowhatsapp_go_delete_handle(gwamsg->download_handle);
     if (error && error[0]) {
