@@ -37,6 +37,7 @@ Other improvements:
 * Account can be logged out via purple action.
 * Reactions are displayed as messages.
 * Names of subscribed channels are fetched when channels are not ignored.
+* The title and description of a link preview are displayed below the message.
 * There is an "away" state.
   * For compatibility with the auto-responder plug-in.
   * Other devices (i.e. the main phone) display notifications while plug-in connection is "away".
