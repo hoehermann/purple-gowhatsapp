@@ -192,7 +192,7 @@ void create_symlinks_recurse(char *path, char *aliased_path) {
     }
 }
 
-char * create_symlinks(PurpleAccount *account, const char *template, time_t timestamp, const char *hash, const char *filename, const char *extension, const char *remote, const char *sender, const char *chat_alias, const char *buddy_alias, const char *messageid, PurpleMessageFlags flags) {
+void create_symlinks(PurpleAccount *account, const char *template, time_t timestamp, const char *hash, const char *filename, const char *extension, const char *remote, const char *sender, const char *chat_alias, const char *buddy_alias, const char *messageid, PurpleMessageFlags flags) {
     // TODO: always store files with their hash, then provide symlink with the filename?
     char *aliased_path = gowhatsapp_attachment_fill_template(template, timestamp, hash, filename, extension, chat_alias, buddy_alias, chat_alias, buddy_alias, messageid, flags);
     char *path = gowhatsapp_attachment_fill_template(template, timestamp, hash, filename, extension, remote, sender, chat_alias, buddy_alias, messageid, flags);
