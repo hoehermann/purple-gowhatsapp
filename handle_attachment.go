@@ -8,6 +8,7 @@ import "C"
 import (
 	"context"
 	"encoding/hex"
+	"html"
 	"mime"
 	"os"
 	"path/filepath"
@@ -131,6 +132,8 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		}
 	}
 	if data_type != C.gowhatsapp_attachment_type_none {
+		// the caption is plain text like a message body, so escape it the same way before it reaches purple
+		caption = strings.ReplaceAll(html.EscapeString(caption), "\n", "<br>")
 		chat := source.Chat.ToNonAD().String()
 		sender := source.Sender.ToNonAD().String()
 		purple_handle_attachment(handler.account, chat, source.IsGroup, sender, caption, id, timestamp, data_type, filename, extension, mimetype, hash, length, downloadable)
