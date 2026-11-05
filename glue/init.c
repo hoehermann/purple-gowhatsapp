@@ -23,6 +23,7 @@
 
 #include "gowhatsapp.h"
 #include "libwhatsmeow.h" // for gowhatsapp_go_init
+#include <gmodule.h>
 
 #ifndef PLUGIN_VERSION
 #error Must set PLUGIN_VERSION in build system
@@ -138,6 +139,11 @@ static PurplePluginProtocolInfo prpl_info = {
 };
 
 static void plugin_init(PurplePlugin *plugin) {
+    // The Go runtime starts when the library is loaded and its threads never stop, so the
+    // library must never be unloaded: make g_module_close() a no-op for it.
+    if (plugin->handle) {
+        g_module_make_resident((GModule *) plugin->handle);
+    }
     prpl_info.protocol_options = gowhatsapp_add_account_options(prpl_info.protocol_options);
 }
 
