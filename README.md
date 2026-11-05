@@ -21,7 +21,7 @@ Standard features:
 * Fetching all contacts from account, showing friendly names in buddy list, downloading profile pictures ([Markus "nihilus" Gothe](https://github.com/nihilus) for [Peter "theassemblerguy" Bachmaier](https://github.com/theassemblerguy)).
 * Sending receipts (configurable).
 * Displaying reactions.
-* Displaying polls (but no participating in them).
+* Displaying polls, voting in polls.
 * Displaying shared locations and contacts as text.
 * Support for socks5 proxies.
 * Reasonable support for group chats by [yourealwaysbe](https://github.com/yourealwaysbe).
@@ -114,4 +114,3 @@ Some in-depth documentation about obscure details can be found in the [notes](./
 * [JimB](https://stackoverflow.com/users/32880/jimb) for golang insights
 * [HVV](https://www.hvv.de/) for providing free wifi at their stations
 
-Also especially huge shout-out to **[Herrie82](https://github.com/Herrie82)** and the [webos-synergy-revival](https://github.com/Herrie82/webos-synergy-revival) project for providing pull-requests containing significant improvements and invaluable insights.
