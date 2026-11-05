@@ -90,7 +90,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 		return nil, fmt.Errorf("error sending file: %v", err)
 	}
 	msg.Conversation = &filename // this ends up in the cache, so the message may be looked up by the name of the file
-	handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, send_response.Timestamp)
+	handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, types.MessageSource{Chat: recipient, Sender: send_response.Sender, IsFromMe: true, IsGroup: isGroup}, send_response.Timestamp)
 	return &send_response, nil
 }
 
