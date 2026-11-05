@@ -8,6 +8,10 @@ Whenever a given file does not fulfill any of the following criteria, it is sent
 
 An image may be sent as an image message (JPEG, `image/jpeg`). This is relatively straight-forward.
 
+##### Sticker Message
+
+A WebP image (`image/webp`) is sent as a sticker. Its size and whether it is animated are read from the file. The plug-in does not check whether the image meets WhatsApp's requirements for stickers.
+
 ##### Voice Message
 
 This feature is only available if the plug-in has been built with liboggfile.

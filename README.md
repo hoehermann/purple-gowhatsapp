@@ -13,6 +13,7 @@ Standard features:
 * Receiving files (image, video and note, audio and voice, document, sticker).
 * Received images are displayed in the conversation window (optional).
 * Sending JPEG images as image messages.
+* Sending WebP images as stickers.
 * Sending opus audio files as voice messages.
 * Sending mp4 video files as video messages.
 * Sending other files as documents.

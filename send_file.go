@@ -51,6 +51,9 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	switch mimetype {
 	case "image/jpeg", "image/png":
 		msg, err = handler.send_file_image(data, mimetype)
+	case "image/webp":
+		// WhatsApp uses WebP for stickers
+		msg, err = handler.send_file_sticker(data, mimetype)
 	case "application/ogg", "audio/ogg":
 		cdata := C.CBytes(data)
 		opusfile_info := C.opusfile_get_info(cdata, C.size_t(len(data)))
@@ -107,6 +110,58 @@ func (handler *Handler) send_file_image(data []byte, mimetype string) (*waE2E.Me
 		FileEncSHA256: uploaded.FileEncSHA256,
 		FileSHA256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
+	}}
+	return msg, nil
+}
+
+/*
+ * Reads the canvas size and the animation flag from the header of a WebP image.
+ * See https://developers.google.com/speed/webp/docs/riff_container.
+ */
+func webp_info(data []byte) (width uint32, height uint32, animated bool, ok bool) {
+	if len(data) < 30 || string(data[0:4]) != "RIFF" || string(data[8:12]) != "WEBP" {
+		return 0, 0, false, false
+	}
+	le24 := func(b []byte) uint32 { return uint32(b[0]) | uint32(b[1])<<8 | uint32(b[2])<<16 }
+	switch string(data[12:16]) {
+	case "VP8X":
+		return le24(data[24:27]) + 1, le24(data[27:30]) + 1, data[20]&0x02 != 0, true
+	case "VP8 ":
+		if data[23] != 0x9d || data[24] != 0x01 || data[25] != 0x2a {
+			return 0, 0, false, false
+		}
+		return (uint32(data[26]) | uint32(data[27])<<8) & 0x3fff, (uint32(data[28]) | uint32(data[29])<<8) & 0x3fff, false, true
+	case "VP8L":
+		if data[20] != 0x2f {
+			return 0, 0, false, false
+		}
+		bits := uint32(data[21]) | uint32(data[22])<<8 | uint32(data[23])<<16 | uint32(data[24])<<24
+		return bits&0x3fff + 1, (bits>>14)&0x3fff + 1, false, true
+	}
+	return 0, 0, false, false
+}
+
+func (handler *Handler) send_file_sticker(data []byte, mimetype string) (*waE2E.Message, error) {
+	width, height, animated, ok := webp_info(data)
+	if !ok {
+		// the size of WhatsApp's sticker canvas
+		width, height = 512, 512
+	}
+	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaImage)
+	if err != nil {
+		return nil, err
+	}
+	msg := &waE2E.Message{StickerMessage: &waE2E.StickerMessage{
+		URL:           proto.String(uploaded.URL),
+		DirectPath:    proto.String(uploaded.DirectPath),
+		MediaKey:      uploaded.MediaKey,
+		Mimetype:      proto.String(mimetype),
+		FileEncSHA256: uploaded.FileEncSHA256,
+		FileSHA256:    uploaded.FileSHA256,
+		FileLength:    proto.Uint64(uint64(len(data))),
+		Width:         proto.Uint32(width),
+		Height:        proto.Uint32(height),
+		IsAnimated:    proto.Bool(animated),
 	}}
 	return msg, nil
 }
