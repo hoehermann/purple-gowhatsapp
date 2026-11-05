@@ -238,7 +238,7 @@ func (handler *Handler) prune_devices(deviceJid types.JID) {
 	if err == nil {
 		for _, device := range devices {
 			if device.ID == nil {
-				handler.log.Infof("Deleting bogous device %s from database...", device.ID.String())
+				handler.log.Infof("Deleting bogous device without ID from database...")
 				device.Delete(ctx) // ignores errors
 			} else {
 				obsolete := device.ID.ToNonAD() == deviceJid.ToNonAD() && *device.ID != deviceJid
