@@ -95,8 +95,13 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 			ci := etm.ContextInfo
 			if ci != nil {
 				cm := ci.QuotedMessage
-				if cm != nil && cm.Conversation != nil {
-					quotelines := strings.Split(*cm.Conversation, "\n")
+				// the quoted message may itself be an extended text (a reply, a mention or a link)
+				quoted := cm.GetConversation()
+				if quoted == "" {
+					quoted = cm.GetExtendedTextMessage().GetText()
+				}
+				if quoted != "" {
+					quotelines := strings.Split(quoted, "\n")
 					text = "> " + strings.Join(quotelines, "\n> ") + "\n"
 				}
 			}
