@@ -34,6 +34,51 @@ func GetAnyPollCreationMessage(message *waE2E.Message) *waE2E.PollCreationMessag
 	return nil
 }
 
+/*
+ * Describes a message by looking it up in the message cache,
+ * e.g. for telling which message a reaction or a deletion refers to.
+ */
+func (handler *Handler) describe_cached_message(id string) string {
+	quote := fmt.Sprintf("unknown message with ID %s", id)
+	cached_message := handler.lookup_cached_message_by_id(id)
+	if cached_message != nil {
+		//handler.log.Infof("Lookup yielded message: %#v", &cached_message.Message)
+		text := cached_message.Message.GetConversation()
+		if cached_message.Message.ExtendedTextMessage != nil {
+			text = cached_message.Message.ExtendedTextMessage.GetText()
+		}
+		if text != "" {
+			ellipsis := ""
+			if len(text) > 50 {
+				ellipsis = "…" // add elipis to indicate message body truncation
+			}
+			quote = fmt.Sprintf("message „%.50s%s“", text, ellipsis)
+		} else {
+			message_type := "message of unknown type"
+			if cached_message.Message.ImageMessage != nil {
+				message_type = "image"
+			}
+			if cached_message.Message.VideoMessage != nil {
+				message_type = "video"
+			}
+			if cached_message.Message.PtvMessage != nil {
+				message_type = "voice message"
+			}
+			if cached_message.Message.AudioMessage != nil {
+				message_type = "audio message"
+			}
+			if cached_message.Message.StickerMessage != nil {
+				message_type = "sticker"
+			}
+			if cached_message.Message.DocumentMessage != nil {
+				message_type = "document"
+			}
+			quote = fmt.Sprintf("%s from %s", message_type, cached_message.Timestamp.Format(time.RFC822))
+		}
+	}
+	return quote
+}
+
 func (handler *Handler) handle_message(message *waE2E.Message, info types.MessageInfo, evt *events.Message) {
 	//handler.log.Infof("message: %#v", message)
 	if info.MessageSource.Chat.Server == types.NewsletterServer {
@@ -81,6 +126,10 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 			if em := pm.GetEditedMessage(); em != nil {
 				message = em
 				isEdit = true
+			} else if pm.Type != nil && pm.GetType() == waE2E.ProtocolMessage_REVOKE {
+				// the sender deleted a message for everyone
+				// Type must be checked for presence since REVOKE is the enum's zero value
+				text += fmt.Sprintf("deleted %s.", handler.describe_cached_message(pm.GetKey().GetID()))
 			}
 		}
 	}
@@ -117,43 +166,7 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 	{
 		rm := message.GetReactionMessage()
 		if rm != nil && rm.Text != nil && rm.Key != nil && rm.Key.ID != nil {
-			quote := fmt.Sprintf("unknown message with ID %s", rm.Key.GetID())
-			cached_message := handler.lookup_cached_message_by_id(rm.Key.GetID())
-			if cached_message != nil {
-				//handler.log.Infof("Lookup yielded message: %#v", &cached_message.Message)
-				text := cached_message.Message.GetConversation()
-				if cached_message.Message.ExtendedTextMessage != nil {
-					text = cached_message.Message.ExtendedTextMessage.GetText()
-				}
-				if text != "" {
-					ellipsis := ""
-					if len(text) > 50 {
-						ellipsis = "…" // add elipis to indicate message body truncation
-					}
-					quote = fmt.Sprintf("message „%.50s%s“", text, ellipsis)
-				} else {
-					message_type := "message of unknown type"
-					if cached_message.Message.ImageMessage != nil {
-						message_type = "image"
-					}
-					if cached_message.Message.VideoMessage != nil {
-						message_type = "video"
-					}
-					if cached_message.Message.PtvMessage != nil {
-						message_type = "voice message"
-					}
-					if cached_message.Message.AudioMessage != nil {
-						message_type = "audio message"
-					}
-					if cached_message.Message.StickerMessage != nil {
-						message_type = "sticker"
-					}
-					if cached_message.Message.DocumentMessage != nil {
-						message_type = "document"
-					}
-					quote = fmt.Sprintf("%s from %s", message_type, cached_message.Timestamp.Format(time.RFC822))
-				}
-			}
+			quote := handler.describe_cached_message(rm.Key.GetID())
 			if *rm.Text == "" {
 				text += fmt.Sprintf("removed their reaction to %s.", quote)
 			} else {
