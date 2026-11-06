@@ -8,12 +8,14 @@ import "C"
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"mime"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"go.mau.fi/util/fallocate"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
@@ -137,19 +139,39 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 	}
 }
 
+// unpreallocated_file hides the *os.File from whatsmeow, so DownloadToFile does not try to
+// preallocate it. The media is still written to disk as it arrives.
+type unpreallocated_file struct {
+	*os.File
+}
+
+// fallocate_supported tells whether the file system holding file can preallocate space.
+// whatsmeow's DownloadToFile preallocates an *os.File with fallocate(2) and gives up on the
+// media host if that fails, which it does on every host where the file system lacks it
+// (tmpfs and vfat on older Linux kernels, for example).
+func fallocate_supported(file *os.File) bool {
+	// the same call whatsmeow makes; on Linux it keeps the file size, so the empty file stays empty
+	err := fallocate.Fallocate(file, 1)
+	return !errors.Is(err, errors.ErrUnsupported)
+}
+
 func (handler *Handler) download_attachment(local_file_path string, message whatsmeow.DownloadableMessage) error {
 	err := os.MkdirAll(filepath.Dir(local_file_path), 0o755)
 	if err != nil {
 		return err
 	}
-	// Download into memory rather than with DownloadToFile, which preallocates the file with
-	// fallocate(2) and fails on file systems without it. The download blocks purple's main loop,
-	// so bound it in time.
-	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
-	defer cancel()
-	data, err := handler.client.Download(ctx, message)
+	file, err := os.Create(local_file_path)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(local_file_path, data, 0o644)
+	var destination whatsmeow.File = file
+	if !fallocate_supported(file) {
+		destination = unpreallocated_file{file}
+	}
+	err = handler.client.DownloadToFile(context.TODO(), message, destination)
+	close_err := file.Close()
+	if err != nil {
+		return err
+	}
+	return close_err
 }

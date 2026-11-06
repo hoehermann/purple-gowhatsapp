@@ -7,6 +7,7 @@ require (
 	github.com/lib/pq v1.10.4
 	github.com/mdp/qrterminal/v3 v3.0.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+	go.mau.fi/util v0.11.0
 	go.mau.fi/whatsmeow v0.0.0-20261102152715-54038813c47f
 	golang.org/x/net v0.61.0
 	google.golang.org/protobuf v1.36.12
@@ -28,7 +29,6 @@ require (
 	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.27 // indirect
 	go.mau.fi/libsignal v0.2.2 // indirect
-	go.mau.fi/util v0.11.0 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e // indirect
 	golang.org/x/sync v0.24.0 // indirect
