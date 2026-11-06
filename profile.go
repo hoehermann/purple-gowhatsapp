@@ -55,7 +55,7 @@ func (handler *Handler) profile_picture_downloader() {
 			log.Infof("Profile picture downloader has been removed.")
 			return
 		}
-		if handler.client == nil && !handler.client.IsConnected() {
+		if handler.client == nil || !handler.client.IsConnected() {
 			// drop requests while not connected to WhatsApp
 			continue
 		}
