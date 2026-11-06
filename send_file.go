@@ -214,6 +214,7 @@ func (handler *Handler) send_file_document(data []byte, mimetype string, filenam
 	}
 	msg := &waE2E.Message{DocumentMessage: &waE2E.DocumentMessage{
 		Title:         proto.String(filename),
+		FileName:      proto.String(filename),
 		URL:           proto.String(uploaded.URL),
 		DirectPath:    proto.String(uploaded.DirectPath),
 		MediaKey:      uploaded.MediaKey,
