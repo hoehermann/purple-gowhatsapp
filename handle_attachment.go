@@ -117,6 +117,10 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 			downloadable = dm
 			hash = hex.EncodeToString(dm.GetFileSHA256())
 			filename = dm.GetFileName() // TODO: sanitize filename
+			if filename == "" {
+				// documents sent by older versions of this plug-in carry their name only as the title
+				filename = dm.GetTitle()
+			}
 			extension = filepath.Ext(filename)
 			if extension != "" {
 				// remove extension from filename for consistency when using file-naming template
