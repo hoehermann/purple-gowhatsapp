@@ -42,6 +42,24 @@ func extension_from_mimetype(mimeType *string) string {
 	return extension
 }
 
+/*
+ * The file name of a document is chosen by the sender.
+ * Make it a single path component so it cannot point outside the attachment directory
+ * when it is used in a file-naming template or suggested for a file transfer.
+ */
+func sanitize_file_name(name string) string {
+	name = strings.Map(func(r rune) rune {
+		if r == '/' || r == '\\' || r == 0 {
+			return '_'
+		}
+		return r
+	}, name)
+	if name == "." || name == ".." {
+		return "_"
+	}
+	return name
+}
+
 // based on https://github.com/FKLC/WhatsAppToDiscord/blob/master/WA2DC.go
 func (handler *Handler) handle_attachment(message *waE2E.Message, id string, source types.MessageSource, timestamp time.Time) {
 	var (
@@ -117,7 +135,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 		if dm != nil {
 			downloadable = dm
 			hash = hex.EncodeToString(dm.GetFileSHA256())
-			filename = dm.GetFileName() // TODO: sanitize filename
+			filename = dm.GetFileName()
 			extension = filepath.Ext(filename)
 			if extension != "" {
 				// remove extension from filename for consistency when using file-naming template
@@ -125,6 +143,7 @@ func (handler *Handler) handle_attachment(message *waE2E.Message, id string, sou
 			} else {
 				extension = extension_from_mimetype(dm.Mimetype)
 			}
+			filename = sanitize_file_name(filename)
 			data_type = C.gowhatsapp_attachment_type_document
 			mimetype = dm.GetMimetype()
 			length = dm.GetFileLength()
