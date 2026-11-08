@@ -46,28 +46,28 @@ set(LIBRARIES ${PURPLE_LIBRARIES} ${PIXBUF_LIBRARIES} ${OPUSFILE_LINK_LIBRARIES}
 # compiler flags
 string(STRIP "${CMAKE_C_FLAGS_INIT}" CGO_CFLAGS)
 foreach(INCLUDE_DIR ${INCLUDE_DIRS})
-  list(APPEND CGO_CFLAGS "-I${INCLUDE_DIR}")
+  string(APPEND CGO_CFLAGS " -I${INCLUDE_DIR}")
 endforeach()
-list(APPEND CGO_CFLAGS "-DPLUGIN_VERSION=${VERSION}")
-list(APPEND CGO_CFLAGS ${CFLAGS})
+string(APPEND CGO_CFLAGS " -DPLUGIN_VERSION=${VERSION}")
+string(APPEND CGO_CFLAGS " ${CFLAGS}")
 
 # linker flags
 string(STRIP "${CMAKE_SHARED_LINKER_FLAGS_INIT}" CGO_LDFLAGS)
 foreach(LIBRARY_DIR ${LIBRARY_DIRS})
-  list(APPEND CGO_LDFLAGS "-L${LIBRARY_DIR}")
+  string(APPEND CGO_LDFLAGS " -L${LIBRARY_DIR}")
 endforeach()
 foreach(LIBRARY ${LIBRARIES})
   cmake_path(GET LIBRARY PARENT_PATH LIBRARY_DIR) # no
-  list(APPEND CGO_LDFLAGS "-L${LIBRARY_DIR}")
+  string(APPEND CGO_LDFLAGS " -L${LIBRARY_DIR}")
   cmake_path(GET LIBRARY FILENAME LIBRARY) # oh no
   STRING(REGEX REPLACE ".(lib|dll|a|so)$" "" LIBRARY ${LIBRARY}) # please do not
   STRING(REGEX REPLACE "^lib" "" LIBRARY ${LIBRARY}) # do not do this
-  list(APPEND CGO_LDFLAGS "-l${LIBRARY}")
+  string(APPEND CGO_LDFLAGS " -l${LIBRARY}")
 endforeach()
 if (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7.2)
   # might actually work without this up to 7.1.0, but I did not check
   # TODO: find out if clang need this
-  list(APPEND CGO_LDFLAGS "-static-libgcc")
+  string(APPEND CGO_LDFLAGS " -static-libgcc")
 endif()
 
 # build cgo library
@@ -101,8 +101,8 @@ add_custom_command(
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   COMMAND ${CMAKE_COMMAND} -E env
   GOPATH="${GOPATH}"
-  CGO_CFLAGS="${CGO_CFLAGS}"
-  CGO_LDFLAGS="${CGO_LDFLAGS}"
+  CGO_CFLAGS=${CGO_CFLAGS}
+  CGO_LDFLAGS=${CGO_LDFLAGS}
   ${CMAKE_Go_COMPILER} build -buildmode=c-archive
   -o "${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_PREFIX}.a"
   ${CMAKE_Go_FLAGS}
