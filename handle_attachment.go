@@ -47,10 +47,12 @@ func extension_from_mimetype(mimeType *string) string {
  * The file name of a document is chosen by the sender.
  * Make it a single path component so it cannot point outside the attachment directory
  * when it is used in a file-naming template or suggested for a file transfer.
+ * The list of potentially problematic file-names originates form
+ * https://stackoverflow.com/questions/1976007/what-characters-are-forbidden-in-windows-and-linux-directory-names
  */
 func sanitize_file_name(name string) string {
 	name = strings.Map(func(r rune) rune {
-		if r == '/' || r == '\\' || r == 0 {
+		if strings.ContainsRune("/<>:|?*\x00\\\"", r) {
 			return '_'
 		}
 		return r
