@@ -89,6 +89,11 @@ func format_contact(display_name string, vcard string) string {
 	return text
 }
 
+func escape_text(text string) string {
+	// WhatsApp is a plain-text protocol (allowing < and >), but Pidgin expects HTML (demanding br and swallowing things which are looking like tags)
+	return strings.ReplaceAll(html.EscapeString(text), "\n", "<br>")
+}
+
 func (handler *Handler) handle_message(message *waE2E.Message, info types.MessageInfo, evt *events.Message) {
 	//handler.log.Infof("message: %#v", message)
 	if info.MessageSource.Chat.Server == types.NewsletterServer {
@@ -306,8 +311,7 @@ func (handler *Handler) handle_message(message *waE2E.Message, info types.Messag
 		if isEdit {
 			text = "[EDIT] " + text
 		}
-		// WhatsApp is a plain-text protocol (allowing < and >), but Pidgin expects HTML (demanding br and swallowing things which are looking like tags)
-		text := strings.ReplaceAll(html.EscapeString(text), "\n", "<br>")
+		text := escape_text(text)
 		// note: info.PushName always denotes the sender (not the chat)
 		purple_display_text_message(handler.account, info.MessageSource.Chat.ToNonAD().String(), info.MessageSource.IsGroup, false, info.MessageSource.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text, &info.ID)
 	}
