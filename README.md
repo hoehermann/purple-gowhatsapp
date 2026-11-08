@@ -114,3 +114,4 @@ Some in-depth documentation about obscure details can be found in the [notes](./
 * [JimB](https://stackoverflow.com/users/32880/jimb) for golang insights
 * [HVV](https://www.hvv.de/) for providing free wifi at their stations
 
+Also especially huge shout-out to **[Herrie82](https://github.com/Herrie82)** and the [webos-synergy-revival](https://github.com/Herrie82/webos-synergy-revival) project for providing pull-requests containing significant improvements and invaluable insights.
