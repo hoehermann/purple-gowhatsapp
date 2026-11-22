@@ -160,17 +160,18 @@ func (handler *Handler) eventHandler(rawEvt interface{}) {
 	// TODO
 	// &events.Blocklist{Action:"", DHash:"REDACTED", PrevDHash:"REDACTED", Changes:[]events.BlocklistChange{events.BlocklistChange{JID:types.JID{User:"REDACTED", RawAgent:0x0, Device:0x0, Integrator:0x0, Server:"s.whatsapp.net"}, Action:"block"}}}
 	case *events.UndecryptableMessage:
-		info := evt.Info
-		source := info.MessageSource
-		unavailable_type := ""
-		if evt.UnavailableType != "" {
-			unavailable_type = fmt.Sprintf(" %s", evt.UnavailableType)
-		}
-		text := fmt.Sprintf("sent an undecryptable%s message. The message might arrive here later.", unavailable_type)
 		if evt.UnavailableType == "sender_drop" {
-			text = "sent a message which was not available when requested. Wake up your main device, then the message will be displayed here. Probably."
+			handler.log.Warnf("Silently ignroing sender_drop message. I do not know what they mean.")
+		} else {
+			info := evt.Info
+			source := info.MessageSource
+			unavailable_type := ""
+			if evt.UnavailableType != "" {
+				unavailable_type = fmt.Sprintf(" %s", evt.UnavailableType)
+			}
+			text := fmt.Sprintf("sent an undecryptable%s message. The message might arrive here later.", unavailable_type)
+			purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, false, source.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text, &info.ID)
 		}
-		purple_display_text_message(handler.account, source.Chat.ToNonAD().String(), source.IsGroup, false, source.Sender.ToNonAD().String(), &info.PushName, info.Timestamp, text, &info.ID)
 	default:
 		log.Warnf("Event type not handled: %#v", rawEvt)
 	}
