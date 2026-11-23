@@ -1,3 +1,30 @@
+# 1.28.0
+
+* Update: Depend on whatsmeow v0.0.0-20261116172437-19d61352436f.
+* Feature: Describe message deletion.
+* Feature: Display the title and description of link previews.
+* Feature: Fetch the names of subscribed channels.
+* Feature: Vote in polls.
+* Feature: Support downloads to file-systems without support for fallocate.
+* Feature: Display attached non-live location.
+* Feature: Display attached contact information.
+* Change: A WebP image is sent as a sticker.
+* Change: Use .so for plug-in file extention on MacOS (was: .dylib).
+* Change: Link against gmodule-2.0 explicitly (was: implicitly).
+* Change: Do not unload the plug-in (was: unload on unload).
+* Change: Silently ignore `sender_drop` messages (was: display text).
+* Change: Auto-downloader now raises error when directory creation fails (was: raise error when download fails).
+* Bugfix: Captions now have their text escaped.
+* Bugfix: File-names are now sanitzed.
+* Bugfix: Display text of a quoted message for more message types.
+* Bugfix: Send file-name when sending document files.
+* Bugfix: Actually allow image insertion.
+* Bugfix: Do not crash when ID when trying to prune a non-existant device.
+* Bugfix: Auto-downloader is hardened against omitted values.
+* Bugfix: Fix forwarding compiler and build flags through CMake to cgo.
+* Bugfix: Forward group information to the front-end in particular when the look-up succeeds.
+* Bugfix: Fix picture downloader error handling.
+
 # 1.27.0
 
 * Update: Depend on whatsmeow v0.0.0-20261017175727-b2b1e71d45e2.
