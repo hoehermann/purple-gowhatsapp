@@ -159,20 +159,20 @@ func (handler *Handler) send_poll_vote(recipient types.JID, isGroup bool, poll_r
  *
  * Returns true on success.
  */
-func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, message string) bool {
-	stripped_message, image_ids := decompose_html(message)
-	handler.log.Infof("After decomposing, message is „%s“ with %d images.", stripped_message, len(image_ids))
+func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, pango_message string) bool {
+	body_text, image_ids, err := decompose_html(pango_message)
+	if err != nil {
+		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, err.Error())
+		return false
+	}
+	handler.log.Infof("After decomposing, message is „%s“ with %d images.", body_text, len(image_ids))
 	if len(image_ids) > 1 {
 		purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "May only sent one image per message.")
 		return false
 	}
 	if len(image_ids) == 1 {
-		if len(stripped_message) > 0 {
-			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "May send an image or some text, but not both in the same message.")
-			return false
-		}
 		data := purple_imgstore_find_by_id(image_ids[0])
-		send_response, err := handler.send_file_bytes(recipient, isGroup, data, "image", false)
+		send_response, err := handler.send_file_bytes(recipient, isGroup, data, "image", false, body_text)
 		if err != nil {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, err.Error())
 			return false
@@ -180,11 +180,11 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 		setting := purple_get_string(handler.account, C.GOWHATSAPP_ECHO_OPTION, C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS)
 		if setting == C.GoString(C.GOWHATSAPP_ECHO_CHOICE_ON_SUCCESS) {
 			// injects the original message (with the image tag)
-			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, handler.client.Store.ID.ToNonAD().String(), nil, send_response.Timestamp, message, nil)
+			purple_display_text_message(handler.account, recipient.ToNonAD().String(), isGroup, true, handler.client.Store.ID.ToNonAD().String(), nil, send_response.Timestamp, pango_message, nil)
 		}
 		return true
 	}
-	is_vote, poll_reference, choices, err := parse_vote_command(stripped_message)
+	is_vote, poll_reference, choices, err := parse_vote_command(pango_message)
 	if is_vote {
 		if err != nil {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, fmt.Sprintf("Unable to vote: %v", err))
@@ -192,20 +192,20 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 		}
 		return handler.send_poll_vote(recipient, isGroup, poll_reference, choices)
 	}
-	msg := &waE2E.Message{Conversation: &stripped_message}
+	msg := &waE2E.Message{Conversation: &body_text}
 	expiration_days := purple_get_int(handler.account, C.GOWHATSAPP_EXPIRATION_OPTION, 0)
 	expiration_seconds := uint32(expiration_days) * 24 * 60 * 60
 	if expiration_seconds > 0 {
 		msg = &waE2E.Message{
 			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-				Text: &stripped_message,
+				Text: &body_text,
 				ContextInfo: &waE2E.ContextInfo{
 					Expiration: proto.Uint32(expiration_seconds),
 				},
 			},
 		}
 	}
-	is_reply, cached_message, stripped_message := handler.prepare_reply(recipient, stripped_message)
+	is_reply, cached_message, body_text := handler.prepare_reply(recipient, body_text)
 	if is_reply {
 		if cached_message == nil {
 			purple_display_system_message(handler.account, recipient.ToNonAD().String(), isGroup, "Unable to prepare reply: Quoted message not found in cache.")
@@ -214,7 +214,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			participant := cached_message.Sender.ToNonAD().String()
 			msg = &waE2E.Message{
 				ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-					Text: &stripped_message,
+					Text: &body_text,
 					ContextInfo: &waE2E.ContextInfo{
 						StanzaID:      &cached_message.ID,
 						Participant:   &participant,
@@ -239,7 +239,7 @@ func (handler *Handler) send_text_message(recipient types.JID, isGroup bool, mes
 			ownJid := handler.client.Store.ID.ToNonAD().String()
 			recipientJid := recipient.ToNonAD().String()
 			msgID := send_response.ID
-			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, send_response.Timestamp, message, &msgID)
+			purple_display_text_message(handler.account, recipientJid, isGroup, true, ownJid, nil, send_response.Timestamp, pango_message, &msgID)
 		}
 		handler.add_to_cache(msg, send_response.ID, recipient, send_response.Sender, types.MessageSource{Chat: recipient, Sender: send_response.Sender, IsFromMe: true, IsGroup: isGroup}, send_response.Timestamp)
 		return true
@@ -342,7 +342,7 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 	}
 	data := b.Bytes()
 	filename := filepath.Base(resp.Request.URL.Path)
-	_, err = handler.send_file_bytes(recipient, isGroup, data, filename, handler.check_url_trust(link))
+	_, err = handler.send_file_bytes(recipient, isGroup, data, filename, handler.check_url_trust(link), link)
 	if err != nil {
 		handler.log.Infof("Error while sending file: %s", err)
 		return false
@@ -352,24 +352,32 @@ func (handler *Handler) send_link_message(recipient types.JID, isGroup bool, lin
 	}
 }
 
-func decompose_html(htmldata string) (string, []int) {
+func decompose_html(htmldata string) (string, []int, error) {
 	var plaintext strings.Builder
 	var image_ids []int
+	var err error
 	tokenizer := html.NewTokenizer(strings.NewReader(htmldata))
 	for {
 		next := tokenizer.Next()
 		switch {
 		case next == html.ErrorToken:
-			return plaintext.String(), image_ids
+			// nothing left to tokenize (this is the happy ending)
+			return plaintext.String(), image_ids, err
 		case next == html.StartTagToken:
 			token := tokenizer.Token()
 			switch {
 			case strings.EqualFold(token.Data, "img"):
+				if plaintext.String() != "" {
+					return plaintext.String(), image_ids, fmt.Errorf("The image must preceed the text.")
+				}
 				for _, attr := range token.Attr {
 					if attr.Key == "id" {
 						image_id, err := strconv.Atoi(attr.Val)
 						if err == nil {
 							image_ids = append(image_ids, image_id)
+						} else {
+							// exit early due to error
+							return plaintext.String(), image_ids, fmt.Errorf("%v cannot be parsed as int due to %v. This is probably a bug in the front-end.", attr.Val, err)
 						}
 					}
 				}

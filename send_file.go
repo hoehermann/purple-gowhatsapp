@@ -30,7 +30,7 @@ func (handler *Handler) send_file(who string, filename string) string {
 	if err != nil {
 		return fmt.Sprintf("Failed to open %s: %v", filename, err)
 	}
-	_, err = handler.send_file_bytes(recipient, isGroup, data, filepath.Base(filename), true)
+	_, err = handler.send_file_bytes(recipient, isGroup, data, filepath.Base(filename), true, "")
 	if err != nil {
 		return err.Error()
 	}
@@ -43,14 +43,14 @@ func (handler *Handler) send_file(who string, filename string) string {
  * The filename shall only be the basename, not the full path.
  */
 // TODO: The allowDocument parameter feels whacky. Do that check in the caller.
-func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data []byte, filename string, allowDocument bool) (*whatsmeow.SendResponse, error) {
+func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data []byte, filename string, allowDocument bool, caption string) (*whatsmeow.SendResponse, error) {
 	var err error = nil
 	var msg *waE2E.Message = nil
 	mimetype := http.DetectContentType(data) // Do not trust the server-supplied mime-type. The server may be misconfigured or mistaken.
 	handler.log.Infof("Attachment mime type is %s.", mimetype)
 	switch mimetype {
 	case "image/jpeg", "image/png":
-		msg, err = handler.send_file_image(data, mimetype)
+		msg, err = handler.send_file_image(data, mimetype, caption)
 	case "image/webp":
 		// WhatsApp uses WebP for stickers
 		msg, err = handler.send_file_sticker(data, mimetype)
@@ -69,7 +69,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	case "video/mp4":
 		err = check_mp4(data)
 		if err == nil {
-			msg, err = handler.send_file_video(data, "video/mp4")
+			msg, err = handler.send_file_video(data, "video/mp4", caption)
 		} else {
 			handler.log.Infof("An mp4 video file was provided, but it was invalid due to %v.", err)
 			err = nil // reset error for retrying to send as document
@@ -83,7 +83,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	if msg == nil && err == nil {
 		// WhatsApp server seems to add extention, so we must remove it.
 		filename = strings.TrimSuffix(filename, filepath.Ext(filename))
-		msg, err = handler.send_file_document(data, mimetype, filename)
+		msg, err = handler.send_file_document(data, mimetype, filename, caption)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %v", err)
@@ -97,7 +97,7 @@ func (handler *Handler) send_file_bytes(recipient types.JID, isGroup bool, data 
 	return &send_response, nil
 }
 
-func (handler *Handler) send_file_image(data []byte, mimetype string) (*waE2E.Message, error) {
+func (handler *Handler) send_file_image(data []byte, mimetype string, caption string) (*waE2E.Message, error) {
 	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaImage)
 	if err != nil {
 		return nil, err
@@ -111,6 +111,9 @@ func (handler *Handler) send_file_image(data []byte, mimetype string) (*waE2E.Me
 		FileSHA256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
+	if caption != "" {
+		msg.ImageMessage.Caption = proto.String(caption)
+	}
 	return msg, nil
 }
 
@@ -190,7 +193,7 @@ func (handler *Handler) send_file_audio(data []byte, mimetype string, seconds ui
 	return msg, nil
 }
 
-func (handler *Handler) send_file_video(data []byte, mimetype string) (*waE2E.Message, error) {
+func (handler *Handler) send_file_video(data []byte, mimetype string, caption string) (*waE2E.Message, error) {
 	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaVideo)
 	if err != nil {
 		return nil, err
@@ -204,10 +207,13 @@ func (handler *Handler) send_file_video(data []byte, mimetype string) (*waE2E.Me
 		FileSHA256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
+	if caption != "" {
+		msg.VideoMessage.Caption = proto.String(caption)
+	}
 	return msg, nil
 }
 
-func (handler *Handler) send_file_document(data []byte, mimetype string, filename string) (*waE2E.Message, error) {
+func (handler *Handler) send_file_document(data []byte, mimetype string, filename string, caption string) (*waE2E.Message, error) {
 	uploaded, err := handler.client.Upload(context.Background(), data, whatsmeow.MediaDocument)
 	if err != nil {
 		return nil, err
@@ -223,5 +229,8 @@ func (handler *Handler) send_file_document(data []byte, mimetype string, filenam
 		FileSHA256:    uploaded.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(data))),
 	}}
+	if caption != "" {
+		msg.DocumentMessage.Caption = proto.String(caption)
+	}
 	return msg, nil
 }

@@ -100,11 +100,16 @@ func (handler *Handler) lookup_cached_message_by_substring(chat types.JID, needl
 		//handler.log.Infof("lookup: „%s“ is „%s“: %v", handler.cachedMessages[i].Chat.ToNonAD(), chat.ToNonAD(), handler.cachedMessages[i].Chat.ToNonAD() == chat.ToNonAD())
 		if handler.cachedMessages[i].Chat.ToNonAD() == chat.ToNonAD() {
 			message := &handler.cachedMessages[i].Message
-			conversation := message.GetConversation()
-			text := message.GetExtendedTextMessage().GetText()
-			//handler.log.Infof("lookup „%s“ in „%s“: %v or in „%s“: %v", needle, conversation, strings.Contains(conversation, needle), text, strings.Contains(text, needle))
-			if strings.Contains(conversation, needle) || strings.Contains(text, needle) {
-				return &handler.cachedMessages[i]
+			for _, haystack := range []string{
+				message.GetConversation(),
+				message.GetExtendedTextMessage().GetText(),
+				message.GetImageMessage().GetCaption(),
+				message.GetVideoMessage().GetCaption(),
+				message.GetDocumentMessage().GetCaption(),
+			} {
+				if strings.Contains(haystack, needle) {
+					return &handler.cachedMessages[i]
+				}
 			}
 		}
 	}
