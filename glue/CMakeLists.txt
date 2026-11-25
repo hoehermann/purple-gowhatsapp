@@ -23,6 +23,15 @@ add_library(${TARGET_NAME} SHARED
 )
 add_dependencies(${TARGET_NAME} libwhatsmeow)
 
+if (GOMETA)
+    target_sources(${TARGET_NAME} PRIVATE
+        "gometa_init.c"
+        "../gometabridge.c" # compiled again, as ../bridge.c
+        "../gometabridge.h"
+    )
+    target_compile_definitions(${TARGET_NAME} PRIVATE GOMETA)
+endif()
+
 target_compile_definitions(${TARGET_NAME} PRIVATE PLUGIN_VERSION=${VERSION})
 target_include_directories(${TARGET_NAME} PRIVATE ${GO_WHATSAPP_INCLUDE_DIRS} ${PURPLE_INCLUDE_DIRS} ${PIXBUF_INCLUDE_DIRS} ${OPUSFILE_INCLUDE_DIRS})
 target_link_directories(${TARGET_NAME} PRIVATE ${PURPLE_LIBRARY_DIRS} ${GMODULE_LIBRARY_DIRS} ${PIXBUF_LIBRARY_DIRS})

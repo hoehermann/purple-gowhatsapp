@@ -138,6 +138,10 @@ static PurplePluginProtocolInfo prpl_info = {
     #endif
 };
 
+#ifdef GOMETA
+void gometa_register_prpl(void); // glue/gometa_init.c
+#endif
+
 static void plugin_init(PurplePlugin *plugin) {
     // The Go runtime starts when the library is loaded and its threads never stop, so the
     // library must never be unloaded: make g_module_close() a no-op for it.
@@ -145,6 +149,9 @@ static void plugin_init(PurplePlugin *plugin) {
         g_module_make_resident((GModule *) plugin->handle);
     }
     prpl_info.protocol_options = gowhatsapp_add_account_options(prpl_info.protocol_options);
+#ifdef GOMETA
+    gometa_register_prpl(); // the Facebook Messenger protocol, from this same library
+#endif
 }
 
 static PurplePluginInfo info = {

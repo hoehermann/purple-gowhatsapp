@@ -86,6 +86,8 @@ These features will not be worked on:
 
 Look at the [build instructions](./docs/BUILDING.md). This project is being developed on Ubuntu 24.04. Support for other distributions and operating systems is community effort.
 
+An experimental Facebook Messenger protocol can be built into the plug-in as well; see [Facebook Messenger](./docs/FACEBOOK.md).
+
 
 ### Installation
 
