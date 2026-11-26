@@ -94,6 +94,12 @@ set(GO_SRCS
   ${CMAKE_SOURCE_DIR}/opusreader.h
   ${CMAKE_SOURCE_DIR}/opusreader.c
 )
+if (GOMETA)
+  file(GLOB GOMETA_GO_SRCS "${CMAKE_SOURCE_DIR}/gometa*.go")
+  list(FILTER GOMETA_GO_SRCS EXCLUDE REGEX "_test\\.go$")
+  list(APPEND GO_SRCS ${GOMETA_GO_SRCS} ${CMAKE_SOURCE_DIR}/gometabridge.c ${CMAKE_SOURCE_DIR}/gometabridge.h)
+  set(GOMETA_GO_FLAGS -tags gometa)
+endif()
 set(OUTPUT_PREFIX libwhatsmeow)
 add_custom_command(
   OUTPUT ${OUTPUT_PREFIX}.a ${OUTPUT_PREFIX}.h
@@ -105,6 +111,7 @@ add_custom_command(
   CGO_LDFLAGS=${CGO_LDFLAGS}
   ${CMAKE_Go_COMPILER} build -buildmode=c-archive
   -o "${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_PREFIX}.a"
+  ${GOMETA_GO_FLAGS}
   ${CMAKE_Go_FLAGS}
 )
 add_custom_target(${OUTPUT_PREFIX} DEPENDS ${OUTPUT_PREFIX}.a ${OUTPUT_PREFIX}.h)

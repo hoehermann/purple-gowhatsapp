@@ -49,6 +49,10 @@ message(STATUS "OPUSFILE_LINK_LIBRARIES: ${OPUSFILE_LINK_LIBRARIES}")
 # read version string from file
 file(READ "${CMAKE_SOURCE_DIR}/VERSION" VERSION)
 
+# The Facebook Messenger protocol (prpl-gometa), registered from the same library. Off by default.
+option(GOMETA "Also build the Facebook Messenger protocol (prpl-gometa)" OFF)
+message(STATUS "GOMETA: ${GOMETA}")
+
 include(scripts/go.cmake)
 add_subdirectory(glue)
 
