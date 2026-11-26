@@ -9,12 +9,12 @@ require (
 	github.com/mdp/qrterminal/v3 v3.0.0
 	github.com/rs/zerolog v1.35.1
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-	go.mau.fi/mautrix-meta v0.2611.0
-	go.mau.fi/util v0.11.1
+	go.mau.fi/mautrix-meta v0.2611.1-0.20261126143347-3f0bb572f0f2
+	go.mau.fi/util v0.11.2-0.20261124193158-ca7820d78067
 	go.mau.fi/whatsmeow v0.0.0-20261116172437-19d61352436f
 	golang.org/x/net v0.62.0
 	google.golang.org/protobuf v1.36.12
-	maunium.net/go/mautrix v0.33.0
+	maunium.net/go/mautrix v0.33.1-0.20261125114131-b1b4ee3b87d9
 	modernc.org/sqlite v1.34.5
 )
 
@@ -70,5 +70,6 @@ require (
 )
 
 // Facebook Messenger (built with -tags gometa): mautrix-meta's messagix package needs beeper's
-// fork of imroc/req, as in mautrix-meta's own go.mod.
-replace github.com/imroc/req/v3 => github.com/beeper/req/v3 v3.0.0-20260925135712-b49593750e56
+// fork of imroc/req, at the revision mautrix-meta's own go.mod pins. mautrix-meta is pinned to
+// its main branch: Facebook's two-factor code pages need mautrix/meta#633, in no release yet.
+replace github.com/imroc/req/v3 => github.com/beeper/req/v3 v3.0.0-20261112020631-42bebc180e13

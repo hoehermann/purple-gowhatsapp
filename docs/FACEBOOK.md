@@ -10,7 +10,7 @@ Plain chats go through [messagix](https://github.com/mautrix/meta/tree/main/pkg/
 
 This adds `-tags gometa` to the Go build (every `gometa*.go` file and `gometabridge.c` carry `//go:build gometa`) and compiles `glue/gometa_init.c` and `gometabridge.c` into the plug-in. Without the option none of it is built.
 
-The Go module needs `go.mau.fi/mautrix-meta` and, as mautrix-meta's own `go.mod` does, a `replace` of `github.com/imroc/req/v3` with beeper's fork. Version selection also raises `github.com/lib/pq` and `github.com/mattn/go-colorable` by a minor version for the WhatsApp build.
+The Go module needs `go.mau.fi/mautrix-meta` and, as mautrix-meta's own `go.mod` does, a `replace` of `github.com/imroc/req/v3` with beeper's fork. mautrix-meta is pinned to a commit on its main branch: Facebook's two-factor code pages need [mautrix/meta#633](https://github.com/mautrix/meta/pull/633), which is in no release yet. Version selection also raises `github.com/lib/pq` and `github.com/mattn/go-colorable` by a minor version, and `go.mau.fi/util` to a pre-release of v0.11.2, for the WhatsApp build.
 
 ### Set-Up
 

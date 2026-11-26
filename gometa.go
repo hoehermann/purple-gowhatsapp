@@ -745,7 +745,7 @@ func (h *gometaHandler) obtainCookies(email, password string) (*cookies.Cookies,
 		case bridgev2.LoginStepTypeDisplayAndWait:
 			// Login approval: Facebook sent a notification to your other device. The next
 			// DoLoginSteps call blocks (polling on a timer) until you approve — not a busy loop.
-			h.logger.Info().Str("info", step.Instructions).Msg("waiting for login approval on your other device")
+			h.logger.Info().Str("info", step.Instructions.String()).Msg("waiting for login approval on your other device")
 			userInput = nil
 		case bridgev2.LoginStepTypeUserInput:
 			ui, err := h.fillLoginStep(step, email, password, &credsSent)
@@ -781,16 +781,20 @@ func (h *gometaHandler) fillLoginStep(step *bridgev2.LoginStep, email, password 
 		case bridgev2.LoginInputFieldTypeSelect:
 			// 2FA method picker: choose a code method (Authentication app / Text message);
 			// the code is then asked for (see the 2FACode case).
-			choice := gometaPreferredMFA(f.Options)
+			offered := make([]string, len(f.Options))
+			for i, o := range f.Options {
+				offered[i] = o.Value
+			}
+			choice := gometaPreferredMFA(offered)
 			if choice == "" {
-				return nil, fmt.Errorf("this Facebook account offers no code-based two-factor method we can use (%v) — enable Authentication app or Text message in Facebook Security settings", f.Options)
+				return nil, fmt.Errorf("this Facebook account offers no code-based two-factor method we can use (%v) — enable Authentication app or Text message in Facebook Security settings", offered)
 			}
 			h.logger.Info().Str("mfa", choice).Msg("selecting 2FA method")
 			out[f.ID] = choice
 		case bridgev2.LoginInputFieldType2FACode:
 			// Facebook wants the login/2FA code; block until the user enters it (promptInput).
-			h.logger.Info().Str("prompt", step.Instructions).Msg("waiting for the 2FA code")
-			code := strings.TrimSpace(h.promptInput(step.Instructions))
+			h.logger.Info().Str("prompt", step.Instructions.String()).Msg("waiting for the 2FA code")
+			code := strings.TrimSpace(h.promptInput(step.Instructions.String()))
 			if code == "" {
 				return nil, fmt.Errorf("no Facebook 2FA code was entered")
 			}
